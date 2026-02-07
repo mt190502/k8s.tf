@@ -1,0 +1,37 @@
+# Shell & Environment
+**/.bash*
+**/.direnv
+**/.envrc
+**/.zcompdump*
+**/.zsh*
+
+# IDE & Editor
+**/.idea
+**/.vscode
+
+# Terraform
+!**/*example*
+**/.terraform
+**/*.tfstate*
+**/*.lock*
+**/charts*
+**/crash.log
+**/override.tf
+**/override.tf.json
+**/tfplan
+
+# Database & Logs
+**/*.db
+**/*.log
+**/logs
+
+# Process files & Temporary
+**/*.pid
+**/*.pid.lock
+**/*.seed
+**/*.swp
+**/*.tmp
+**/pids
+
+# Miscellaneous
+**/TODO.md

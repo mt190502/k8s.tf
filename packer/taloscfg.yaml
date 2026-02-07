@@ -1,0 +1,8 @@
+customization:
+  systemExtensions:
+    officialExtensions:
+      - siderolabs/iscsi-tools
+      - siderolabs/qemu-guest-agent
+      - siderolabs/tailscale
+      - siderolabs/util-linux-tools
+#   bootloader: sd-boot            #~ hetzner doesn't support uefi boot, so we have to use legacy bios bootloader
