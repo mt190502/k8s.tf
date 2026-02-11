@@ -1,0 +1,9 @@
+---
+apiVersion: v1alpha1
+kind: ExtensionServiceConfig
+name: tailscale
+environment:
+  - "TS_ROUTES=10.96.0.0/12"
+  - "TS_AUTH_ONCE=true"
+  - "TS_AUTHKEY=${TS_AUTHKEY}"
+  - "TS_HOSTNAME=${TS_HOSTNAME}"
