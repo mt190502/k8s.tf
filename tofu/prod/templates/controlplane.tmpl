@@ -1,0 +1,11 @@
+---
+cluster:
+  controllerManager:
+    extraArgs:
+      node-cidr-mask-size-ipv4: "24"
+      node-cidr-mask-size-ipv6: "64"
+  etcd:
+    advertisedSubnets:
+${ETCD_CIDRS}
+    listenSubnets:
+${ETCD_CIDRS}

@@ -17,9 +17,14 @@ variable "talos" {
         code = string
       })
     })
+    options = object({
+      dualstack = bool
+      kubespan  = bool
+      kubeprism = bool
+    })
   })
   default = {
-    version = "v1.12.2"
+    version = "v1.12.4"
     images = {
       amd64 = {
         id   = ""
@@ -29,6 +34,11 @@ variable "talos" {
         id   = ""
         code = ""
       }
+    }
+    options = {
+      dualstack = true
+      kubespan  = true
+      kubeprism = true
     }
   }
 
@@ -71,11 +81,18 @@ variable "cluster" {
     name    = string
     version = string
     url = object({
-      main = string
-      prefixes = object({
-        api      = string
-        external = string
-        internal = string
+      dns       = string
+      main      = string
+      apiserver = string
+    })
+    ipcfg = object({
+      pod_cidr = object({
+        ipv4 = string
+        ipv6 = string
+      })
+      service_cidr = object({
+        ipv4 = string
+        ipv6 = string
       })
     })
     nodes = object({
@@ -100,20 +117,26 @@ variable "cluster" {
         protocol    = string
         direction   = string
         port        = string
-        type        = string
         source_ips  = list(string)
       }))
     })
   })
   default = {
     name    = ""
-    version = "v1.34.3"
+    version = "v1.35.1"
     url = {
-      main = ""
-      prefixes = {
-        api      = "k8s"
-        external = "ext"
-        internal = "int"
+      dns       = ""
+      main      = ""
+      apiserver = ""
+    }
+    ipcfg = {
+      pod_cidr = {
+        ipv4 = "10.244.0.0/16"
+        ipv6 = "2001:db8:42:0::/56"
+      }
+      service_cidr = {
+        ipv4 = "10.96.0.0/12"
+        ipv6 = "2001:db8:42:1::/112"
       }
     }
     nodes = {

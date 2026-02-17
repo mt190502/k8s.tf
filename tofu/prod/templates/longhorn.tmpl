@@ -1,6 +1,7 @@
+---
 machine:
-  sysctls:
-    vm.nr_hugepages: "1024"
+#  sysctls:
+#    vm.nr_hugepages: "1024"           #~ Linux ate my ram!
   kernel:
     modules:
       - name: nvme_tcp

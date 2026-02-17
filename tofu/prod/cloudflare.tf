@@ -1,35 +1,47 @@
-resource "cloudflare_dns_record" "masters_v4" {
+resource "cloudflare_dns_record" "masters" {
   for_each = {
     for node in values(local.hetzner_nodes) : node.name => node
     if node.role == "controlplane"
   }
   zone_id = var.tokens.cloudflare.zone_id
-  name    = local.cluster_fqdn.api
-  content = local.tailscale_nodes[each.value.name].addresses[0]
+  name    = var.cluster.url.apiserver
+  content = local.tailscale_ipv4[each.value.name]
   comment = each.value.name
   type    = "A"
-  ttl     = 3600
+  ttl     = 60
 }
 
 resource "cloudflare_dns_record" "masters_v6" {
-  for_each = {
+  for_each = var.talos.options.dualstack ? {
     for node in values(local.hetzner_nodes) : node.name => node
     if node.role == "controlplane"
-  }
+  } : {}
   zone_id = var.tokens.cloudflare.zone_id
-  name    = local.cluster_fqdn.api
-  content = local.tailscale_nodes[each.value.name].addresses[1]
+  name    = var.cluster.url.apiserver
+  content = local.tailscale_ipv6[each.value.name]
   comment = each.value.name
   type    = "AAAA"
-  ttl     = 3600
+  ttl     = 60
 }
 
 resource "cloudflare_dns_record" "lb" {
   for_each = local.hetzner_nodes
   zone_id  = var.tokens.cloudflare.zone_id
-  name     = local.cluster_fqdn.external
-  content  = local.tailscale_nodes[each.value.name].addresses[0]
+  name     = var.cluster.url.main
+  content  = hcloud_server.nodes[each.value.name].ipv4_address
   comment  = each.value.name
+  proxied  = true
   type     = "A"
-  ttl      = 3600
+  ttl      = 1
+}
+
+resource "cloudflare_dns_record" "lb_v6" {
+  for_each = var.talos.options.dualstack ? local.hetzner_nodes : {}
+  zone_id  = var.tokens.cloudflare.zone_id
+  name     = var.cluster.url.main
+  content  = hcloud_server.nodes[each.value.name].ipv6_address
+  comment  = each.value.name
+  proxied  = true
+  type     = "AAAA"
+  ttl      = 1
 }

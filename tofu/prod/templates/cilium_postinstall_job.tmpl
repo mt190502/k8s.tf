@@ -1,0 +1,120 @@
+---
+cluster:
+  inlineManifests:
+    - name: cilium-install
+      contents: |
+        ---
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRoleBinding
+        metadata:
+          name: cilium-kubelet-admin
+        roleRef:
+          apiGroup: rbac.authorization.k8s.io
+          kind: ClusterRole
+          name: system:kubelet-api-admin
+        subjects:
+        - kind: User
+          name: apiserver-kubelet-client
+          apiGroup: rbac.authorization.k8s.io
+        - kind: User
+          name: kube-apiserver-kubelet-client
+          apiGroup: rbac.authorization.k8s.io
+        ---
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRoleBinding
+        metadata:
+          name: cilium-install
+        roleRef:
+          apiGroup: rbac.authorization.k8s.io
+          kind: ClusterRole
+          name: cluster-admin
+        subjects:
+        - kind: ServiceAccount
+          name: cilium-install
+          namespace: kube-system
+        ---
+        apiVersion: v1
+        kind: ServiceAccount
+        metadata:
+          name: cilium-install
+          namespace: kube-system
+        ---
+        apiVersion: batch/v1
+        kind: Job
+        metadata:
+          name: helm-install-cilium
+          namespace: kube-system
+        spec:
+          backoffLimit: 10
+          template:
+            metadata:
+              labels:
+                app: helm-install-cilium
+            spec:
+              restartPolicy: OnFailure
+              tolerations:
+                - operator: Exists
+                - effect: NoSchedule
+                  operator: Exists
+                - effect: NoExecute
+                  operator: Exists
+                - effect: PreferNoSchedule
+                  operator: Exists
+                - key: node-role.kubernetes.io/control-plane
+                  operator: Exists
+                  effect: NoSchedule
+                - key: node-role.kubernetes.io/control-plane
+                  operator: Exists
+                  effect: NoExecute
+                - key: node-role.kubernetes.io/control-plane
+                  operator: Exists
+                  effect: PreferNoSchedule
+              affinity:
+                nodeAffinity:
+                  requiredDuringSchedulingIgnoredDuringExecution:
+                    nodeSelectorTerms:
+                      - matchExpressions:
+                          - key: node-role.kubernetes.io/control-plane
+                            operator: Exists
+              serviceAccount: cilium-install
+              serviceAccountName: cilium-install
+              hostNetwork: true
+              containers:
+              - name: helm-install-cilium
+                image: alpine:latest
+                env:
+                - name: KUBERNETES_SERVICE_HOST
+                  value: "127.0.0.1"
+                - name: KUBERNETES_SERVICE_PORT
+                  value: "${SRV_PORT}"
+                command:
+                  - sh
+                  - -c
+                  - |
+                    apk add --no-cache helm
+                    helm repo add cilium https://helm.cilium.io/
+                    helm repo update
+                    helm upgrade --install cilium cilium/cilium --namespace kube-system \
+                      --set bpf.masquerade=true \
+                      --set cgroup.autoMount.enabled=false \
+                      --set cgroup.hostRoot=/sys/fs/cgroup \
+                      --set encryption.enabled=true \
+                      --set encryption.nodeEncryption=true \
+                      --set encryption.type=wireguard \
+                      --set envoy.enabled=true \
+                      --set envoyConfig.enabled=true \
+                      --set ipam.mode=kubernetes \
+                      --set ipv6.enabled=${DUALSTACK} \
+                      --set k8sServiceHost=$KUBERNETES_SERVICE_HOST \
+                      --set k8sServicePort=$KUBERNETES_SERVICE_PORT \
+                      --set kubeProxyReplacement=true \
+                      --set operator.extraEnv[0].name=KUBERNETES_SERVICE_HOST \
+                      --set operator.extraEnv[1].name=KUBERNETES_SERVICE_PORT \
+                      --set operator.useHostNetwork=true \
+                      --set routingMode=tunnel \
+                      --set securityContext.capabilities.ciliumAgent={CHOWN,KILL,NET_ADMIN,NET_RAW,IPC_LOCK,SYS_ADMIN,SYS_RESOURCE,DAC_OVERRIDE,FOWNER,SETGID,SETUID} \
+                      --set securityContext.capabilities.cleanCiliumState={NET_ADMIN,SYS_ADMIN,SYS_RESOURCE} \
+                      --set tunnelMTU=1420 \
+                      --set tunnelProtocol=vxlan \
+                      --set-string operator.extraEnv[0].value=$KUBERNETES_SERVICE_HOST \
+                      --set-string operator.extraEnv[1].value=$KUBERNETES_SERVICE_PORT

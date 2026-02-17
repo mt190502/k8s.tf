@@ -16,13 +16,26 @@ data "tailscale_device" "workers" {
   ]
 }
 
-# resource "tailscale_device_tags" "nodes" {
-#   #~ not required if tags are set in the provided client configuration
-#   for_each  = local.tailscale_nodes
-#   device_id = each.value.node_id
-#   tags      = ["k8s-node", "servers"]
-#   depends_on = [
-#     data.tailscale_device.masters,
-#     data.tailscale_device.workers
-#   ]
-# }
+resource "null_resource" "destroy_tailscale" {
+  for_each = {
+    for k, d in local.tailscale_nodes : k => d.id
+  }
+  
+  provisioner "local-exec" {
+    when = destroy
+    command = <<-EOT
+      TOKEN=$(curl -sX POST "https://api.tailscale.com/api/v2/oauth/token" \
+        -d "client_id=${self.triggers.oauth_client_id}" \
+        -d "client_secret=${self.triggers.oauth_client_secret}" \
+        -d "grant_type=client_credentials" | jq -r '.access_token')
+      curl -sX DELETE "https://api.tailscale.com/api/v2/device/${self.triggers.device_id}" \
+        -H "Authorization: Bearer $TOKEN" || true
+    EOT
+  }
+  
+  triggers = {
+    device_id = each.value
+    oauth_client_id = var.tokens.tailscale.client_id
+    oauth_client_secret = var.tokens.tailscale.client_secret
+  }
+}

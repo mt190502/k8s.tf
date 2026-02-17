@@ -82,7 +82,9 @@ apply:
 	echo "Applying production infrastructure with Terraform..."
 	cd tofu/prod && \
 	  tofu init -upgrade && \
-	  tofu apply -var-file=../secret.tfvars -var-file=variables.tfvars -auto-approve || true
+	  tofu apply -var-file=../secret.tfvars -var-file=variables.tfvars && \
+	  tofu output -raw -var-file=../secret.tfvars -var-file=variables.tfvars kubeconfig > ~/.kube/srv-test.mtaha.dev && \
+	  tofu output -raw -var-file=../secret.tfvars -var-file=variables.tfvars talosconfig > ~/.talos/config
 	echo "Terraform apply completed successfully!"
 	$(MAKE) _sops MODE=encrypt TARGET_FILE=tofu/secret.tfvars
 

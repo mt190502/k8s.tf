@@ -4,10 +4,15 @@
 //
 //////////////////////////////////////////////////
 talos = {
-  version = "v1.12.2"
+  version = "v1.12.4"
   images = {
-    amd64 = { id = "356499561", code = "cx33" }
-    arm64 = { id = "356499560", code = "cax11" }
+    amd64 = { id = "358263593", code = "cx33" }
+    arm64 = { id = "358263592", code = "cax11" }
+  }
+  options = {
+    dualstack = true
+    kubespan  = false
+    kubeprism = true
   }
 }
 
@@ -18,26 +23,27 @@ talos = {
 //
 /////////////////////////////////////////////////
 cluster = {
-  name    = "srv-test.mtaha.dev"
-  version = "v1.34.3"
+  name    = "srv.mtaha.dev"
+  version = "v1.35.1"
   url = {
-    main = "srv-test.mtaha.dev"
-    prefixes = {
-      api      = "k8s"
-      external = "lb"
-      internal = "int"
+    dns       = "mtaha.dev"
+    main      = "srv.mtaha.dev"
+    apiserver = "k8s.srv.mtaha.dev"
+  }
+  ipcfg = {
+    pod_cidr = {
+      ipv4 = "10.244.0.0/16"
+      ipv6 = "2001:db8:42:0::/56"
+    }
+    service_cidr = {
+      ipv4 = "10.96.0.0/12"
+      ipv6 = "2001:db8:42:1::/112"
     }
   }
   nodes = {
     masters = [
       {
-        name     = "m1-test"
-        type     = "arm64"
-        location = "fsn1"
-        taints   = []
-      },
-      {
-        name     = "m2-test"
+        name     = "m1"
         type     = "arm64"
         location = "hel1"
         taints   = []
@@ -45,15 +51,15 @@ cluster = {
     ]
     workers = [
       {
-        name     = "w1-test"
+        name     = "w1"
         type     = "amd64"
-        location = "nbg1"
+        location = "hel1"
         taints   = []
       },
       {
-        name     = "w2-test"
+        name     = "w2"
         type     = "amd64"
-        location = "fsn1"
+        location = "hel1"
         taints   = []
       }
     ]
@@ -67,7 +73,6 @@ cluster = {
         protocol    = "tcp",
         direction   = "in",
         port        = "443",
-        type        = "both",
         source_ips = [
           "0.0.0.0/0",
           "::/0"
@@ -79,7 +84,6 @@ cluster = {
         protocol    = "udp",
         direction   = "in",
         port        = "443",
-        type        = "both",
         source_ips = [
           "0.0.0.0/0",
           "::/0"
@@ -91,7 +95,6 @@ cluster = {
         protocol    = "tcp",
         direction   = "in",
         port        = "30000-32767",
-        type        = "both",
         source_ips = [
           "0.0.0.0/0",
           "::/0"
@@ -103,7 +106,28 @@ cluster = {
         protocol    = "udp",
         direction   = "in",
         port        = "30000-32767",
-        type        = "both",
+        source_ips = [
+          "0.0.0.0/0",
+          "::/0"
+        ]
+      },
+      {
+        short_name  = "tailscale"
+        description = "Allow Tailscale traffic",
+        protocol    = "udp",
+        direction   = "in",
+        port        = "41641",
+        source_ips = [
+          "0.0.0.0/0",
+          "::/0"
+        ]
+      },
+      {
+        short_name  = "wireguard"
+        description = "Allow pod2pod WireGuard traffic",
+        protocol    = "udp",
+        direction   = "in",
+        port        = "51821",
         source_ips = [
           "0.0.0.0/0",
           "::/0"
