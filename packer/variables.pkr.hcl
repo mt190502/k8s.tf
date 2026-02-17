@@ -7,7 +7,7 @@
 variable "talos_version" {
   description = "Talos version to use for the cluster"
   type        = string
-  default     = "v1.12.2"
+  default     = "v1.12.4"
 }
 
 variable "talos_image_id" {
