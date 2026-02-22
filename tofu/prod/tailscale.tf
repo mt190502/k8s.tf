@@ -20,9 +20,9 @@ resource "null_resource" "destroy_tailscale" {
   for_each = {
     for k, d in local.tailscale_nodes : k => d.id
   }
-  
+
   provisioner "local-exec" {
-    when = destroy
+    when    = destroy
     command = <<-EOT
       TOKEN=$(curl -sX POST "https://api.tailscale.com/api/v2/oauth/token" \
         -d "client_id=${self.triggers.oauth_client_id}" \
@@ -32,10 +32,10 @@ resource "null_resource" "destroy_tailscale" {
         -H "Authorization: Bearer $TOKEN" || true
     EOT
   }
-  
+
   triggers = {
-    device_id = each.value
-    oauth_client_id = var.tokens.tailscale.client_id
+    device_id           = each.value
+    oauth_client_id     = var.tokens.tailscale.client_id
     oauth_client_secret = var.tokens.tailscale.client_secret
   }
 }
