@@ -53,7 +53,7 @@ data "talos_machine_configuration" "nodes" {
         ])
       }),
       templatefile("templates/longhorn.tmpl", {}),
-      templatefile("templates/metrics.tmpl", {}),
+      templatefile("templates/extras.tmpl", {}),
       templatefile("templates/tailscale.tmpl", {
         TS_AUTHKEY  = var.tokens.tailscale.auth_key,
         TS_HOSTNAME = each.value.name

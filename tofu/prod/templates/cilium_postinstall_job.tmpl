@@ -102,12 +102,17 @@ cluster:
                       --set encryption.nodeEncryption=true \
                       --set encryption.type=wireguard \
                       --set envoy.enabled=true \
+                      --set envoy.securityContext.capabilities.envoy={NET_BIND_SERVICE,NET_ADMIN,SYS_ADMIN} \
+                      --set envoy.securityContext.capabilities.keepCapNetBindService=true \
                       --set envoyConfig.enabled=true \
+                      --set gatewayAPI.enabled=true \
+                      --set gatewayAPI.hostNetwork.enabled=true \
                       --set ipam.mode=kubernetes \
                       --set ipv6.enabled=${DUALSTACK} \
                       --set k8sServiceHost=$KUBERNETES_SERVICE_HOST \
                       --set k8sServicePort=$KUBERNETES_SERVICE_PORT \
                       --set kubeProxyReplacement=true \
+                      --set l7Proxy=true \
                       --set operator.extraEnv[0].name=KUBERNETES_SERVICE_HOST \
                       --set operator.extraEnv[1].name=KUBERNETES_SERVICE_PORT \
                       --set operator.useHostNetwork=true \
