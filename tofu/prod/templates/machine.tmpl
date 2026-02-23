@@ -9,9 +9,6 @@ ${CERT_SANS}
       - 2606:4700:4700::1111
       - 2620:fe::fe
   sysctls:
-    net.bridge.bridge-nf-call-ip6tables: "1"
-    net.bridge.bridge-nf-call-iptables: "1"
-    net.ipv4.conf.all.src_valid_mark: "1"
     net.ipv4.ip_forward: "1"
     net.ipv6.conf.all.forwarding: "1"
   kubelet:
