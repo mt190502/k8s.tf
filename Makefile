@@ -9,6 +9,8 @@ default:
 	echo " secrets:       - Encrypt/decrypt secrets with SOPS"
 	echo "   encrypt-all  - Encrypt all secrets files"
 	echo "   decrypt-all  - Decrypt all secrets files"
+	echo " manifests:     - Manage Terraform manifests for different environments"
+	echo "   install      - Install apps under manifests/ directory"
 	echo " dev:           - Development environment"
 	echo "   dev-build    - Build Packer images for development"
 	echo "   dev-plan     - Plan development infrastructure"
@@ -49,12 +51,24 @@ _sops:
 
 	
 decrypt-all:
-	$(MAKE) _sops MODE=decrypt TARGET_FILE=packer/secret.hcl
-	$(MAKE) _sops MODE=decrypt TARGET_FILE=tofu/secret.tfvars
-
+	for file in $$(find . -type f \( -name "*secret*.hcl" -o -name "*secret*.tfvars" \)); do \
+        $(MAKE) _sops MODE=decrypt TARGET_FILE="$$file"; \
+    done
+	
 encrypt-all:
-	$(MAKE) _sops MODE=encrypt TARGET_FILE=packer/secret.hcl
-	$(MAKE) _sops MODE=encrypt TARGET_FILE=tofu/secret.tfvars	
+	for file in $$(find . -type f \( -name "*secret*.hcl" -o -name "*secret*.tfvars" \)); do \
+        $(MAKE) _sops MODE=encrypt TARGET_FILE="$$file"; \
+    done
+	
+
+install:
+	clear
+	$(MAKE) _sops MODE=decrypt TARGET_FILE=manifests/secret.tfvars
+	echo "Installing applications..."
+	cd manifests && \
+	tofu init -upgrade && \
+	tofu apply -var-file=secret.tfvars
+	$(MAKE) _sops MODE=encrypt TARGET_FILE=manifests/secret.tfvars
 
 	
 	
