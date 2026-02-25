@@ -1,4 +1,4 @@
-.PHONY: default init
+.PHONY: default init install
 .SILENT: 
 
 default:
@@ -61,6 +61,7 @@ encrypt-all:
     done
 	
 
+
 install:
 	clear
 	$(MAKE) _sops MODE=decrypt TARGET_FILE=manifests/secret.tfvars
@@ -71,7 +72,7 @@ install:
 	$(MAKE) _sops MODE=encrypt TARGET_FILE=manifests/secret.tfvars
 
 	
-	
+
 build:
 	clear
 	$(MAKE) _sops MODE=decrypt TARGET_FILE=packer/secret.hcl
@@ -97,7 +98,7 @@ apply:
 	cd tofu/prod && \
 	  tofu init -upgrade && \
 	  tofu apply -var-file=../secret.tfvars -var-file=variables.tfvars && \
-	  tofu output -raw -var-file=../secret.tfvars -var-file=variables.tfvars kubeconfig > ~/.kube/srv-test.mtaha.dev && \
+	  tofu output -raw -var-file=../secret.tfvars -var-file=variables.tfvars kubeconfig > ~/.kube/srv.mtaha.dev && \
 	  tofu output -raw -var-file=../secret.tfvars -var-file=variables.tfvars talosconfig > ~/.talos/config
 	echo "Terraform apply completed successfully!"
 	$(MAKE) _sops MODE=encrypt TARGET_FILE=tofu/secret.tfvars
@@ -134,8 +135,12 @@ dev-destroy:
 	
 lint:
 	echo "Linting Terraform and HCL files..."
+	$(MAKE) decrypt-all
 	cd packer && \
 	packer fmt *pkr*.hcl && \
+	cd ../manifests && \
+    tofu fmt -recursive && \
     cd ../tofu && \
     tofu fmt -recursive
 	echo "Linting completed successfully!"
+	$(MAKE) encrypt-all
