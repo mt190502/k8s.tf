@@ -1,9 +1,10 @@
-resource "kubernetes_manifest" "clusterissuer" {
-  manifest = {
+locals {
+  clusterissuer_name = "mainissuer"
+  clusterissuer = yamlencode({
     apiVersion = "cert-manager.io/v1"
     kind       = "ClusterIssuer"
     metadata = {
-      name = "mainissuer"
+      name = local.clusterissuer_name
     }
     spec = {
       acme = {
@@ -26,6 +27,22 @@ resource "kubernetes_manifest" "clusterissuer" {
         ]
       }
     }
+  })
+}
+
+resource "null_resource" "clusterissuer" {
+  triggers = {
+    name         = local.clusterissuer_name
+    manifest_sha = sha256(local.clusterissuer)
+  }
+
+  provisioner "local-exec" {
+    command = "kubectl apply -f - <<EOF\n${local.clusterissuer}\nEOF"
+  }
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = "kubectl delete clusterissuer ${self.triggers.name} --ignore-not-found=true"
   }
 
   depends_on = [

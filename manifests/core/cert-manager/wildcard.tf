@@ -1,13 +1,14 @@
-resource "kubernetes_manifest" "certificate" {
-  manifest = {
+locals {
+  certificate_name = "wildcard-mtaha.dev-tls"
+  certificate = yamlencode({
     apiVersion = "cert-manager.io/v1"
     kind       = "Certificate"
     metadata = {
-      name      = "wildcard-mtaha.dev-tls"
+      name      = local.certificate_name
       namespace = kubernetes_namespace_v1.this.metadata[0].name
     }
     spec = {
-      secretName = "wildcard-mtaha.dev-tls"
+      secretName = local.certificate_name
       secretTemplate = {
         annotations = {
           "reflector.v1.k8s.emberstack.com/reflection-allowed"            = "true"
@@ -21,10 +22,27 @@ resource "kubernetes_manifest" "certificate" {
         "*.mtaha.dev"
       ]
       issuerRef = {
-        name = kubernetes_manifest.clusterissuer.manifest.metadata.name
+        name = local.clusterissuer_name
         kind = "ClusterIssuer"
       }
     }
+  })
+}
+
+resource "null_resource" "certificate" {
+  triggers = {
+    name         = local.certificate_name
+    namespace    = kubernetes_namespace_v1.this.metadata[0].name
+    manifest_sha = sha256(local.certificate)
+  }
+
+  provisioner "local-exec" {
+    command = "kubectl apply -f - <<EOF\n${local.certificate}\nEOF"
+  }
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = "kubectl delete certificate wildcard-mtaha.dev-tls -n ${self.triggers.namespace} --ignore-not-found=true"
   }
 
   depends_on = [

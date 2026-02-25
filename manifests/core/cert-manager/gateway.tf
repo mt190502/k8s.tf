@@ -6,7 +6,7 @@ resource "kubernetes_manifest" "gateway" {
       name      = "gateway"
       namespace = kubernetes_namespace_v1.this.metadata[0].name
       annotations = {
-        "cert-manager.io/cluster-issuer" = kubernetes_manifest.clusterissuer.manifest.metadata.name
+        "cert-manager.io/cluster-issuer" = local.clusterissuer_name
       }
     }
     spec = {
@@ -14,13 +14,14 @@ resource "kubernetes_manifest" "gateway" {
       listeners = [
         {
           name     = "websecure"
+          hostname = "*.mtaha.dev"
           port     = 443
           protocol = "HTTPS"
           tls = {
             mode = "Terminate"
             certificateRefs = [
               {
-                name      = kubernetes_secret_v1.this.metadata[0].name
+                name      = local.certificate_name
                 namespace = kubernetes_namespace_v1.this.metadata[0].name
               }
             ]
@@ -36,7 +37,7 @@ resource "kubernetes_manifest" "gateway" {
   }
 
   depends_on = [
-    kubernetes_manifest.clusterissuer,
-    kubernetes_manifest.certificate
+    null_resource.clusterissuer,
+    null_resource.certificate
   ]
 }
