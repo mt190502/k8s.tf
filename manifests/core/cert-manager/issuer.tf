@@ -50,12 +50,12 @@ resource "null_resource" "clusterissuer" {
   }
 
   provisioner "local-exec" {
-    command = "kubectl apply -f - <<EOF\n${local.clusterissuer}\nEOF"
+    command = "[ \"true\" = \"${self.triggers.exists}\" ] || kubectl apply -f - <<EOF\n${local.clusterissuer}\nEOF"
   }
 
   provisioner "local-exec" {
     when    = destroy
-    command = "kubectl delete clusterissuer ${self.triggers.name} --ignore-not-found=true"
+    command = "[ \"true\" = \"${self.triggers.exists}\" ] && kubectl delete clusterissuer ${self.triggers.name} --ignore-not-found=true"
   }
 
   depends_on = [

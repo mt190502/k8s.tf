@@ -50,12 +50,12 @@ resource "null_resource" "certificate" {
   }
 
   provisioner "local-exec" {
-    command = "kubectl apply -f - <<EOF\n${local.certificate}\nEOF"
+    command = "[ \"true\" = \"${self.triggers.exists}\" ] || kubectl apply -f - <<EOF\n${local.certificate}\nEOF"
   }
 
   provisioner "local-exec" {
     when    = destroy
-    command = "kubectl delete certificate wildcard-mtaha.dev-tls -n ${self.triggers.namespace} --ignore-not-found=true"
+    command = "[ \"true\" = \"${self.triggers.exists}\" ] && kubectl delete certificate wildcard-mtaha.dev-tls -n ${self.triggers.namespace} --ignore-not-found=true"
   }
 
   depends_on = [
