@@ -1,3 +1,7 @@
+#~ https://github.com/hashicorp/terraform-provider-kubernetes/issues/2673
+#~ https://github.com/hashicorp/terraform-provider-kubernetes/issues/2777
+#~ https://www.google.com/search?q=hashicorp+kubernetes+api+did+not+recognize+groupversionkind
+
 locals {
   certificate_name = "wildcard-mtaha.dev-tls"
   certificate = yamlencode({
@@ -29,11 +33,20 @@ locals {
   })
 }
 
+data "external" "certificate_exists" {
+  program = [
+    "bash",
+    "-c",
+    "kubectl get certificate ${local.certificate_name} -n ${kubernetes_namespace_v1.this.metadata[0].name} >/dev/null 2>&1 && echo '{\"exists\":\"true\"}' || echo '{\"exists\":\"false\"}'",
+  ]
+}
+
 resource "null_resource" "certificate" {
   triggers = {
     name         = local.certificate_name
     namespace    = kubernetes_namespace_v1.this.metadata[0].name
     manifest_sha = sha256(local.certificate)
+    exists       = data.external.certificate_exists.result.exists
   }
 
   provisioner "local-exec" {

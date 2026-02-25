@@ -1,3 +1,7 @@
+#~ https://github.com/hashicorp/terraform-provider-kubernetes/issues/2673
+#~ https://github.com/hashicorp/terraform-provider-kubernetes/issues/2777
+#~ https://www.google.com/search?q=hashicorp+kubernetes+api+did+not+recognize+groupversionkind
+
 locals {
   clusterissuer_name = "mainissuer"
   clusterissuer = yamlencode({
@@ -30,10 +34,19 @@ locals {
   })
 }
 
+data "external" "clusterissuer_exists" {
+  program = [
+    "bash",
+    "-c",
+    "kubectl get clusterissuer ${local.clusterissuer_name} >/dev/null 2>&1 && echo '{\"exists\":\"true\"}' || echo '{\"exists\":\"false\"}'",
+  ]
+}
+
 resource "null_resource" "clusterissuer" {
   triggers = {
     name         = local.clusterissuer_name
     manifest_sha = sha256(local.clusterissuer)
+    exists       = data.external.clusterissuer_exists.result.exists
   }
 
   provisioner "local-exec" {
