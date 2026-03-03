@@ -1,0 +1,105 @@
+---
+cluster:
+  inlineManifests:
+    - name: istio-install
+      contents: |
+        ---
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRoleBinding
+        metadata:
+          name: istio-install
+        roleRef:
+          apiGroup: rbac.authorization.k8s.io
+          kind: ClusterRole
+          name: cluster-admin
+        subjects:
+        - kind: ServiceAccount
+          name: istio-install
+          namespace: kube-system
+        ---
+        apiVersion: v1
+        kind: ServiceAccount
+        metadata:
+          name: istio-install
+          namespace: kube-system
+        ---
+        apiVersion: batch/v1
+        kind: Job
+        metadata:
+          name: helm-install-istio
+          namespace: kube-system
+        spec:
+          backoffLimit: 10
+          template:
+            metadata:
+              labels:
+                app: helm-install-istio
+            spec:
+              restartPolicy: OnFailure
+              tolerations:
+                - operator: Exists
+                - effect: NoSchedule
+                  operator: Exists
+                - effect: NoExecute
+                  operator: Exists
+                - effect: PreferNoSchedule
+                  operator: Exists
+                - key: node-role.kubernetes.io/control-plane
+                  operator: Exists
+                  effect: NoSchedule
+                - key: node-role.kubernetes.io/control-plane
+                  operator: Exists
+                  effect: NoExecute
+                - key: node-role.kubernetes.io/control-plane
+                  operator: Exists
+                  effect: PreferNoSchedule
+              affinity:
+                nodeAffinity:
+                  requiredDuringSchedulingIgnoredDuringExecution:
+                    nodeSelectorTerms:
+                      - matchExpressions:
+                          - key: node-role.kubernetes.io/control-plane
+                            operator: Exists
+              serviceAccount: istio-install
+              serviceAccountName: istio-install
+              hostNetwork: true
+              containers:
+              - name: helm-install-istio
+                image: alpine:latest
+                env:
+                - name: KUBERNETES_SERVICE_HOST
+                  value: "127.0.0.1"
+                - name: KUBERNETES_SERVICE_PORT
+                  value: "${SRV_PORT}"
+                command:
+                  - sh
+                  - -c
+                  - |
+                    set -euo pipefail
+                    apk add --no-cache helm kubectl
+
+                    kubectl get namespace istio-system >/dev/null 2>&1 || kubectl create namespace istio-system
+                    kubectl label namespace istio-system \
+                      pod-security.kubernetes.io/enforce=privileged \
+                      pod-security.kubernetes.io/audit=privileged \
+                      pod-security.kubernetes.io/warn=privileged
+
+                    helm repo add istio https://istio-release.storage.googleapis.com/charts
+                    helm repo update
+
+                    # Install ambient dataplane components via Helm:
+                    # - base: CRDs
+                    # - istiod: control plane
+                    # - cni: ambient redirection
+                    # - ztunnel: node proxy for ambient
+                    # - istio-ingress: optional, for ingress gateway (not required for ambient)
+                    helm upgrade --install istio-base istio/base --namespace istio-system --version ${ISTIO_VERSION} --wait
+                    helm upgrade --install istiod istio/istiod --namespace istio-system --version ${ISTIO_VERSION} \
+                      --set profile=ambient \
+                      --set global.proxy.clusterDomain=${CLUSTER_DOMAIN} \
+                      --wait
+                    helm upgrade --install istio-cni istio/cni --namespace istio-system --version ${ISTIO_VERSION} --set profile=ambient --wait
+                    helm upgrade --install ztunnel istio/ztunnel --namespace istio-system --version ${ISTIO_VERSION}
+                    helm upgrade --install istio-ingress istio/gateway --namespace istio-system --version ${ISTIO_VERSION} \
+                      --set global.proxy.clusterDomain=${CLUSTER_DOMAIN} \
+                      --wait
