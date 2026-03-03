@@ -1,9 +1,10 @@
 resource "helm_release" "this" {
-  name       = "longhorn"
-  repository = "https://charts.longhorn.io"
-  version    = "1.11.0"
-  chart      = "longhorn"
-  namespace  = kubernetes_namespace_v1.this.metadata[0].name
+  name            = "longhorn"
+  repository      = "https://charts.longhorn.io"
+  version         = "1.11.0"
+  chart           = "longhorn"
+  namespace       = kubernetes_namespace_v1.this.metadata[0].name
+  upgrade_install = true
   values = [
     <<-EOF
       preUpgradeChecker:
@@ -12,7 +13,6 @@ resource "helm_release" "this" {
         replicas: 3
     EOF
   ]
-
   depends_on = [
     kubernetes_namespace_v1.this
   ]

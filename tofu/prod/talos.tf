@@ -18,8 +18,10 @@ data "talos_machine_configuration" "nodes" {
         ])
       }),
       templatefile("templates/cilium_postinstall_job.tmpl", {
-        DUALSTACK = var.talos.options.dualstack ? "true" : "false"
-        SRV_PORT  = var.talos.options.kubeprism ? 7445 : 6443
+        CILIUM_VERSION = "1.19.1"
+        DUALSTACK      = var.talos.options.dualstack ? "true" : "false"
+        SRV_PORT       = var.talos.options.kubeprism ? 7445 : 6443
+        CLUSTER_DOMAIN = var.cluster.url.dns
       })
     ] : [],
 

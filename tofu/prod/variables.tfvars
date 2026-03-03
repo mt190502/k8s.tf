@@ -127,7 +127,18 @@ cluster = {
         description = "Allow pod2pod WireGuard traffic",
         protocol    = "udp",
         direction   = "in",
-        port        = "51821",
+        port        = "51871",
+        source_ips = [
+          "0.0.0.0/0",
+          "::/0"
+        ]
+      },
+      {
+        short_name  = "cilium-vxlan"
+        description = "Allow Cilium VXLAN tunnel traffic",
+        protocol    = "udp",
+        direction   = "in",
+        port        = "8472",
         source_ips = [
           "0.0.0.0/0",
           "::/0"

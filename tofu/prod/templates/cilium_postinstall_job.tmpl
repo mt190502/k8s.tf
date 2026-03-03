@@ -94,32 +94,33 @@ cluster:
                     apk add --no-cache helm
                     helm repo add cilium https://helm.cilium.io/
                     helm repo update
-                    helm upgrade --install cilium cilium/cilium --namespace kube-system \
+                    helm upgrade --install cilium cilium/cilium --namespace kube-system --version ${CILIUM_VERSION} \
                       --set bpf.masquerade=true \
                       --set cgroup.autoMount.enabled=false \
                       --set cgroup.hostRoot=/sys/fs/cgroup \
                       --set encryption.enabled=true \
                       --set encryption.nodeEncryption=true \
                       --set encryption.type=wireguard \
+                      --set-string extraConfig.node-encryption-opt-out-labels="do-not-encrypt=true" \
                       --set envoy.enabled=true \
                       --set envoy.securityContext.capabilities.envoy={NET_BIND_SERVICE,NET_ADMIN,SYS_ADMIN} \
                       --set envoy.securityContext.capabilities.keepCapNetBindService=true \
                       --set envoyConfig.enabled=true \
                       --set gatewayAPI.enabled=true \
                       --set gatewayAPI.hostNetwork.enabled=true \
+                      --set hubble.enabled=true \
+                      --set hubble.relay.enabled=true \
+                      --set hubble.ui.enabled=true \
+                      --set hubble.peerService.clusterDomain=${CLUSTER_DOMAIN} \
                       --set ipam.mode=kubernetes \
                       --set ipv6.enabled=${DUALSTACK} \
                       --set k8sServiceHost=$KUBERNETES_SERVICE_HOST \
                       --set k8sServicePort=$KUBERNETES_SERVICE_PORT \
                       --set kubeProxyReplacement=true \
                       --set l7Proxy=true \
-                      --set operator.extraEnv[0].name=KUBERNETES_SERVICE_HOST \
-                      --set operator.extraEnv[1].name=KUBERNETES_SERVICE_PORT \
                       --set operator.useHostNetwork=true \
                       --set routingMode=tunnel \
                       --set securityContext.capabilities.ciliumAgent={CHOWN,KILL,NET_ADMIN,NET_RAW,IPC_LOCK,SYS_ADMIN,SYS_RESOURCE,DAC_OVERRIDE,FOWNER,SETGID,SETUID} \
                       --set securityContext.capabilities.cleanCiliumState={NET_ADMIN,SYS_ADMIN,SYS_RESOURCE} \
                       --set tunnelMTU=1420 \
-                      --set tunnelProtocol=vxlan \
-                      --set-string operator.extraEnv[0].value=$KUBERNETES_SERVICE_HOST \
-                      --set-string operator.extraEnv[1].value=$KUBERNETES_SERVICE_PORT
+                      --set tunnelProtocol=vxlan

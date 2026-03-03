@@ -109,7 +109,8 @@ destroy:
 	echo "Destroying production infrastructure with Terraform..."
 	cd tofu/prod && \
 		tofu init -upgrade && \
-		tofu destroy -var-file=../secret.tfvars -var-file=variables.tfvars || true
+		tofu destroy -var-file=../secret.tfvars -var-file=variables.tfvars && \
+	    rm -f ../../manifests/terraform.tfstate*
 	echo "Terraform destroy completed successfully!"
 	$(MAKE) _sops MODE=encrypt TARGET_FILE=tofu/secret.tfvars
 
