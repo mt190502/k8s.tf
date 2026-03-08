@@ -25,14 +25,6 @@ data "talos_machine_configuration" "nodes" {
       })
     ] : [],
 
-    #~ Misc options
-    var.talos.options.kubespan ? [
-      templatefile("templates/kubespan.tmpl", {})
-    ] : [],
-    var.talos.options.kubeprism ? [
-      templatefile("templates/kubeprism.tmpl", {})
-    ] : [],
-
     #~ All nodes
     [
       templatefile("templates/machine.tmpl", {

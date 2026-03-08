@@ -3,6 +3,13 @@ machine:
   certSANs:
 ${CERT_SANS}
   network:
+    interfaces:
+      - interface: tailscale0
+        routes:
+          - network: 100.64.0.0/10
+            metric: 100
+          - network: fd7a:115c:a1e0::/48
+            metric: 100
     nameservers:
       - 1.1.1.1
       - 9.9.9.9

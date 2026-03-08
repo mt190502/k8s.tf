@@ -96,10 +96,10 @@ cluster:
                     helm repo update
                     helm upgrade --install cilium cilium/cilium --namespace kube-system --version ${CILIUM_VERSION} \
                       --set bpf.masquerade=true \
+                      --set bpf.hostLegacyRouting=true \
                       --set cgroup.autoMount.enabled=false \
                       --set cgroup.hostRoot=/sys/fs/cgroup \
                       --set encryption.enabled=true \
-                      --set encryption.nodeEncryption=true \
                       --set encryption.type=wireguard \
                       --set-string extraConfig.node-encryption-opt-out-labels="do-not-encrypt=true" \
                       --set envoy.enabled=true \
@@ -117,7 +117,6 @@ cluster:
                       --set k8sServiceHost=$KUBERNETES_SERVICE_HOST \
                       --set k8sServicePort=$KUBERNETES_SERVICE_PORT \
                       --set kubeProxyReplacement=true \
-                      --set l7Proxy=true \
                       --set operator.useHostNetwork=true \
                       --set routingMode=tunnel \
                       --set securityContext.capabilities.ciliumAgent={CHOWN,KILL,NET_ADMIN,NET_RAW,IPC_LOCK,SYS_ADMIN,SYS_RESOURCE,DAC_OVERRIDE,FOWNER,SETGID,SETUID} \

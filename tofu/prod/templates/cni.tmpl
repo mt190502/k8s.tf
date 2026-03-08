@@ -1,11 +1,8 @@
 ---
 cluster:
-  discovery:
-    enabled: true
   network:
     cni:
       name: none
-    dnsDomain: ${DNS_DOMAIN}
     podSubnets:
 ${POD_CIDRS}
     serviceSubnets:

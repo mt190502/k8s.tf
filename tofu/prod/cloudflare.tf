@@ -48,7 +48,7 @@ resource "cloudflare_dns_record" "lb_v6" {
 
 resource "cloudflare_dns_record" "wildcard" {
   zone_id = var.tokens.cloudflare.zone_id
-  name    = "*.${var.cluster.url.dns}"
+  name    = var.cluster.url.dns == "cluster.local" ? "*" : "*.${var.cluster.url.dns}"
   content = var.cluster.url.main
   comment = "Wildcard record for ${var.cluster.url.dns}"
   proxied = true

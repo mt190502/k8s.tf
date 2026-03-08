@@ -87,7 +87,7 @@ plan: _init
 	echo "Planning production infrastructure with Terraform..."
 	cd tofu/prod && \
 	  tofu init -upgrade && \
-      tofu plan -var-file=../secret.tfvars -var-file=variables.tfvars || true
+      tofu plan -var-file=../secret.tfvars -var-file=variables.tfvars -show-sensitive || true
 	echo "Terraform plan completed successfully!"
 	$(MAKE) _sops MODE=encrypt TARGET_FILE=tofu/secret.tfvars
 
