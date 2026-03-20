@@ -1,0 +1,102 @@
+## ============================================================================================= ##
+#  modules/infra/cloudflare/post/terragrunt.hcl                                                   #
+#                                                                                                 #
+#  Terragrunt wrapper for the Cloudflare post stage --- creates all cluster DNS records.          #
+#                                                                                                 #
+#  Required Inputs                                                                                #
+#   - cluster_url (main, apiserver, dns), cloudflare_api_token, cloudflare_zone_id                #
+#   - dualstack                                                                                   #
+#   - nodes (from hetzner/post), tailscale_ipv4, tailscale_ipv6 (from tailscale/post)             #
+#                                                                                                 #
+#  Apply order:                                                                                   #
+#   talos/pre -> hetzner/post -> tailscale/post -> talos/post -> [cloudflare/post]                #
+## ============================================================================================= ##
+include "common" {
+  path   = find_in_parent_folders("modules/common.hcl")
+  expose = true
+}
+
+exclude {
+  if      = !try(values.enabled, true)
+  actions = ["all"]
+}
+
+terraform {
+  source = "./"
+}
+
+generate "versions" {
+  path      = "versions.tf"
+  if_exists = "overwrite_terragrunt"
+  contents  = <<-EOF
+    terraform {
+      required_providers {
+        cloudflare = { source = "cloudflare/cloudflare", version = "${include.common.locals.providers.cloudflare.version}" }
+      }
+    }
+  EOF
+}
+
+generate "secrets" {
+  path      = "secrets.auto.tfvars"
+  if_exists = "overwrite_terragrunt"
+  contents  = <<-EOF
+    secrets = {
+      api_token = "${try(values.secrets.api_token, "") != "" ? values.secrets.api_token : include.common.locals.mock_cloudflare_api_token}"
+      zone_id   = "${try(values.secrets.zone_id, "") != "" ? values.secrets.zone_id : include.common.locals.mock_cloudflare_zone_id}"
+    }
+  EOF
+}
+
+## --------------------------------------------------------------------------------------------- ##
+#  Dependencies -  enforce apply order and wire outputs from upstream modules as inputs.          #
+## --------------------------------------------------------------------------------------------- ##
+dependency "hetzner_post" {
+  config_path = "../../hetzner/post"
+  mock_outputs = {
+    controlplane_nodes = include.common.locals.mock_nodes_minimal
+    nodes              = include.common.locals.mock_nodes_minimal
+  }
+  mock_outputs_allowed_terraform_commands = include.common.locals.mock_outputs_allowed_terraform_commands
+  mock_outputs_merge_strategy_with_state  = include.common.locals.mock_outputs_merge_strategy_with_state
+}
+
+dependency "tailscale_post" {
+  config_path = "../../tailscale/post"
+  mock_outputs = {
+    node_ipv4 = include.common.locals.mock_tailscale_ipv4
+    node_ipv6 = include.common.locals.mock_tailscale_ipv6
+  }
+  mock_outputs_allowed_terraform_commands = include.common.locals.mock_outputs_allowed_terraform_commands
+  mock_outputs_merge_strategy_with_state  = include.common.locals.mock_outputs_merge_strategy_with_state
+}
+
+dependency "talos_post" {
+  config_path                             = "../../talos/post"
+  skip_outputs                            = true
+  mock_outputs                            = {}
+  mock_outputs_allowed_terraform_commands = include.common.locals.mock_outputs_allowed_terraform_commands
+  mock_outputs_merge_strategy_with_state  = include.common.locals.mock_outputs_merge_strategy_with_state
+}
+
+inputs = {
+  enabled = try(values.enabled, true)
+  config = {
+    cluster_url = {
+      main      = try(values.config.cluster_url.main, "mock.example.com")
+      apiserver = try(values.config.cluster_url.apiserver, "k8s.mock.example.com")
+      dns       = try(values.config.cluster_url.dns, "mock.example.com")
+    }
+    dualstack = try(values.config.dualstack, true)
+  }
+  nodes = {
+    for name, node in try(dependency.hetzner_post.outputs.nodes, {}) : name => {
+      name         = node.name
+      role         = node.role
+      ipv4_address = node.ipv4_address
+      ipv6_address = node.ipv6_address
+    }
+  }
+  tailscale_ipv4 = try(dependency.tailscale_post.outputs.node_ipv4, {})
+  tailscale_ipv6 = try(dependency.tailscale_post.outputs.node_ipv6, {})
+}

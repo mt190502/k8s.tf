@@ -1,0 +1,20 @@
+## ============================================================================================= ##
+#  modules/manifests/core/longhorn/helm.tf                                                        #
+## ============================================================================================= ##
+resource "helm_release" "this" {
+  name            = "longhorn"
+  repository      = "https://charts.longhorn.io"
+  chart           = "longhorn"
+  version         = var.versions.chart
+  namespace       = kubernetes_namespace_v1.this.metadata[0].name
+  upgrade_install = true
+  values = [
+    <<-EOF
+      preUpgradeChecker:
+        jobEnabled: false
+      longhornUI:
+        replicas: 3
+    EOF
+  ]
+  depends_on = [kubernetes_namespace_v1.this]
+}

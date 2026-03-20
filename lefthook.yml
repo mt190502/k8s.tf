@@ -5,9 +5,10 @@ pre-commit:
     glob: "*secret*"
     exclude: 
       - "*/secret.tf"
+      - "*.example"
     run: |
       for f in {all_files}; do
-        if ! grep -Eq "sops|version" "$f"; then
+        if ! sops filestatus "$f" | grep -q "true"; then
           echo "File $f is not encrypted with SOPS"
           exit 1
         fi

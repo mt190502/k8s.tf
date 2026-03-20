@@ -1,40 +1,73 @@
-.PHONY: default init install
-.SILENT: 
+## ============================================================================================= ##
+#  K8S.TF Makefile                                                                                #
+#                                                                                                 #
+#  Authors:                                                                                       #
+#    - Taha <mt190502@mtaha.dev>										                          #
+#                                                                                                 #
+#  Special thanks to:                                                                             #
+#    - Kreato <hi@krea.to>                                                                        #
+#    - Siderolabs Talos Contributors                                                              #
+#                                                                                                 #
+#  Copyright (c) 2026 Taha. All rights reserved.                                                  #
+#  Licensed under the AGPL License. See LICENSE in the project root for license information.      #
+## ============================================================================================= ##
+.PHONY: default generate plan apply destroy clean decrypt encrypt build infra-plan infra-apply infra-destroy manifests-plan manifests-apply manifests-destroy
+.SILENT:
 
-default:
-	echo "Available targets:"
-	echo " general:       - General targets"
-	echo "   init         - Initialize symlinks for providers.tf"
-	echo "   lint         - Lint Terraform files"
-	echo " secrets:       - Encrypt/decrypt secrets with SOPS"
-	echo "   encrypt-all  - Encrypt all secrets files"
-	echo "   decrypt-all  - Decrypt all secrets files"
-	echo " manifests:     - Manage Terraform manifests for different environments"
-	echo "   install      - Install apps under manifests/ directory"
-	echo " dev:           - Development environment"
-	echo "   dev-build    - Build Packer images for development"
-	echo "   dev-plan     - Plan development infrastructure"
-	echo "   dev-apply    - Apply development infrastructure"
-	echo "   dev-destroy  - DANGER: Destroy development infrastructure"
-	echo " prod:          - Production environment"
-	echo "   build        - Build Packer images"
-	echo "   plan         - Plan production infrastructure"
-	echo "   apply        - Apply production infrastructure"
-	echo "   destroy      - DANGER: Destroy production infrastructure"
+## --------------------------------------------------------------------------------------------- ##
+#  Environments 																			      #
+## --------------------------------------------------------------------------------------------- ##
+#~ Default environment is 'prod', but you can specify 'dev' or others as needed.
+ENV ?= prod
 
-_init:
-	echo "Creating symlinks for tofu environments..."
-	ln -sf ../providers.tf tofu/dev/providers.tf
-	ln -sf ../providers.tf tofu/prod/providers.tf
-	echo "Symlinks created successfully!"
-	
+##~ ---------------------------------------------------------------------------- ~##
+#  Provider plugin cache — shared across all units so tofu init only downloads    #
+#  each provider binary once. Works as a fallback alongside Terragrunt's built-in  #
+#  provider_cache_server.                                                          #
+##~ ---------------------------------------------------------------------------- ~##
+PROVIDER_CACHE_DIR ?= $(HOME)/.cache/terragrunt/providers
+export TF_PLUGIN_CACHE_DIR = $(PROVIDER_CACHE_DIR)
+
+##~ ---------------------------------------------------------------------------- ~##
+#  Secrets — stack files read this via read_terragrunt_config()                   #
+#                                                                                  #
+#  Override:                                                                       #
+#    make infra-plan SECRETS=/path/to/other.hcl                                    #
+##~ ---------------------------------------------------------------------------- ~##
+SECRETS ?= $(PWD)/secrets.hcl
+export TERRAGRUNT_SECRETS = $(SECRETS)
+
+##~ ---------------------------------------------------------------------------- ~##
+#  Stack targets                                                                   #
+##~ ---------------------------------------------------------------------------- ~##
+STACK_FILE = $(ENV).stack.hcl
+STACK_DIR  = .terragrunt-stack
+TG_RUN_ALL = terragrunt --working-dir "$(STACK_DIR)" run --all
+TG_RUN_INFRA = terragrunt --working-dir "$(STACK_DIR)/infra/.terragrunt-stack" run --all
+TG_RUN_MANIFESTS = terragrunt --working-dir "$(STACK_DIR)/manifests/.terragrunt-stack" run --all --non-interactive
+STACK_NESTED_DIRS = $(STACK_DIR)/.terragrunt-stack $(STACK_DIR)/*/.terragrunt-stack $(STACK_DIR)/*/*/.terragrunt-stack
+STACK_DEEP_NESTED_DIRS = $(STACK_DIR)/.terragrunt-stack $(STACK_DIR)/*/*/.terragrunt-stack
+KUBE_CONTEXT ?= admin@$(shell awk -F'"' '/^[[:space:]]*cluster_name[[:space:]]*=/{print $$2; exit}' $(ENV).values.hcl)
+
+
+
+## --------------------------------------------------------------------------------------------- ##
+#  Helpers                                                                                        #
+## --------------------------------------------------------------------------------------------- ##
+##~ ---------------------------------------------------------------------------- ~##
+#  SOPS encryption/decryption helper target. Expects the following environment     #
+#  variables to be set:                                                            #
+#    - SOPS_AGE_KEY_FILE: Path to the AGE key file used for encryption/decryption. #
+#    - TARGET_FILE: Path to the file to encrypt or decrypt.						   #
+#    - MODE: Either 'encrypt' or 'decrypt' to specify the operation.               #
+##~ ---------------------------------------------------------------------------- ~##
 _sops:
 	set -euo pipefail; \
 	: "$${SOPS_AGE_KEY_FILE:?SOPS_AGE_KEY_FILE is not set}"; \
 	: "$${TARGET_FILE:?TARGET_FILE is not set}"; \
 	: "$${MODE:?MODE is not set}"; \
 	[ -f "$$SOPS_AGE_KEY_FILE" ] || { echo "Error: SOPS_AGE_KEY_FILE does not exist at $$SOPS_AGE_KEY_FILE"; exit 1; }; \
-	[ -f "$$TARGET_FILE" ] || { echo "Error: TARGET_FILE does not exist at $$TARGET_FILE"; exit 1; }; \
+	[ -f "$$TARGET_FILE" ]       || { echo "Error: TARGET_FILE does not exist at $$TARGET_FILE"; exit 1; }; \
 	if [ "$$MODE" = "decrypt" ]; then \
 		grep -q 'BEGIN AGE ENCRYPTED FILE' "$$TARGET_FILE" || { echo "Error: TARGET_FILE does not appear to be a valid SOPS file or is already decrypted"; exit 0; }; \
 		sops -i -d "$$TARGET_FILE"; \
@@ -48,100 +81,175 @@ _sops:
 		exit 1; \
 	fi
 
+decrypt:
+	for file in $$(find . -type f \( -name "secrets.hcl" -o -name "secret.hcl" \) ! -name "*.example"); do \
+		$(MAKE) _sops MODE=decrypt TARGET_FILE="$$file"; \
+	done
+
+encrypt:
+	for file in $$(find . -type f \( -name "secrets.hcl" -o -name "secret.hcl" \) ! -name "*.example"); do \
+		$(MAKE) _sops MODE=encrypt TARGET_FILE="$$file"; \
+	done
+
+
+##~ ---------------------------------------------------------------------------- ~##
+#  Default target: shows usage info. You can also run 'make help' for the same.    #
+##~ ---------------------------------------------------------------------------- ~##
+default:
+	echo "Available targets:"
+	echo " stack:"
+	echo "   generate           - Generate Terragrunt stack units              (ENV=prod|dev, default: prod)"
+	echo " infra:"
+	echo "   infra-plan         - Plan infra units only                        (ENV=prod|dev, SECRETS=path.hcl)"
+	echo "   infra-apply        - Apply infra units only                       (ENV=prod|dev, SECRETS=path.hcl)"
+	echo "   infra-destroy      - DANGER: Destroy infra units only             (ENV=prod|dev, SECRETS=path.hcl)"
+	echo " manifests:"
+	echo "   manifests-plan     - Plan core manifest units only                (ENV=prod|dev, SECRETS=path.hcl)"
+	echo "   manifests-apply    - Apply core manifest units only               (ENV=prod|dev, SECRETS=path.hcl)"
+	echo "   manifests-destroy  - DANGER: Destroy core manifest units only     (ENV=prod|dev, SECRETS=path.hcl)"
+	echo " all:"
+	echo "   plan               - Plan all units (infra + manifests)           (ENV=prod|dev, SECRETS=path.hcl)"
+	echo "   apply              - Apply all units (infra + manifests)          (ENV=prod|dev, SECRETS=path.hcl)"
+	echo "   destroy            - DANGER: Destroy infra units only             (ENV=prod|dev, SECRETS=path.hcl)"
+	echo " misc:"
+	echo "   clean              - Remove generated .terragrunt-stack/ and .terraform/ directory"
+	echo " secrets:"
+	echo "   encrypt            - Encrypt secrets in place"
+	echo "   decrypt            - Decrypt secrets in place"
+	echo " packer:"
+	echo "   build              - Build Packer images (only for hetzner)"
+
+
+##~ ---------------------------------------------------------------------------- ~##
+#  Generate stack units based on the specified environment.                        #
+##~ ---------------------------------------------------------------------------- ~##
+generate:
+	command -v clear >/dev/null 2>&1 && clear || true
+	echo "Checking secret file for $(ENV) stack: $(SECRETS)"
+	if [ ! -f "$(SECRETS)" ]; then \
+		echo "Error: Secrets file not found at $(SECRETS). Please create it or specify the correct path using SECRETS=path/to/secrets.hcl"; \
+		exit 1; \
+	elif sops filestatus $(SECRETS) | jq -r '.encrypted' | grep -q "true"; then \
+		echo "Error: Secrets file at $(SECRETS) appears to be encrypted. Please decrypt it before proceeding."; \
+		exit 1; \
+	fi
+	echo "Generating stack: $(ENV) ($(STACK_FILE))"
+	ln -sf $(STACK_FILE) terragrunt.stack.hcl
+	terragrunt stack generate || (rm -f terragrunt.stack.hcl; exit 1)
+	rm -rf $(STACK_DEEP_NESTED_DIRS)
+	rm -f terragrunt.stack.hcl
+
+
+##~ ---------------------------------------------------------------------------- ~##
+# Infra plan/apply/destroy targets. These operate only on the infra units.         #
+##~ ---------------------------------------------------------------------------- ~##
+infra-plan: generate
+	echo "Planning infra units..."
+	$(TG_RUN_INFRA) plan -- -show-sensitive
+	rm -rf $(STACK_NESTED_DIRS)
+
+infra-apply: generate
+	echo "Applying infra units..."
+	$(TG_RUN_INFRA) apply
+	rm -rf $(STACK_NESTED_DIRS)
+
+infra-destroy:
+	if [ ! -d "$(STACK_DIR)" ]; then \
+		echo "Error: Stack directory $(STACK_DIR) does not exist. Nothing to destroy."; \
+		exit 1; \
+	fi	
+	echo "Destroying infra units..."
+	$(TG_RUN_INFRA) destroy
+	rm -rf $(STACK_NESTED_DIRS)
+	rm -rf $(STACK_DIR) .terraform
 
 	
-decrypt-all:
-	for file in $$(find . -type f \( -name "*secret*.hcl" -o -name "*secret*.tfvars" \)); do \
-        $(MAKE) _sops MODE=decrypt TARGET_FILE="$$file"; \
-    done
+##~ ---------------------------------------------------------------------------- ~##
+# Manifests plan/apply/destroy targets. These operate only on the manifest units.  #
+##~ ---------------------------------------------------------------------------- ~##
+manifests-plan: generate
+	kubectl cluster-info > /dev/null || { echo "Error: kubeconfig is not valid or cluster is not reachable. Please check your kubeconfig and cluster status."; exit 1; }
+	echo "Planning manifest units..."
+	$(TG_RUN_MANIFESTS) plan -- -show-sensitive
+	rm -rf $(STACK_NESTED_DIRS)
+
+manifests-apply: generate
+	kubectl cluster-info > /dev/null || { echo "Error: kubeconfig is not valid or cluster is not reachable. Please check your kubeconfig and cluster status."; exit 1; }
+	echo "Applying manifest units..."
+	$(TG_RUN_MANIFESTS) apply
+	rm -rf $(STACK_NESTED_DIRS)
+
+manifests-destroy:
+	if [ ! -d "$(STACK_DIR)" ]; then \
+		echo "Error: Stack directory $(STACK_DIR) does not exist. Nothing to destroy."; \
+		exit 1; \
+	fi
+	kubectl cluster-info > /dev/null || { echo "Error: kubeconfig is not valid or cluster is not reachable. Please check your kubeconfig and cluster status."; exit 1; }
+	echo "Destroying manifest units..."
+	$(TG_RUN_MANIFESTS) destroy
+	rm -rf $(STACK_NESTED_DIRS)
+
 	
-encrypt-all:
-	for file in $$(find . -type f \( -name "*secret*.hcl" -o -name "*secret*.tfvars" \)); do \
-        $(MAKE) _sops MODE=encrypt TARGET_FILE="$$file"; \
-    done
-	
+##~ ---------------------------------------------------------------------------- ~##
+# Legacy aliases                                                                   #
+##~ ---------------------------------------------------------------------------- ~##
+plan: generate
+	$(TG_RUN_INFRA) plan -- -show-sensitive
+	if kubectl config get-contexts "$(KUBE_CONTEXT)" > /dev/null 2>&1 && kubectl --context "$(KUBE_CONTEXT)" cluster-info > /dev/null 2>&1; then \
+		if ! $(TG_RUN_MANIFESTS) plan; then \
+			echo "Warning: manifests plan failed (kubeconfig/provider context issue). Infra plan succeeded."; \
+		fi; \
+	else \
+		echo "Warning: kubeconfig context '$(KUBE_CONTEXT)' is not reachable; skipping manifests plan."; \
+	fi
+	rm -rf $(STACK_NESTED_DIRS)
+
+apply: generate
+	$(TG_RUN_INFRA) apply
+	if kubectl cluster-info > /dev/null 2>&1; then \
+		$(TG_RUN_MANIFESTS) apply; \
+	else \
+		echo "Warning: kubeconfig/cluster is not reachable; skipping manifests apply."; \
+	fi
+	rm -rf $(STACK_NESTED_DIRS)
+
+destroy:
+	if [ ! -d "$(STACK_DIR)" ]; then \
+		echo "Error: Stack directory $(STACK_DIR) does not exist. Nothing to destroy."; \
+		exit 1; \
+	fi
+	echo "Destroying infra units only: $(ENV)"
+	$(TG_RUN_INFRA) destroy
+	rm -rf $(STACK_NESTED_DIRS)
+	rm -rf $(STACK_DIR) .terraform
+
+clean:
+	terragrunt stack clean || true
+	rm -rf $(STACK_DIR) .terraform/
+	echo "Cleaned $(STACK_DIR)"
 
 
-install:
-	clear
-	$(MAKE) _sops MODE=decrypt TARGET_FILE=manifests/secret.tfvars
-	echo "Installing applications..."
-	cd manifests && \
-	tofu init -upgrade && \
-	tofu apply -var-file=secret.tfvars
-	$(MAKE) _sops MODE=encrypt TARGET_FILE=manifests/secret.tfvars
-
-	
-
+##~ ---------------------------------------------------------------------------- ~##
+#  Packer build target. This is separate from the main stack targets since it may  #
+# require different secrets and is only relevant for certain providers             #
+# (e.g., Hetzner). It also handles its own encryption/decryption of secrets to     #
+# avoid affecting the main stack secrets.                                          #
+##~ ---------------------------------------------------------------------------- ~##
 build:
-	clear
+	command -v clear >/dev/null 2>&1 && clear || true
 	$(MAKE) _sops MODE=decrypt TARGET_FILE=packer/secret.hcl
 	echo "Building Packer images..."
 	cd packer && packer build -var-file=secret.hcl -var-file=prod.pkrvars.hcl . || true
 	echo "Packer build completed successfully!"
 	$(MAKE) _sops MODE=encrypt TARGET_FILE=packer/secret.hcl
 
-plan: _init
-	clear
-	$(MAKE) _sops MODE=decrypt TARGET_FILE=tofu/secret.tfvars
-	echo "Planning production infrastructure with Terraform..."
-	cd tofu/prod && \
-	  tofu init -upgrade && \
-      tofu plan -var-file=../secret.tfvars -var-file=variables.tfvars -show-sensitive || true
-	echo "Terraform plan completed successfully!"
-	$(MAKE) _sops MODE=encrypt TARGET_FILE=tofu/secret.tfvars
 
-apply:
-	clear
-	$(MAKE) _sops MODE=decrypt TARGET_FILE=tofu/secret.tfvars
-	echo "Applying production infrastructure with Terraform..."
-	cd tofu/prod && \
-	  tofu init -upgrade && \
-	  tofu apply -var-file=../secret.tfvars -var-file=variables.tfvars && \
-	  tofu output -raw -var-file=../secret.tfvars -var-file=variables.tfvars kubeconfig > ~/.kube/srv.mtaha.dev && \
-	  tofu output -raw -var-file=../secret.tfvars -var-file=variables.tfvars talosconfig > ~/.talos/config
-	echo "Terraform apply completed successfully!"
-	$(MAKE) _sops MODE=encrypt TARGET_FILE=tofu/secret.tfvars
-
-destroy:
-	clear
-	$(MAKE) _sops MODE=decrypt TARGET_FILE=tofu/secret.tfvars
-	echo "Destroying production infrastructure with Terraform..."
-	cd tofu/prod && \
-		tofu init -upgrade && \
-		tofu destroy -var-file=../secret.tfvars -var-file=variables.tfvars && \
-	    rm -f ../../manifests/terraform.tfstate*
-	echo "Terraform destroy completed successfully!"
-	$(MAKE) _sops MODE=encrypt TARGET_FILE=tofu/secret.tfvars
-
-
-
-dev-build:
-	clear
-	echo "Not implemented yet..."
-	# $(MAKE) _sops MODE=decrypt TARGET_FILE=packer/secret.hcl
-	# echo "Building Packer images..."
-	# cd packer && packer build -var-file=secret.hcl -var-file=dev.pkrvars.hcl . || true
-	# echo "Packer build completed successfully!"
-	# $(MAKE) _sops MODE=encrypt TARGET_FILE=packer/secret.hcl
-	
-dev-plan:
-	clear
-	
-dev-apply:
-	clear
-	
-dev-destroy:
-	clear
-	
+##~ ---------------------------------------------------------------------------- ~##
+#  Lint target. This runs formatters on all Terraform and HCL files in the stack,  #
+##~ ---------------------------------------------------------------------------- ~##
 lint:
-	echo "Linting Terraform and HCL files..."
-	$(MAKE) decrypt-all
-	cd packer && \
-	packer fmt *pkr*.hcl && \
-	cd ../manifests && \
-    tofu fmt -recursive && \
-    cd ../tofu && \
-    tofu fmt -recursive
+	echo "Linting all files (*.hcl) ..."
+	terragrunt hcl fmt || true 
+	echo "Linting Terraform files (*.tf) ..."
+	cd modules && tofu fmt -recursive
 	echo "Linting completed successfully!"
-	$(MAKE) encrypt-all

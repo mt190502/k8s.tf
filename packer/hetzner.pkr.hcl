@@ -1,9 +1,7 @@
-//////////////////////////////////////////////////
-//
-//// Infrastructure: Hetzner Talos
-//
-//////////////////////////////////////////////////
-#~ Packer configuration for Hetzner Talos cluster
+## ============================================================================================= ##
+#  Infrastructure: Hetzner Talos                                                                  #
+## ============================================================================================= ##
+# Packer configuration for Hetzner Talos cluster
 packer {
   required_plugins {
     hetzner = {
@@ -21,7 +19,9 @@ locals {
   }
 }
 
-#~ Generate the rescue snapshots (one per architecture, reused for all nodes of that role)
+## --------------------------------------------------------------------------------------------- ##
+#  Generate the rescue snapshots (one per architecture, reused for all nodes of that role)        #
+## --------------------------------------------------------------------------------------------- ##
 source "hcloud" "talos_amd64" {
   rescue        = "linux64"
   image         = "debian-12"
@@ -47,7 +47,9 @@ source "hcloud" "talos_arm64" {
   })
 }
 
-#~ Build the Talos OS images (once per architecture, reused for all nodes of that role)
+## --------------------------------------------------------------------------------------------- ##
+#  Build the Talos OS images (once per architecture, reused for all nodes of that role)           #
+## --------------------------------------------------------------------------------------------- ##
 build {
   name = "talos-${var.talos_version}"
   sources = [

@@ -1,0 +1,18 @@
+---
+cluster:
+  network:
+    cni:
+      name: none
+    %{~ if DNS_DOMAIN != "cluster.local" ~}
+    dnsDomain: ${DNS_DOMAIN}
+    %{~ endif ~}
+    podSubnets:
+    %{~ for cidr in POD_CIDRS ~}
+      - ${cidr}
+    %{~ endfor ~}
+    serviceSubnets:
+    %{~ for cidr in SERVICE_CIDRS ~}
+      - ${cidr}
+    %{~ endfor ~}
+  proxy:
+    disabled: true

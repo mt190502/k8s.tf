@@ -1,0 +1,32 @@
+---
+machine:
+  certSANs:
+  %{~ for san in CERT_SANS ~}
+    - ${san}
+  %{~ endfor ~}
+  network:
+    %{~ if TAILSCALE ~}
+    interfaces:
+      - interface: tailscale0
+        routes:
+          - network: 100.64.0.0/10
+            metric: 100
+          - network: fd7a:115c:a1e0::/48
+            metric: 100
+    %{~ endif ~}
+    nameservers:
+      - 1.1.1.1
+      - 9.9.9.9
+      - 2606:4700:4700::1111
+      - 2620:fe::fe
+  sysctls:
+    net.ipv4.ip_forward: "1"
+    net.ipv6.conf.all.forwarding: "1"
+  kubelet:
+    nodeIP:
+      validSubnets:
+      %{~ for cidr in KUBELET_NODEIP_CIDRS ~}
+        - ${cidr}
+      %{~ endfor ~}
+    extraArgs:
+      rotate-server-certificates: true

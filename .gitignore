@@ -12,6 +12,7 @@
 # Terraform
 !**/*example*
 **/.terraform
+**/.terragrunt*
 **/*.tfstate*
 **/*.lock*
 **/charts*
