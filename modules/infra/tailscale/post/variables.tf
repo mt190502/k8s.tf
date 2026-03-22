@@ -12,8 +12,8 @@
 #      client_secret  --- OAuth client secret - used to delete devices on destroy                 #
 #      tailnet        --- Tailnet name                                                            #
 #                                                                                                 #
-#    Dependency outputs (passed separately):                                                      #
-#      nodes          --- Node map with name and role (from hetzner/post)                         #
+#    Dependency outputs (passed via deps variable):                                               #
+#      deps.nodes --- Node map with name and role (from hetzner/post)                             #
 ## ============================================================================================= ##
 variable "enabled" {
   description = "Enable this module"
@@ -39,10 +39,18 @@ variable "secrets" {
   sensitive = true
 }
 
-variable "nodes" {
-  description = "Map of all nodes to discover via Tailscale (must match Talos hostname)"
-  type = map(object({
-    name = string
-    role = string
-  }))
+variable "deps" {
+  description = "Outputs from upstream modules that are needed for this module"
+  type = object({
+    nodes = map(object({
+      name = string
+      role = string
+    }))
+  })
+}
+
+variable "rootvars" {
+  description = "Root configuration from parent stack"
+  type        = any
+  default     = {}
 }

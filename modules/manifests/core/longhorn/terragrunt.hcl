@@ -107,25 +107,6 @@ generate "versions" {
   EOF
 }
 
-## --------------------------------------------------------------------------------------------- ##
-#  Dependencies -  enforce apply order and wire outputs from upstream modules as inputs.          #
-## --------------------------------------------------------------------------------------------- ##
-dependency "cloudflare_post" {
-  config_path                             = "${get_repo_root()}/.terragrunt-stack/infra/cloudflare/post"
-  skip_outputs                            = true
-  mock_outputs                            = {}
-  mock_outputs_allowed_terraform_commands = include.common.locals.mock_outputs_allowed_terraform_commands
-  mock_outputs_merge_strategy_with_state  = include.common.locals.mock_outputs_merge_strategy_with_state
-}
-
-dependency "talos_post" {
-  config_path                             = "${get_repo_root()}/.terragrunt-stack/infra/talos/post"
-  skip_outputs                            = true
-  mock_outputs                            = {}
-  mock_outputs_allowed_terraform_commands = include.common.locals.mock_outputs_allowed_terraform_commands
-  mock_outputs_merge_strategy_with_state  = include.common.locals.mock_outputs_merge_strategy_with_state
-}
-
 inputs = {
   enabled = try(values.enabled, true)
   versions = {

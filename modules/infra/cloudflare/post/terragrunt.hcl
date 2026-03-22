@@ -4,9 +4,9 @@
 #  Terragrunt wrapper for the Cloudflare post stage --- creates all cluster DNS records.          #
 #                                                                                                 #
 #  Required Inputs                                                                                #
-#   - cluster_url (main, apiserver, dns), cloudflare_api_token, cloudflare_zone_id                #
-#   - dualstack                                                                                   #
-#   - nodes (from hetzner/post), tailscale_ipv4, tailscale_ipv6 (from tailscale/post)             #
+#   config.cluster_url (main, apiserver, dns), secrets.api_token, secrets.zone_id                 #
+#   dualstack                                                                                     #
+#   deps.nodes (from hetzner/post), deps.tailscale.ipv4_addresses, deps.tailscale.ipv6_addresses  #
 #                                                                                                 #
 #  Apply order:                                                                                   #
 #   talos/pre -> hetzner/post -> tailscale/post -> talos/post -> [cloudflare/post]                #
@@ -52,7 +52,9 @@ generate "secrets" {
 #  Dependencies -  enforce apply order and wire outputs from upstream modules as inputs.          #
 ## --------------------------------------------------------------------------------------------- ##
 dependency "hetzner_post" {
-  config_path = "../../hetzner/post"
+  enabled      = values.rootvars.hetzner.enabled
+  config_path  = "../../hetzner/post"
+  skip_outputs = contains(include.common.locals.skip_outputs_commands, get_terraform_command())
   mock_outputs = {
     controlplane_nodes = include.common.locals.mock_nodes_minimal
     nodes              = include.common.locals.mock_nodes_minimal
@@ -62,7 +64,9 @@ dependency "hetzner_post" {
 }
 
 dependency "tailscale_post" {
-  config_path = "../../tailscale/post"
+  enabled      = values.rootvars.tailscale.enabled
+  config_path  = "../../tailscale/post"
+  skip_outputs = contains(include.common.locals.skip_outputs_commands, get_terraform_command())
   mock_outputs = {
     node_ipv4 = include.common.locals.mock_tailscale_ipv4
     node_ipv6 = include.common.locals.mock_tailscale_ipv6
@@ -89,14 +93,21 @@ inputs = {
     }
     dualstack = try(values.config.dualstack, true)
   }
-  nodes = {
-    for name, node in try(dependency.hetzner_post.outputs.nodes, {}) : name => {
-      name         = node.name
-      role         = node.role
-      ipv4_address = node.ipv4_address
-      ipv6_address = node.ipv6_address
+  deps = {
+    nodes = values.rootvars.hetzner.enabled ? {
+      for name, node in try(dependency.hetzner_post.outputs.nodes, {}) : name => {
+        name         = node.name
+        role         = node.role
+        ipv4_address = node.ipv4_address
+        ipv6_address = node.ipv6_address
+      }
+    } : {}
+    tailscale = values.rootvars.tailscale.enabled ? {
+      ipv4_addresses = try(dependency.tailscale_post.outputs.node_ipv4, {})
+      ipv6_addresses = try(dependency.tailscale_post.outputs.node_ipv6, {})
+      } : {
+      ipv4_addresses = {}
+      ipv6_addresses = {}
     }
   }
-  tailscale_ipv4 = try(dependency.tailscale_post.outputs.node_ipv4, {})
-  tailscale_ipv6 = try(dependency.tailscale_post.outputs.node_ipv6, {})
 }

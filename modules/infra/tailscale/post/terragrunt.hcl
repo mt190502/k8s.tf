@@ -4,9 +4,8 @@
 #  Terragrunt wrapper for the Tailscale post stage --- discovers node IPs after hetzner/post.     #
 #                                                                                                 #
 #  Required Inputs                                                                                #
-#   - dualstack, tailscale_auth_key, tailscale_client_id, tailscale_client_secret                 #
-#   - tailscale_tailnet                                                                           #
-#   - nodes (from hetzner/post dependency)                                                        #
+#   config.dualstack, secrets.auth_key, secrets.client_id, secrets.client_secret, secrets.tailnet #
+#   deps.nodes (from hetzner/post dependency)                                                     #
 #                                                                                                 #
 #  Apply order:                                                                                   #
 #   talos/pre -> hetzner/post -> [tailscale/post] -> talos/post -> cloudflare/post                #
@@ -55,7 +54,9 @@ generate "secrets" {
 #  Dependencies -  enforce apply order and wire outputs from upstream modules as inputs.          #
 ## --------------------------------------------------------------------------------------------- ##
 dependency "hetzner_post" {
-  config_path = "../../hetzner/post"
+  enabled      = values.rootvars.hetzner.enabled
+  config_path  = "../../hetzner/post"
+  skip_outputs = contains(include.common.locals.skip_outputs_commands, get_terraform_command())
   mock_outputs = {
     controlplane_nodes = {}
     nodes              = {}
@@ -69,10 +70,12 @@ inputs = {
   config = {
     dualstack = try(values.config.dualstack, true)
   }
-  nodes = {
-    for name, node in try(dependency.hetzner_post.outputs.nodes, {}) : name => {
-      name = node.name
-      role = node.role
-    }
+  deps = {
+    nodes = values.rootvars.hetzner.enabled ? {
+      for name, node in try(dependency.hetzner_post.outputs.nodes, {}) : name => {
+        name = node.name
+        role = node.role
+      }
+    } : {}
   }
 }

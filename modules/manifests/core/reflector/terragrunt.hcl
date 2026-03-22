@@ -58,6 +58,9 @@ dependency "longhorn" {
 
 inputs = {
   enabled = try(values.enabled, true)
+  config = {
+    wildcard_reflection_namespaces = try(values.config.wildcard_reflection_namespaces, [])
+  }
   versions = {
     chart = values.versions.chart
   }

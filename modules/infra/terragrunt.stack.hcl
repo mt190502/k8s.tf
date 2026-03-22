@@ -2,10 +2,10 @@
 #  modules/infra/terragrunt.stack.hcl --- Infrastructure sub-stack                                #
 ## ============================================================================================= ##
 locals {
-  config   = try(values.config, {})
-  secrets  = try(values.secrets, {})
-  versions = try(values.versions, {})
-  units    = try(values.units, {})
+  c = try(values.config, {})
+  s = try(values.secrets, {})
+  v = try(values.versions, {})
+  r = try(values.rootvars, {})
 }
 
 unit "talos_pre" {
@@ -14,22 +14,23 @@ unit "talos_pre" {
   values = {
     enabled = true
     config = {
-      cluster_name = try(local.config.cluster_name, "")
-      cluster_url  = try(local.config.cluster_url, null)
-      dualstack    = try(local.config.dualstack, true)
-      ipcfg        = try(local.config.ipcfg, null)
-      kubeprism    = try(local.config.kubeprism, true)
-      kubespan     = try(local.config.kubespan, false)
-      nodes        = try(local.config.nodes, {})
+      cluster_name = try(local.c.kubernetes.cluster_name, "")
+      cluster_url  = try(local.c.kubernetes.cluster_url, null)
+      dualstack    = try(local.c.talos.dualstack, true)
+      ipcfg        = try(local.c.kubernetes.ipcfg, null)
+      kubeprism    = try(local.c.talos.kubeprism, true)
+      kubespan     = try(local.c.talos.kubespan, false)
+      nodes        = try(local.c.kubernetes.nodes, [])
     }
     secrets = {
-      auth_key = try(local.secrets.tailscale.auth_key, "")
+      auth_key = try(local.s.tailscale.auth_key, "")
     }
     versions = {
-      cilium     = try(local.versions.cilium, "")
-      kubernetes = try(local.versions.kubernetes, "")
-      talos      = try(local.versions.talos, "")
+      cilium     = try(local.v.cilium, "")
+      kubernetes = try(local.v.kubernetes, "")
+      talos      = try(local.v.talos, "")
     }
+    rootvars = local.r
   }
 }
 
@@ -37,17 +38,20 @@ unit "hetzner_post" {
   source = "./hetzner/post"
   path   = "hetzner/post"
   values = {
-    enabled = try(local.units.hetzner.enabled, true)
+    enabled = try(local.c.hetzner.enabled, true)
     config = {
-      cluster_name = try(local.config.cluster_name, "")
-      dualstack    = try(local.config.dualstack, true)
-      firewall     = try(local.config.firewall, null)
-      image_ids    = try(local.config.image_ids, null)
-      nodes        = can(local.config.nodes) ? values(local.config.nodes) : []
+      assignments     = try(local.c.hetzner.assignments, [])
+      cluster_name    = try(local.c.kubernetes.cluster_name, "")
+      dualstack       = try(local.c.talos.dualstack, true)
+      firewall        = try(local.c.hetzner.firewall, null)
+      images          = try(local.c.hetzner.images, null)
+      nodes           = try(local.c.hetzner.nodes, [])
+      private_network = try(local.c.hetzner.private_network, null)
     }
     secrets = {
-      api_token = try(local.secrets.hetzner.api_token, "")
+      api_token = try(local.s.hetzner.api_token, "")
     }
+    rootvars = local.r
   }
 }
 
@@ -55,16 +59,17 @@ unit "tailscale_post" {
   source = "./tailscale/post"
   path   = "tailscale/post"
   values = {
-    enabled = try(local.units.tailscale.enabled, true)
+    enabled = try(local.c.tailscale.enabled, true)
     config = {
-      dualstack = try(local.config.dualstack, true)
+      dualstack = try(local.c.talos.dualstack, true)
     }
     secrets = {
-      auth_key      = try(local.secrets.tailscale.auth_key, "")
-      client_id     = try(local.secrets.tailscale.client_id, "")
-      client_secret = try(local.secrets.tailscale.client_secret, "")
-      tailnet       = try(local.secrets.tailscale.tailnet, "")
+      auth_key      = try(local.s.tailscale.auth_key, "")
+      client_id     = try(local.s.tailscale.client_id, "")
+      client_secret = try(local.s.tailscale.client_secret, "")
+      tailnet       = try(local.s.tailscale.tailnet, "")
     }
+    rootvars = local.r
   }
 }
 
@@ -74,14 +79,12 @@ unit "talos_post" {
   values = {
     enabled = true
     config = {
-      cluster_name       = try(local.config.cluster_name, "")
-      cluster_endpoint   = try(local.config.cluster_url.apiserver, "")
-      dualstack          = try(local.config.dualstack, true)
-      first_controlplane = try(local.config.first_controlplane, "")
+      cluster_name       = try(local.c.kubernetes.cluster_name, "")
+      cluster_endpoint   = try(local.c.kubernetes.cluster_url.apiserver, "")
+      dualstack          = try(local.c.talos.dualstack, true)
+      first_controlplane = try(local.c.kubernetes.first_controlplane, "")
     }
-    #~ TODO: Remove this hardcoded options
-    hetzner_enabled   = try(local.units.hetzner.enabled, true)
-    tailscale_enabled = try(local.units.tailscale.enabled, true)
+    rootvars = local.r
   }
 }
 
@@ -89,14 +92,15 @@ unit "cloudflare_post" {
   source = "./cloudflare/post"
   path   = "cloudflare/post"
   values = {
-    enabled = try(local.units.cloudflare.enabled, true)
+    enabled = try(local.c.cloudflare.enabled, true)
     config = {
-      cluster_url = try(local.config.cluster_url, null)
-      dualstack   = try(local.config.dualstack, true)
+      cluster_url = try(local.c.kubernetes.cluster_url, null)
+      dualstack   = try(local.c.talos.dualstack, true)
     }
     secrets = {
-      api_token = try(local.secrets.cloudflare.api_token, "")
-      zone_id   = try(local.secrets.cloudflare.zone_id, "")
+      api_token = try(local.s.cloudflare.api_token, "")
+      zone_id   = try(local.s.cloudflare.zone_id, "")
     }
+    rootvars = local.r
   }
 }

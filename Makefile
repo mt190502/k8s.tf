@@ -40,6 +40,7 @@ export TERRAGRUNT_SECRETS = $(SECRETS)
 ##~ ---------------------------------------------------------------------------- ~##
 #  Stack targets                                                                   #
 ##~ ---------------------------------------------------------------------------- ~##
+export STACK_ENV = $(ENV)
 STACK_FILE = $(ENV).stack.hcl
 STACK_DIR  = .terragrunt-stack
 TG_RUN_ALL = terragrunt --working-dir "$(STACK_DIR)" run --all
@@ -134,10 +135,8 @@ generate:
 		exit 1; \
 	fi
 	echo "Generating stack: $(ENV) ($(STACK_FILE))"
-	ln -sf $(STACK_FILE) terragrunt.stack.hcl
-	terragrunt stack generate || (rm -f terragrunt.stack.hcl; exit 1)
+	terragrunt stack generate
 	rm -rf $(STACK_DEEP_NESTED_DIRS)
-	rm -f terragrunt.stack.hcl
 
 
 ##~ ---------------------------------------------------------------------------- ~##
@@ -154,11 +153,13 @@ infra-apply: generate
 	rm -rf $(STACK_NESTED_DIRS)
 
 infra-destroy:
-	if [ ! -d "$(STACK_DIR)" ]; then \
-		echo "Error: Stack directory $(STACK_DIR) does not exist. Nothing to destroy."; \
+	clear
+	if [ ! -d "$(STACK_DIR)/infra/.terragrunt-stack" ]; then \
+		echo "Error: Infra stack does not appear to be generated. Please run 'make infra-plan' or 'make infra-apply' first."; \
 		exit 1; \
-	fi	
+	fi
 	echo "Destroying infra units..."
+	terragrunt stack generate
 	$(TG_RUN_INFRA) destroy
 	rm -rf $(STACK_NESTED_DIRS)
 	rm -rf $(STACK_DIR) .terraform
@@ -180,12 +181,10 @@ manifests-apply: generate
 	rm -rf $(STACK_NESTED_DIRS)
 
 manifests-destroy:
-	if [ ! -d "$(STACK_DIR)" ]; then \
-		echo "Error: Stack directory $(STACK_DIR) does not exist. Nothing to destroy."; \
-		exit 1; \
-	fi
+	clear
 	kubectl cluster-info > /dev/null || { echo "Error: kubeconfig is not valid or cluster is not reachable. Please check your kubeconfig and cluster status."; exit 1; }
 	echo "Destroying manifest units..."
+	terragrunt stack generate
 	$(TG_RUN_MANIFESTS) destroy
 	rm -rf $(STACK_NESTED_DIRS)
 
@@ -214,11 +213,13 @@ apply: generate
 	rm -rf $(STACK_NESTED_DIRS)
 
 destroy:
+	clear
 	if [ ! -d "$(STACK_DIR)" ]; then \
-		echo "Error: Stack directory $(STACK_DIR) does not exist. Nothing to destroy."; \
+		echo "Error: Stack does not appear to be generated. Please run 'make generate' first."; \
 		exit 1; \
 	fi
 	echo "Destroying infra units only: $(ENV)"
+	terragrunt stack generate
 	$(TG_RUN_INFRA) destroy
 	rm -rf $(STACK_NESTED_DIRS)
 	rm -rf $(STACK_DIR) .terraform

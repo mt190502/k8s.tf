@@ -6,7 +6,7 @@
 #  After destroy: removes cluster entries from kubeconfig and deletes talosconfig.                #
 #                                                                                                 #
 #  Required Inputs                                                                                #
-#   - cluster_name, cluster_url.apiserver, dualstack, first_controlplane                          #
+#   - cluster_name, cluster_endpoint, dualstack, first_controlplane                               #
 #                                                                                                 #
 #  Apply order:                                                                                   #
 #   talos/pre -> hetzner/post -> tailscale/post -> [talos/post] -> cloudflare/post                #
@@ -107,9 +107,10 @@ generate "versions" {
 ## --------------------------------------------------------------------------------------------- ##
 #  Dependencies -  enforce apply order and wire outputs from upstream modules as inputs.          #
 ## --------------------------------------------------------------------------------------------- ##
-dependency "hetzner" {
+dependency "hetzner_post" {
+  enabled      = values.rootvars.hetzner.enabled
   config_path  = "../../hetzner/post"
-  skip_outputs = false
+  skip_outputs = contains(include.common.locals.skip_outputs_commands, get_terraform_command())
   mock_outputs = {
     nodes              = include.common.locals.mock_nodes_full
     controlplane_nodes = include.common.locals.mock_nodes_full
@@ -119,8 +120,9 @@ dependency "hetzner" {
 }
 
 dependency "tailscale_post" {
+  enabled      = values.rootvars.tailscale.enabled
   config_path  = "../../tailscale/post"
-  skip_outputs = false
+  skip_outputs = contains(include.common.locals.skip_outputs_commands, get_terraform_command())
   mock_outputs = {
     node_ipv4 = include.common.locals.mock_tailscale_ipv4
     node_ipv6 = include.common.locals.mock_tailscale_ipv6
@@ -131,7 +133,7 @@ dependency "tailscale_post" {
 
 dependency "talos_pre" {
   config_path  = "../pre"
-  skip_outputs = false
+  skip_outputs = contains(include.common.locals.skip_outputs_commands, get_terraform_command())
   mock_outputs = {
     machine_configurations = {
       mock-node = "mock-machine-config"
@@ -156,9 +158,15 @@ inputs = {
     dualstack          = try(values.config.dualstack, true)
     first_controlplane = try(values.config.first_controlplane, "") != "" ? values.config.first_controlplane : "mock-node"
   }
-  machine_configurations = dependency.talos_pre.outputs.machine_configurations
-  machine_secrets        = dependency.talos_pre.outputs.machine_secrets
-  nodes                  = try(values.hetzner_enabled, true) ? try(dependency.hetzner.outputs.nodes, {}) : {}
-  tailscale_ipv4         = try(values.hetzner_enabled, true) && try(values.tailscale_enabled, true) ? try(dependency.tailscale_post.outputs.node_ipv4, {}) : {}
-  tailscale_ipv6         = try(values.hetzner_enabled, true) && try(values.tailscale_enabled, true) && try(values.config.dualstack, true) ? try(dependency.tailscale_post.outputs.node_ipv6, {}) : {}
+  deps = {
+    talos = {
+      machine_configurations = dependency.talos_pre.outputs.machine_configurations
+      machine_secrets        = dependency.talos_pre.outputs.machine_secrets
+    }
+    nodes = values.rootvars.hetzner.enabled ? dependency.hetzner_post.outputs.nodes : {}
+    tailscale = {
+      ipv4_addresses = values.rootvars.hetzner.enabled && values.rootvars.tailscale.enabled ? try(dependency.tailscale_post.outputs.node_ipv4, {}) : {}
+      ipv6_addresses = values.rootvars.hetzner.enabled && values.rootvars.tailscale.enabled && try(values.config.dualstack, true) ? try(dependency.tailscale_post.outputs.node_ipv6, {}) : {}
+    }
+  }
 }

@@ -4,6 +4,7 @@ cluster:
     extraArgs:
       node-cidr-mask-size-ipv4: "24"
       node-cidr-mask-size-ipv6: "64"
+  %{~ if length(ETCD_CIDRS) > 0 ~}
   etcd:
     advertisedSubnets:
     %{~ for cidr in ETCD_CIDRS ~}
@@ -13,3 +14,4 @@ cluster:
     %{~ for cidr in ETCD_CIDRS ~}
       - ${cidr}
     %{~ endfor ~}
+  %{~ endif ~}

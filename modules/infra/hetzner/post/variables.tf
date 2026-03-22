@@ -5,16 +5,18 @@
 #                                                                                                 #
 #    enabled        --- Enable this module                                                        #
 #    config         --- Configuration object                                                      #
+#      assignments  --- Node-to-architecture/location mapping rules                               #
 #      cluster_name --- Cluster name used for resource labels                                     #
 #      dualstack    --- Enable public IPv6 on nodes                                               #
 #      firewall     --- Firewall toggle and rule list                                             #
-#      image_ids    --- Hetzner image IDs per architecture (amd64 + arm64)                        #
-#      nodes        --- Node definitions: name, role, type, location, taints                      #
+#      images       --- Hetzner image IDs per architecture (amd64 + arm64)                        #
+#      nodes        --- Node definitions: name, role, arch, location, image_id, server_type...    #
+#      private_network --- Private network configuration (enabled, cidr)                          #
 #    secrets        --- Sensitive configuration                                                   #
 #      api_token    --- Hetzner Cloud API token                                                   #
 #                                                                                                 #
-#    Dependency outputs (passed separately):                                                      #
-#      machine_configurations --- Per-node rendered configs from talos/pre (used as user_data)    #
+#    Dependency outputs (passed via deps variable):                                               #
+#      talos.machine_configurations --- Per-node rendered configs (used as user_data)             #
 ## ============================================================================================= ##
 variable "enabled" {
   description = "Enable this module"
@@ -25,20 +27,31 @@ variable "enabled" {
 variable "config" {
   description = "Hetzner post-stage configuration"
   type = object({
+    assignments = list(object({
+      selector = object({
+        role = string
+      })
+      architecture = string
+      strategy     = string
+      locations    = list(string)
+    }))
     cluster_name = string
     dualstack    = bool
+    private_network = object({
+      enabled = bool
+      cidr    = string
+    })
     firewall = object({
       enabled = bool
       rules = list(object({
         short_name  = string
         description = string
         protocol    = string
-        direction   = string
         port        = string
-        source_ips  = list(string)
+        source_ips  = optional(list(string))
       }))
     })
-    image_ids = object({
+    images = object({
       amd64 = object({
         id   = string
         code = string
@@ -49,11 +62,13 @@ variable "config" {
       })
     })
     nodes = list(object({
-      name     = string
-      role     = string
-      type     = string
-      location = string
-      taints   = list(string)
+      name        = string
+      role        = string
+      arch        = string
+      location    = string
+      image_id    = string
+      server_type = string
+      taints      = list(string)
     }))
   })
 }
@@ -66,8 +81,17 @@ variable "secrets" {
   sensitive = true
 }
 
-variable "machine_configurations" {
-  description = "Per-node machine configuration strings --- from talos/pre output, keyed by node name; used as user_data on first boot"
-  type        = map(string)
-  sensitive   = true
+variable "deps" {
+  description = "Outputs from upstream modules that are needed for this module"
+  type = object({
+    talos = object({
+      machine_configurations = map(string)
+    })
+  })
+}
+
+variable "rootvars" {
+  description = "Root configuration from parent stack"
+  type        = any
+  default     = {}
 }

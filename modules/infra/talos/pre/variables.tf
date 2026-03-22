@@ -11,7 +11,7 @@
 #      dualstack      --- Enable dual-stack IPv4/IPv6                                             #
 #      kubeprism      --- Enable KubePrism (local apiserver proxy on port 7445)                   #
 #      kubespan       --- Enable KubeSpan (WireGuard overlay between nodes)                       #
-#      nodes          --- Map of all nodes: name, role, type, location, taints                    #
+#      nodes          --- List of all nodes: name, role, taints                                   #
 #    secrets          --- Sensitive configuration                                                 #
 #      auth_key       --- Tailscale auth key injected into each node's machine config             #
 #    versions         --- Version configuration                                                   #
@@ -47,12 +47,10 @@ variable "config" {
     dualstack = bool
     kubeprism = bool
     kubespan  = bool
-    nodes = map(object({
-      name     = string
-      role     = string
-      type     = string
-      location = string
-      taints   = list(string)
+    nodes = list(object({
+      name   = string
+      role   = string
+      taints = list(string)
     }))
   })
 }
@@ -72,4 +70,10 @@ variable "versions" {
     kubernetes = string
     talos      = string
   })
+}
+
+variable "rootvars" {
+  description = "Root configuration from parent stack"
+  type        = any
+  default     = {}
 }

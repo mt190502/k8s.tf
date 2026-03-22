@@ -8,8 +8,8 @@
 #    nodes            --- node map with name and role (must match Talos hostname)                 #
 ## ============================================================================================= ##
 locals {
-  masters = { for name, node in var.nodes : name => node if node.role == "controlplane" }
-  workers = { for name, node in var.nodes : name => node if node.role == "worker" }
+  masters = { for name, node in var.deps.nodes : name => node if node.role == "controlplane" }
+  workers = { for name, node in var.deps.nodes : name => node if node.role == "worker" }
   all = merge(
     { for name, dev in data.tailscale_device.masters : name => dev },
     { for name, dev in data.tailscale_device.workers : name => dev },

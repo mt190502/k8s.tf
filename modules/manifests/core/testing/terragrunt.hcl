@@ -55,9 +55,10 @@ dependency "cert_manager" {
 }
 
 inputs = {
+  enabled = try(values.enabled, true)
   config = {
-    domain       = try(values.config.domain, "mock.com")
-    gateway_name = try(dependency.cert_manager.outputs.gateway_name, "") != "" ? dependency.cert_manager.outputs.gateway_name : "mock-gateway"
-    namespace    = try(dependency.cert_manager.outputs.namespace, "") != "" ? dependency.cert_manager.outputs.namespace : "mock-namespace"
+    domain       = try(values.config.domain, "mock.local")
+    gateway_name = dependency.cert_manager.outputs.gateway_name
+    namespace    = dependency.cert_manager.outputs.namespace
   }
 }

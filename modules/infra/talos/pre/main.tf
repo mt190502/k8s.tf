@@ -13,7 +13,7 @@ resource "talos_machine_secrets" "this" {
 }
 
 data "talos_machine_configuration" "nodes" {
-  for_each           = var.config.nodes
+  for_each           = { for node in var.config.nodes : node.name => node }
   cluster_name       = var.config.cluster_name
   cluster_endpoint   = "https://${var.config.cluster_url.apiserver}:6443"
   machine_type       = each.value.role
@@ -22,7 +22,7 @@ data "talos_machine_configuration" "nodes" {
   config_patches = concat(
     each.value.role == "controlplane" ? [
       templatefile("../templates/controlplane.tmpl", {
-        ETCD_CIDRS = ["100.64.0.0/10", "fd7a:115c:a1e0::/48"]
+        ETCD_CIDRS = var.rootvars.hetzner.enabled && var.rootvars.hetzner.private_network.enabled ? [var.rootvars.hetzner.private_network.cidr] : (var.rootvars.tailscale.enabled ? ["100.64.0.0/10", "fd7a:115c:a1e0::/48"] : [])
       }),
       templatefile("../templates/cilium_postinstall_job.tmpl", {
         CILIUM_VERSION = var.versions.cilium
@@ -39,8 +39,8 @@ data "talos_machine_configuration" "nodes" {
     [
       templatefile("../templates/machine.tmpl", {
         CERT_SANS            = values(var.config.cluster_url)
-        KUBELET_NODEIP_CIDRS = ["100.64.0.0/10", "fd7a:115c:a1e0::/48"]
-        TAILSCALE            = true
+        KUBELET_NODEIP_CIDRS = var.rootvars.tailscale.enabled ? ["100.64.0.0/10", "fd7a:115c:a1e0::/48"] : []
+        TAILSCALE            = var.rootvars.tailscale.enabled ? "true" : "false"
       }),
       templatefile("../templates/cni.tmpl", {
         DNS_DOMAIN    = var.config.cluster_url.dns
@@ -55,10 +55,11 @@ data "talos_machine_configuration" "nodes" {
       templatefile("../templates/kubespan.tmpl", {
         ENABLED = var.config.kubespan
       }),
-      templatefile("../templates/tailscale.tmpl", {
+      templatefile("../templates/netcfg.tmpl", {}),
+      var.rootvars.tailscale.enabled ? templatefile("../templates/tailscale.tmpl", {
         TS_AUTHKEY  = var.secrets.auth_key
         TS_HOSTNAME = each.value.name
-      }),
+      }) : ""
     ]
   )
   depends_on = [

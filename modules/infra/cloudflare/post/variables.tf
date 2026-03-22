@@ -11,8 +11,9 @@
 #      api_token   --- Cloudflare API token                                                       #
 #      zone_id     --- Cloudflare Zone ID                                                         #
 #                                                                                                 #
-#    Dependency outputs (passed separately):                                                      #
-#      nodes, tailscale_ipv4, tailscale_ipv6                                                      #
+#    Dependency outputs (passed via deps variable):                                               #
+#      nodes (name, role, ipv4_address, ipv6_address)                                             #
+#      tailscale.ipv4_addresses, tailscale.ipv6_addresses                                         #
 ## ============================================================================================= ##
 variable "enabled" {
   description = "Enable this module"
@@ -41,23 +42,24 @@ variable "secrets" {
   sensitive = true
 }
 
-variable "nodes" {
-  description = "Map of all nodes with their Hetzner public IPs and role --- used for lb and apiserver DNS records"
-  type = map(object({
-    name         = string
-    role         = string
-    ipv4_address = string
-    ipv6_address = string
-  }))
+variable "deps" {
+  description = "Outputs from upstream modules that are needed for this module"
+  type = object({
+    nodes = map(object({
+      name         = string
+      role         = string
+      ipv4_address = string
+      ipv6_address = string
+    }))
+    tailscale = object({
+      ipv4_addresses = map(string)
+      ipv6_addresses = map(string)
+    })
+  })
 }
 
-variable "tailscale_ipv4" {
-  description = "Map of node name to Tailscale IPv4 address"
-  type        = map(string)
-}
-
-variable "tailscale_ipv6" {
-  description = "Map of node name to Tailscale IPv6 address"
-  type        = map(string)
+variable "rootvars" {
+  description = "Root configuration from parent stack"
+  type        = any
   default     = {}
 }

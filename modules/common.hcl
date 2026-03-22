@@ -44,16 +44,18 @@ locals {
   ## --------------------------------------------------------------------------------------------- ##
   #  Shared mock outputs for dependency blocks (plan/validate without state).                       #
   ## --------------------------------------------------------------------------------------------- ##
-  mock_outputs_allowed_terraform_commands = ["validate", "plan", "init"]
+  skip_outputs_commands                   = ["plan", "validate", "init", "destroy"]
+  mock_outputs_allowed_terraform_commands = ["validate", "plan", "init", "destroy"]
   mock_outputs_merge_strategy_with_state  = "no_merge"
 
   mock_node_full = {
     name         = "mock-node"
     role         = "controlplane"
-    type         = "cx22"
+    arch         = "arm64"
     location     = "fsn1"
     ipv4_address = "1.2.3.4"
     ipv6_address = "::1"
+    private_ip   = null
     taints       = []
   }
 
@@ -64,6 +66,7 @@ locals {
   mock_node_minimal = {
     name         = "mock-node"
     role         = "controlplane"
+    arch         = "arm64"
     ipv4_address = "1.2.3.4"
     ipv6_address = "::1"
   }

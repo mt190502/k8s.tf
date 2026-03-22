@@ -14,7 +14,7 @@ provider "cloudflare" {
 }
 
 resource "cloudflare_dns_record" "lb" {
-  for_each = var.nodes
+  for_each = var.deps.nodes
   zone_id  = var.secrets.zone_id
   name     = var.config.cluster_url.main
   content  = each.value.ipv4_address
@@ -25,7 +25,7 @@ resource "cloudflare_dns_record" "lb" {
 }
 
 resource "cloudflare_dns_record" "lb_v6" {
-  for_each = var.config.dualstack ? var.nodes : {}
+  for_each = var.config.dualstack ? var.deps.nodes : {}
   zone_id  = var.secrets.zone_id
   name     = var.config.cluster_url.main
   content  = each.value.ipv6_address
@@ -37,12 +37,12 @@ resource "cloudflare_dns_record" "lb_v6" {
 
 resource "cloudflare_dns_record" "masters" {
   for_each = {
-    for name, node in var.nodes : name => node
+    for name, node in var.deps.nodes : name => node
     if node.role == "controlplane"
   }
   zone_id = var.secrets.zone_id
   name    = var.config.cluster_url.apiserver
-  content = lookup(var.tailscale_ipv4, each.value.name, each.value.ipv4_address)
+  content = lookup(var.deps.tailscale.ipv4_addresses, each.value.name, each.value.ipv4_address)
   comment = each.value.name
   type    = "A"
   ttl     = 60
@@ -50,12 +50,12 @@ resource "cloudflare_dns_record" "masters" {
 
 resource "cloudflare_dns_record" "masters_v6" {
   for_each = var.config.dualstack ? {
-    for name, node in var.nodes : name => node
+    for name, node in var.deps.nodes : name => node
     if node.role == "controlplane"
   } : {}
   zone_id = var.secrets.zone_id
   name    = var.config.cluster_url.apiserver
-  content = lookup(var.tailscale_ipv6, each.value.name, each.value.ipv6_address)
+  content = lookup(var.deps.tailscale.ipv6_addresses, each.value.name, each.value.ipv6_address)
   comment = each.value.name
   type    = "AAAA"
   ttl     = 60

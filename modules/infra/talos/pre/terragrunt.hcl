@@ -4,11 +4,11 @@
 #  Terragrunt wrapper for the Talos pre stage (machine secret + config generation).               #
 #                                                                                                 #
 #  Required Inputs                                                                                #
-#   - cilium_version, kubernetes_version, talos_version (strings)                                 #
+#   - versions.cilium, versions.kubernetes, versions.talos                                        #
 #   - cluster_name, cluster_url, ipcfg (cluster identity + networking)                            #
 #   - dualstack, kubeprism, kubespan (feature flags)                                              #
-#   - nodes (map: name, role, type, location, taints)                                             #
-#   - tailscale_auth_key (sensitive)                                                              #
+#   - nodes (list: name, role, taints)                                                            #
+#   - secrets.auth_key (sensitive)                                                                #
 #                                                                                                 #
 #  Apply order:                                                                                   #
 #   [talos/pre] -> hetzner/post -> tailscale/post -> talos/post -> cloudflare/post                #
@@ -33,7 +33,7 @@ generate "versions" {
   contents  = <<-EOF
     terraform {
       required_providers {
-        talos = { source = "siderolabs/talos", version = "~> 0.10.1" }
+        talos = { source = "siderolabs/talos", version = "${include.common.locals.providers.talos.version}" }
       }
     }
   EOF
@@ -58,11 +58,12 @@ inputs = {
     ipcfg        = try(values.config.ipcfg, null)
     kubeprism    = try(values.config.kubeprism, true)
     kubespan     = try(values.config.kubespan, false)
-    nodes        = try(values.config.nodes, {})
+    nodes        = try(values.config.nodes, [])
   }
   versions = {
     cilium     = try(values.versions.cilium, "")
     kubernetes = try(values.versions.kubernetes, "")
     talos      = try(values.versions.talos, "")
   }
+  rootvars = try(values.rootvars, {})
 }

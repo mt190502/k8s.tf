@@ -4,9 +4,9 @@
 #  Terragrunt wrapper for the Hetzner post stage --- creates servers and firewall.                #
 #                                                                                                 #
 #  Required Inputs                                                                                #
-#   - cluster_name, dualstack, firewall, hetzner_api_token, image_ids                             #
-#   - nodes (list: name, role, type, location, taints)                                            #
-#   - machine_configurations (from talos/pre dependency)                                          #
+#   - config.cluster_name, config.dualstack, config.firewall, secrets.api_token, config.images    #
+#   - nodes (list: name, role, arch, location, image_id, server_type, taints)                     #
+#   - deps.talos.machine_configurations (from talos/pre dependency)                               #
 #                                                                                                 #
 #  Apply order:                                                                                   #
 #   talos/pre -> [hetzner/post] -> tailscale/post -> talos/post -> cloudflare/post                #
@@ -56,7 +56,7 @@ generate "secrets" {
 ## --------------------------------------------------------------------------------------------- ##
 dependency "talos_pre" {
   config_path  = "../../talos/pre"
-  skip_outputs = contains(["plan", "validate", "init"], get_terraform_command())
+  skip_outputs = contains(include.common.locals.skip_outputs_commands, get_terraform_command())
   mock_outputs = {
     machine_configurations = local.mock_user_data
     machine_secrets = {
@@ -74,23 +74,32 @@ dependency "talos_pre" {
 inputs = {
   enabled = try(values.enabled, true)
   config = {
+    assignments  = try(values.config.assignments, {})
     cluster_name = try(values.config.cluster_name, "")
     dualstack    = try(values.config.dualstack, true)
     firewall = {
       enabled = try(values.config.firewall.enabled, false)
       rules   = try(values.config.firewall.rules, [])
     }
-    image_ids = {
+    images = {
       amd64 = {
-        id   = try(values.config.image_ids.amd64.id, "")
-        code = try(values.config.image_ids.amd64.code, "")
+        id   = try(values.config.images.amd64.id, "")
+        code = try(values.config.images.amd64.code, "")
       }
       arm64 = {
-        id   = try(values.config.image_ids.arm64.id, "")
-        code = try(values.config.image_ids.arm64.code, "")
+        id   = try(values.config.images.arm64.id, "")
+        code = try(values.config.images.arm64.code, "")
       }
     }
     nodes = try(values.config.nodes, [])
+    private_network = {
+      enabled = try(values.config.private_network.enabled, false)
+      cidr    = try(values.config.private_network.cidr, "10.0.0.0/16")
+    }
   }
-  machine_configurations = dependency.talos_pre.outputs.machine_configurations
+  deps = {
+    talos = {
+      machine_configurations = dependency.talos_pre.outputs.machine_configurations
+    }
+  }
 }

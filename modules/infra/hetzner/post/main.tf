@@ -11,6 +11,29 @@ provider "hcloud" {
 }
 
 ## --------------------------------------------------------------------------------------------- ##
+#  Private network for internal cluster communication (when enabled)                              #
+## --------------------------------------------------------------------------------------------- ##
+resource "hcloud_network" "private" {
+  count    = var.config.private_network.enabled ? 1 : 0
+  name     = "${var.config.cluster_name}-private"
+  ip_range = var.config.private_network.cidr
+}
+
+resource "hcloud_network_subnet" "private" {
+  count        = var.config.private_network.enabled ? 1 : 0
+  network_id   = hcloud_network.private[0].id
+  type         = "cloud"
+  network_zone = "eu-central"
+  ip_range     = var.config.private_network.cidr
+}
+
+resource "hcloud_server_network" "private" {
+  for_each  = var.config.private_network.enabled ? hcloud_server.nodes : {}
+  server_id = each.value.id
+  subnet_id = hcloud_network_subnet.private[0].id
+}
+
+## --------------------------------------------------------------------------------------------- ##
 #  Single firewall applied to all nodes when enabled; rules sourced from var.firewall.rules       #
 ## --------------------------------------------------------------------------------------------- ##
 resource "hcloud_firewall" "fw" {
@@ -22,7 +45,7 @@ resource "hcloud_firewall" "fw" {
       description = rule.value.description
       protocol    = rule.value.protocol
       port        = rule.value.port
-      direction   = rule.value.direction
+      direction   = "in"
       source_ips  = rule.value.source_ips
     }
   }
@@ -35,11 +58,11 @@ resource "hcloud_firewall" "fw" {
 resource "hcloud_server" "nodes" {
   for_each     = { for node in var.config.nodes : node.name => node }
   name         = each.value.name
-  server_type  = var.config.image_ids[each.value.type].code
+  server_type  = each.value.server_type
   location     = each.value.location
-  image        = var.config.image_ids[each.value.type].id
+  image        = each.value.image_id
   labels       = { "role" : each.value.role }
-  user_data    = var.machine_configurations[each.value.name]
+  user_data    = var.deps.talos.machine_configurations[each.value.name]
   firewall_ids = var.config.firewall.enabled ? [hcloud_firewall.fw[0].id] : []
   public_net {
     ipv4_enabled = true

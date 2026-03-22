@@ -12,45 +12,30 @@ locals {
     ## --------------------------------------------------------------------------------------------- ##
     #  Cluster identity                                                                               #
     ## --------------------------------------------------------------------------------------------- ##
-    cluster_name = "srv.mtaha.dev"
-    cluster_url = {
-      dns       = "mtaha.dev"         # base domain -> wildcard cert, hubble peer domain
-      main      = "srv.mtaha.dev"     # LB / proxied A record
-      apiserver = "k8s.srv.mtaha.dev" # controlplane endpoint
-    }
-
-    ## --------------------------------------------------------------------------------------------- ##
-    # Networking --- pod & service CIDRs                                                              #
-    ## --------------------------------------------------------------------------------------------- ##
-    ipcfg = {
-      pod = {
-        ipv4 = "10.244.0.0/16"
-        ipv6 = "2001:db8:42:0::/56"
+    kubernetes = {
+      cluster_name = "srv.mtaha.dev"
+      cluster_url = {
+        dns       = "mtaha.dev"         # base domain -> wildcard cert, hubble peer domain
+        main      = "srv.mtaha.dev"     # LB / proxied A record
+        apiserver = "k8s.srv.mtaha.dev" # controlplane endpoint
       }
-      service = {
-        ipv4 = "10.96.0.0/12"
-        ipv6 = "2001:db8:42:1::/112"
+      ipcfg = {
+        pod = {
+          ipv4 = "10.244.0.0/16"
+          ipv6 = "2001:db8:42:0::/56"
+        }
+        service = {
+          ipv4 = "10.96.0.0/12"
+          ipv6 = "2001:db8:42:1::/112"
+        }
       }
-    }
-
-    ## --------------------------------------------------------------------------------------------- ##
-    #  Nodes                                                                                          #
-    #    role: controlplane | worker                                                                  #
-    #    arch: amd64 | arm64                                                                          #
-    #    provider:                                                                                    #
-    #      type (e.g. hetzner, libvirt, etc.) -- used to look up provider-specific settings           #
-    #      location (e.g. hetzner region) -- used to determine where to create the node               #
-    ## --------------------------------------------------------------------------------------------- ##
-    nodes = {
-      masters = [
-        { name = "m1", arch = "arm64", provider = { type = "hetzner", location = "hel1" }, taints = [] },
-        { name = "m2", arch = "arm64", provider = { type = "hetzner", location = "nbg1" }, taints = [] },
-        { name = "m3", arch = "arm64", provider = { type = "hetzner", location = "fsn1" }, taints = [] },
-      ]
-      workers = [
-        { name = "w1", arch = "amd64", provider = { type = "hetzner", location = "hel1" }, taints = [] },
-        { name = "w2", arch = "amd64", provider = { type = "hetzner", location = "nbg1" }, taints = [] },
-        { name = "w3", arch = "amd64", provider = { type = "hetzner", location = "fsn1" }, taints = [] },
+      nodes = [
+        { name = "m1", role = "controlplane", taints = [] },
+        { name = "m2", role = "controlplane", taints = [] },
+        { name = "m3", role = "controlplane", taints = [] },
+        { name = "w1", role = "worker", taints = [] },
+        { name = "w2", role = "worker", taints = [] },
+        { name = "w3", role = "worker", taints = [] },
       ]
     }
 
@@ -62,15 +47,25 @@ locals {
     }
     hetzner = {
       enabled = true
-      image_ids = {
-        amd64 = { id = "358263593", code = "cx33" }
-        arm64 = { id = "358263592", code = "cax11" }
-      }
+      assignments = [
+        {
+          selector     = { role = "controlplane" }
+          architecture = "arm64"
+          locations    = ["hel1", "nbg1", "fsn1"]
+          strategy     = "roundrobin"
+        },
+        {
+          selector     = { role = "worker" }
+          architecture = "amd64"
+          locations    = ["hel1", "nbg1", "fsn1"]
+          strategy     = "roundrobin"
+        }
+      ]
       firewall = {
         enabled = true
         rules = [
           {
-            short_name  = "https-in"
+            short_name  = "https"
             description = "Allow HTTPS traffic"
             protocol    = "tcp"
             direction   = "in"
@@ -78,7 +73,7 @@ locals {
             source_ips  = ["0.0.0.0/0", "::/0"]
           },
           {
-            short_name  = "https-in-udp"
+            short_name  = "https-quic"
             description = "Allow HTTPS/QUIC traffic"
             protocol    = "udp"
             direction   = "in"
@@ -108,24 +103,16 @@ locals {
             direction   = "in"
             port        = "41641"
             source_ips  = ["0.0.0.0/0", "::/0"]
-          },
-          {
-            short_name  = "wireguard"
-            description = "Allow pod2pod WireGuard traffic",
-            protocol    = "udp",
-            direction   = "in",
-            port        = "51871",
-            source_ips  = ["0.0.0.0/0", "::/0"]
-          },
-          {
-            short_name  = "cilium-vxlan"
-            description = "Allow Cilium VXLAN tunnel traffic",
-            protocol    = "udp",
-            direction   = "in",
-            port        = "8472",
-            source_ips  = ["0.0.0.0/0", "::/0"]
           }
         ]
+      }
+      images = {
+        amd64 = { id = "358263593", code = "cx33" }
+        arm64 = { id = "358263592", code = "cax11" }
+      }
+      private_network = {
+        enabled = true
+        cidr    = "10.0.0.0/16"
       }
     }
     tailscale = {
@@ -141,23 +128,24 @@ locals {
     #  Versions                                                                                       #
     ## --------------------------------------------------------------------------------------------- ##
     versions = {
-      talos      = "v1.12.4"
-      kubernetes = "v1.35.1"
+      talos      = "v1.12.6"
+      kubernetes = "v1.35.2"
       cilium     = "1.19.1"
     }
   }
 
-  # ===========================================================================
-  # Applications --- set enabled = false to skip deploying an app
-  # ===========================================================================
+  ## ============================================================================================= ##
+  #  Applications --- set enabled = false to skip deploying an app                                  #
+  ## ============================================================================================= ##
   apps = {
     longhorn = {
       enabled = true
       version = "1.11.0"
     }
     reflector = {
-      enabled = true
-      version = "10.0.10"
+      enabled                        = true
+      version                        = "10.0.10"
+      wildcard_reflection_namespaces = ["adguard-home", "radicale"]
     }
     kube_prometheus_stack = {
       enabled = true
@@ -168,17 +156,12 @@ locals {
       version = "0.27.1"
     }
     cert_manager = {
-      enabled                        = true
-      version                        = "v1.19.3"
-      acme_email                     = "mt190502@mtaha.dev"
-      dns_domain                     = local.infra.cluster_url.dns
-      wildcard_reflection_namespaces = ["adguard-home", "radicale"]
+      enabled    = true
+      version    = "v1.19.3"
+      acme_email = "mt190502@mtaha.dev"
     }
     tests = {
       enabled = true
-      config  = {
-        domain = local.infra.cluster_url.dns
-      }
     }
   }
 }

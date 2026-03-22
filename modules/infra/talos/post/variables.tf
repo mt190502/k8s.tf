@@ -11,8 +11,10 @@
 #      dualstack           --- When true, IPv6 addresses are included in the node list            #
 #      first_controlplane  --- Name of the first controlplane node (bootstrap target)             #
 #                                                                                                 #
-#    Dependency outputs (passed separately):                                                      #
-#      machine_configurations, machine_secrets, nodes, tailscale_ipv4, tailscale_ipv6             #
+#    Dependency outputs (passed via deps variable):                                               #
+#      talos.machine_configurations, talos.machine_secrets                                        #
+#      nodes (name, role, arch, location, ipv4_address, ipv6_address, private_ip, taints)         #
+#      tailscale.ipv4_addresses, tailscale.ipv6_addresses                                         #
 #                                                                                                 #
 #    Terragrunt-only inputs (not passed to Terraform):                                            #
 #      hetzner_enabled, tailscale_enabled --- Control dependency data flow from stack units       #
@@ -33,43 +35,38 @@ variable "config" {
   })
 }
 
-variable "machine_configurations" {
-  description = "Per-node machine configuration strings --- from talos/pre output, keyed by node name; used as user_data on first boot"
-  type        = map(string)
-  sensitive   = true
-}
-
-variable "machine_secrets" {
-  description = "Talos machine secrets object --- from talos/pre output (talos_machine_secrets resource)"
+variable "deps" {
+  description = "Outputs from upstream modules that are needed for this module"
   type = object({
-    client_configuration = object({
-      ca_certificate     = string
-      client_certificate = string
-      client_key         = string
+    talos = object({
+      machine_configurations = map(string)
+      machine_secrets = object({
+        client_configuration = object({
+          ca_certificate     = string
+          client_certificate = string
+          client_key         = string
+        })
+      })
+    })
+    nodes = map(object({
+      name         = string
+      role         = string
+      arch         = string
+      location     = string
+      ipv4_address = string
+      ipv6_address = string
+      private_ip   = optional(string)
+      taints       = list(string)
+    }))
+    tailscale = object({
+      ipv4_addresses = map(string)
+      ipv6_addresses = map(string)
     })
   })
-  sensitive = true
 }
 
-variable "nodes" {
-  description = "Map of all nodes with role metadata --- from hetzner/post output, keyed by node name. Empty map when hetzner unit is disabled."
-  type = map(object({
-    name     = string
-    role     = string
-    type     = string
-    location = string
-    taints   = list(string)
-  }))
-}
-
-variable "tailscale_ipv4" {
-  description = "Map of node name to Tailscale IPv4 address --- from tailscale/post output. Empty map when hetzner or tailscale unit is disabled."
-  type        = map(string)
-  default     = {}
-}
-
-variable "tailscale_ipv6" {
-  description = "Map of node name to Tailscale IPv6 address --- from tailscale/post output. Empty map when hetzner or tailscale unit is disabled, or dualstack is false."
-  type        = map(string)
+variable "rootvars" {
+  description = "Root configuration from parent stack"
+  type        = any
   default     = {}
 }
