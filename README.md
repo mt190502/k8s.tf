@@ -12,6 +12,7 @@ observability, and certificate management.
 - Gateway API for ingress with Envoy load balancing
 - SOPS + age encryption for sensitive configuration
 - Terragrunt stack-based deployment with dependency management
+- Centralized mock outputs for plan/destroy without applied state
 
 <br>
 
@@ -264,8 +265,9 @@ graph TD
 ```
 
 > [!NOTE]
-> Long-chain dependencies (e.g., Longhorn's DNS wait hooks after Cloudflare) are
-defined in module `terragrunt.hcl` files via `dependency` blocks and hooks.
+> Dependencies are defined in module `terragrunt.hcl` files via `dependency` blocks.
+> The `skip_outputs` setting uses `common.hcl` locals to enable plan/destroy without
+> applied upstream state. Mock outputs match actual output types for type safety.
 
 ---
 
@@ -273,28 +275,38 @@ defined in module `terragrunt.hcl` files via `dependency` blocks and hooks.
 
 ```
 /
-├── prod.stack.hcl                     # Root stack: infra + manifests value injection
+├── terragrunt.stack.hcl               # Root stack: infra + manifests value injection
 ├── prod.values.hcl                    # Single source of truth (cluster, nodes, app versions)
 ├── secrets.hcl                        # Never committed in plain text; encrypted with SOPS
 ├── secrets.hcl.example                # Template
 ├── .sops.yaml                         # SOPS / age rules
 ├── Makefile                           # generate, plan, apply, SOPS, packer, lint
 ├── modules/
-│   ├── common.hcl                     # Backend, provider versions, shared helpers
+│   ├── common.hcl                     # Backend, provider versions, mock outputs, shared helpers
 │   ├── infra/                         # Base infrastructure modules (Talos, Hetzner, Tailscale, Cloudflare)
 │   │   ├── terragrunt.stack.hcl       # Defines infra stack units and dependencies
-│   │   ├── talos/{pre,post,templates}
-│   │   ├── hetzner/{pre,post}
-│   │   └── tailscale/post
-│   └── manifests/                     # Application modules (Longhorn, Reflector, CNPG, kube-prometheus-stack, cert-manager)
+│   │   ├── talos/
+│   │   │   ├── pre/                   # Machine secrets + config generation
+│   │   │   ├── post/                  # Config apply, bootstrap, kubeconfig
+│   │   │   └── templates/             # .tmpl patch files
+│   │   ├── hetzner/
+│   │   │   ├── pre/                   # Placeholder (no resources)
+│   │   │   └── post/                  # Servers, firewall, private network
+│   │   ├── tailscale/
+│   │   │   ├── pre/                   # Placeholder (no resources)
+│   │   │   └── post/                  # Device discovery, IP resolution
+│   │   └── cloudflare/
+│   │       ├── pre/                   # Placeholder (no resources)
+│   │       └── post/                  # DNS records (A/AAAA/CNAME)
+│   └── manifests/                     # Application modules
 │       ├── terragrunt.stack.hcl       # Defines manifests stack units and dependencies
 │       └── core/
-│           ├── longhorn/
-│           ├── reflector/
-│           ├── cnpg/
-│           ├── kube-prometheus-stack/
-│           ├── cert-manager/
-│           └── testing/               # Smoke tests after Gateway / TLS
+│           ├── longhorn/              # Distributed block storage
+│           ├── reflector/             # Secret/configmap reflection
+│           ├── cnpg/                  # CloudNativePG operator
+│           ├── kube-prometheus-stack/ # Monitoring stack
+│           ├── cert-manager/          # ACME certificates + Gateway
+│           └── testing/               # Smoke tests (nginx, echoserver)
 │
 └── packer/                            # Optional Talos image build for Hetzner
     ├── hetzner.pkr.hcl                # Packer template
@@ -304,18 +316,18 @@ defined in module `terragrunt.hcl` files via `dependency` blocks and hooks.
 ```
 
 > [!NOTE]
-> When `make generate` runs, Terragrunt temporarily links `$(ENV).stack.hcl` as
-`terragrunt.stack.hcl` and generates unit directories under **`.terragrunt-stack/`**;
-the Makefile may clean these intermediate directories after plan/apply.
+> When `make generate` runs, Terragrunt reads `terragrunt.stack.hcl` and generates unit
+> directories under **`.terragrunt-stack/`**; the Makefile cleans these intermediate
+> directories after plan/apply. Each module's `terragrunt.hcl` includes `common.hcl` for
+> shared backend config, provider versions, and mock outputs.
 
 <br>
 
 ## Other Environments
 
-Production is defined by **`prod.stack.hcl`** and **`prod.values.hcl`**. For another
-environment (e.g., dev), copy these to `dev.stack.hcl` + `dev.values.hcl` and use
-`make apply ENV=dev`. The stack file should read the matching `*.values.hcl` via
-`read_terragrunt_config`.
+Production is defined by **`terragrunt.stack.hcl`** and **`prod.values.hcl`**. For another
+environment (e.g., dev), create `dev.values.hcl` and use `make apply ENV=dev`. The stack
+file reads the matching `*.values.hcl` based on the `STACK_ENV` environment variable.
 
 <br>
 
