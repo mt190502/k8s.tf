@@ -13,6 +13,7 @@ observability, and certificate management.
 - SOPS + age encryption for sensitive configuration
 - Terragrunt stack-based deployment with dependency management
 - Centralized mock outputs for plan/destroy without applied state
+- **Mock mode for testing** — plan infrastructure without real configuration
 
 <br>
 
@@ -165,6 +166,11 @@ To edit secrets later: `make decrypt` → edit → `make encrypt`.
 Update `infra` (cluster name, `cluster_url`, nodes, firewall, versions) and `apps`
 blocks in `prod.values.hcl` for your environment.
 
+> [!TIP]
+> If `prod.values.hcl` is empty or missing the `infra` block, the stack runs in **mock mode**
+> using default values from `modules/common.hcl`. This allows `make infra-plan` without real
+> configuration. Apply/destroy operations are blocked in mock mode.
+
 ### 3. Generate Stack and Apply
 
 Default environment is **prod** (`ENV=prod`). `make generate` requires `secrets.hcl`
@@ -282,7 +288,7 @@ graph TD
 ├── .sops.yaml                         # SOPS / age rules
 ├── Makefile                           # generate, plan, apply, SOPS, packer, lint
 ├── modules/
-│   ├── common.hcl                     # Backend, provider versions, mock outputs, shared helpers
+│   ├── common.hcl                     # Backend, provider versions, mock outputs, mock_infra, mock_apps
 │   ├── infra/                         # Base infrastructure modules (Talos, Hetzner, Tailscale, Cloudflare)
 │   │   ├── terragrunt.stack.hcl       # Defines infra stack units and dependencies
 │   │   ├── talos/
