@@ -160,6 +160,10 @@ locals {
       version    = "v1.19.3"
       acme_email = "mt190502@mtaha.dev"
     }
+    tailscale_operator = {
+      enabled = true
+      version = "1.94.2"
+    }
     tests = {
       enabled = false
     }

@@ -121,10 +121,19 @@ stack "manifests" {
   values = {
     config = {
       dns_domain = local.infra.kubernetes.cluster_url.dns
+      subnet_router_advertised_cidrs = concat(
+        [local.infra.kubernetes.ipcfg.service.ipv4],
+        local.infra.talos.dualstack ? [local.infra.kubernetes.ipcfg.service.ipv6] : []
+      )
     }
     secrets = {
       cloudflare = {
         api_token = try(local.s.cloudflare.api_token, "")
+      }
+      tailscale = {
+        auth_key      = try(local.s.tailscale.auth_key, "")
+        client_id     = try(local.s.tailscale.client_id, "")
+        client_secret = try(local.s.tailscale.client_secret, "")
       }
     }
     apps = try(local.v.apps, {})

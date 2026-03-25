@@ -73,6 +73,25 @@ unit "cert_manager" {
   }
 }
 
+unit "tailscale_operator" {
+  source = "./core/tailscale-operator"
+  path   = "core/tailscale-operator"
+  values = {
+    enabled = try(local.a.tailscale_operator.enabled, true)
+    config = {
+      subnet_router_advertised_cidrs = try(local.c.subnet_router_advertised_cidrs, [])
+    }
+    secrets = {
+      auth_key      = try(local.s.tailscale.auth_key, "")
+      client_id     = try(local.s.tailscale.client_id, "")
+      client_secret = try(local.s.tailscale.client_secret, "")
+    }
+    versions = {
+      chart = try(local.a.tailscale_operator.version, "")
+    }
+  }
+}
+
 unit "tests" {
   source = "./core/testing"
   path   = "core/testing"
