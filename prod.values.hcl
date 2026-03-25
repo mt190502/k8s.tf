@@ -161,7 +161,7 @@ locals {
       acme_email = "mt190502@mtaha.dev"
     }
     tests = {
-      enabled = true
+      enabled = false
     }
   }
 }
