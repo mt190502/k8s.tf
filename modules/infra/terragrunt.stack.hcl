@@ -73,7 +73,6 @@ unit "tailscale_post" {
       dualstack = try(local.c.talos.dualstack, true)
     }
     secrets = {
-      auth_key      = try(local.s.tailscale.auth_key, "")
       client_id     = try(local.s.tailscale.client_id, "")
       client_secret = try(local.s.tailscale.client_secret, "")
       tailnet       = try(local.s.tailscale.tailnet, "")

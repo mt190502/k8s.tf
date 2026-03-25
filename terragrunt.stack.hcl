@@ -1,5 +1,5 @@
 ## ============================================================================================= ##
-# prod.stack.hcl --- Production stack                                                             #
+# terragrunt.stack.hcl --- Root stack definition                                                  #
 #                                                                                                 #
 # Infrastructure:  hetzner + tailscale + cloudflare + talos                                       #
 # Applications:    core/apps --- each app is a separate unit                                      #

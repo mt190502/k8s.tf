@@ -4,7 +4,7 @@
 #  Terragrunt wrapper for the Tailscale post stage --- discovers node IPs after hetzner/post.     #
 #                                                                                                 #
 #  Required Inputs                                                                                #
-#   config.dualstack, secrets.auth_key, secrets.client_id, secrets.client_secret, secrets.tailnet #
+#   config.dualstack, secrets.client_id, secrets.client_secret, secrets.tailnet                   #
 #   deps.nodes (from hetzner/post dependency)                                                     #
 #                                                                                                 #
 #  Apply order:                                                                                   #
@@ -42,7 +42,6 @@ generate "secrets" {
   if_exists = "overwrite_terragrunt"
   contents  = <<-EOF
     secrets = {
-      auth_key      = "${try(values.secrets.auth_key, "") != "" ? values.secrets.auth_key : include.common.locals.mock_tailscale_auth_key}" 
       client_id     = "${try(values.secrets.client_id, "") != "" ? values.secrets.client_id : include.common.locals.mock_tailscale_oauth_id}"
       client_secret = "${try(values.secrets.client_secret, "") != "" ? values.secrets.client_secret : include.common.locals.mock_tailscale_oauth_secret}"
       tailnet       = "${try(values.secrets.tailnet, "") != "" ? values.secrets.tailnet : include.common.locals.mock_tailscale_tailnet}"

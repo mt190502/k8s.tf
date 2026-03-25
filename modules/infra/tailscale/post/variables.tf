@@ -7,7 +7,6 @@
 #    config           --- Configuration object                                                    #
 #      dualstack      --- Also resolve IPv6 Tailscale addresses                                   #
 #    secrets          --- Sensitive configuration                                                 #
-#      auth_key       --- Tailscale auth key for node registration                                #
 #      client_id      --- OAuth client ID - used to delete devices on destroy                     #
 #      client_secret  --- OAuth client secret - used to delete devices on destroy                 #
 #      tailnet        --- Tailnet name                                                            #
@@ -31,7 +30,6 @@ variable "config" {
 variable "secrets" {
   description = "Tailscale post-stage secrets"
   type = object({
-    auth_key      = string
     client_id     = string
     client_secret = string
     tailnet       = string

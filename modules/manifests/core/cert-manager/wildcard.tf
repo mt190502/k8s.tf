@@ -4,7 +4,8 @@
 #  Issues a wildcard Certificate for *.dns_domain via the ClusterIssuer in issuer.tf.             #
 #  The resulting Secret is annotated for Reflector to sync into configured namespaces.            #
 #  Uses null_resource + kubectl because the kubernetes provider does not support CRDs well.       #
-#  Refs: https://github.com/hashicorp/terraform-provider-kubernetes#2673, #2777                   #
+#  Refs: https://github.com/hashicorp/terraform-provider-kubernetes/issues/2673                   #
+#        https://github.com/hashicorp/terraform-provider-kubernetes/issues/2777                   #
 ## ============================================================================================= ##
 locals {
   certificate_name      = "wildcard-${var.config.dns_domain}-tls"

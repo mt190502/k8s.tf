@@ -4,7 +4,8 @@
 #  Creates the shared Cilium Gateway (HTTPS :443, *.dns_domain) in cert-manager namespace.        #
 #  TLS is terminated with the wildcard certificate from wildcard.tf.                              #
 #  Uses null_resource + kubectl because the kubernetes provider does not support CRDs well.       #
-#  Refs: https://github.com/hashicorp/terraform-provider-kubernetes#2673, #2777                   #
+#  Refs: https://github.com/hashicorp/terraform-provider-kubernetes/issues/2673                   #
+#        https://github.com/hashicorp/terraform-provider-kubernetes/issues/2777                   #
 ## ============================================================================================= ##
 locals {
   gateway_name = "gateway"

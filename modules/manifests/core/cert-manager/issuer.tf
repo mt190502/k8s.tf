@@ -3,7 +3,8 @@
 #                                                                                                 #
 #  Creates a Let's Encrypt ClusterIssuer (ACME DNS01 via Cloudflare).                             #
 #  Uses null_resource + kubectl because the kubernetes provider does not support CRDs well.       #
-#  Refs: https://github.com/hashicorp/terraform-provider-kubernetes#2673, #2777                   #
+#  Refs: https://github.com/hashicorp/terraform-provider-kubernetes/issues/2673                   #
+#        https://github.com/hashicorp/terraform-provider-kubernetes/issues/2777                   #
 ## ============================================================================================= ##
 locals {
   clusterissuer_name = "mainissuer"
