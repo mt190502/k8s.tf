@@ -74,7 +74,7 @@ dependency "talos_pre" {
 inputs = {
   enabled = try(values.enabled, true)
   config = {
-    assignments  = try(values.config.assignments, {})
+    assignments  = try(values.config.assignments, [])
     cluster_name = try(values.config.cluster_name, "")
     dualstack    = try(values.config.dualstack, true)
     firewall = {
@@ -102,4 +102,5 @@ inputs = {
       machine_configurations = dependency.talos_pre.outputs.machine_configurations
     }
   }
+  rootvars = try(values.rootvars, {})
 }

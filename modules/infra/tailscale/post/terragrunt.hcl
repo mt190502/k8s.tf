@@ -54,7 +54,7 @@ generate "secrets" {
 #  Dependencies -  enforce apply order and wire outputs from upstream modules as inputs.          #
 ## --------------------------------------------------------------------------------------------- ##
 dependency "hetzner_post" {
-  enabled      = values.rootvars.hetzner.enabled
+  enabled      = try(values.rootvars.hetzner.enabled, false)
   config_path  = "../../hetzner/post"
   skip_outputs = contains(include.common.locals.skip_outputs_commands, get_terraform_command())
   mock_outputs = {
@@ -71,11 +71,12 @@ inputs = {
     dualstack = try(values.config.dualstack, true)
   }
   deps = {
-    nodes = values.rootvars.hetzner.enabled ? {
+    nodes = try(values.rootvars.hetzner.enabled, false) ? {
       for name, node in try(dependency.hetzner_post.outputs.nodes, {}) : name => {
         name = node.name
         role = node.role
       }
     } : {}
   }
+  rootvars = try(values.rootvars, {})
 }

@@ -108,7 +108,7 @@ generate "versions" {
 #  Dependencies -  enforce apply order and wire outputs from upstream modules as inputs.          #
 ## --------------------------------------------------------------------------------------------- ##
 dependency "hetzner_post" {
-  enabled      = values.rootvars.hetzner.enabled
+  enabled      = try(values.rootvars.hetzner.enabled, false)
   config_path  = "../../hetzner/post"
   skip_outputs = contains(include.common.locals.skip_outputs_commands, get_terraform_command())
   mock_outputs = {
@@ -120,7 +120,7 @@ dependency "hetzner_post" {
 }
 
 dependency "tailscale_post" {
-  enabled      = values.rootvars.tailscale.enabled
+  enabled      = try(values.rootvars.tailscale.enabled, false)
   config_path  = "../../tailscale/post"
   skip_outputs = contains(include.common.locals.skip_outputs_commands, get_terraform_command())
   mock_outputs = {
@@ -163,10 +163,20 @@ inputs = {
       machine_configurations = dependency.talos_pre.outputs.machine_configurations
       machine_secrets        = dependency.talos_pre.outputs.machine_secrets
     }
-    nodes = values.rootvars.hetzner.enabled ? dependency.hetzner_post.outputs.nodes : {}
+    nodes = try(values.rootvars.hetzner.enabled, false) ? dependency.hetzner_post.outputs.nodes : {}
     tailscale = {
-      ipv4_addresses = values.rootvars.hetzner.enabled && values.rootvars.tailscale.enabled ? try(dependency.tailscale_post.outputs.node_ipv4, {}) : {}
-      ipv6_addresses = values.rootvars.hetzner.enabled && values.rootvars.tailscale.enabled && try(values.config.dualstack, true) ? try(dependency.tailscale_post.outputs.node_ipv6, {}) : {}
+      ipv4_addresses = try(values.rootvars.tailscale.enabled, false) ? dependency.tailscale_post.outputs.node_ipv4 : {}
+      ipv6_addresses = try(values.rootvars.tailscale.enabled, false) ? dependency.tailscale_post.outputs.node_ipv6 : {}
     }
+    node_ips = try(values.rootvars.hetzner.enabled, false) ? {
+      for name, node in dependency.hetzner_post.outputs.nodes :
+      name => try(
+        try(values.rootvars.tailscale.enabled, false) && dependency.tailscale_post.outputs.node_ipv4[name] != ""
+        ? dependency.tailscale_post.outputs.node_ipv4[name]
+        : node.ipv4_address,
+        node.ipv4_address
+      )
+    } : {}
   }
+  rootvars = try(values.rootvars, {})
 }

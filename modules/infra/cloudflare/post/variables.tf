@@ -3,17 +3,24 @@
 #                                                                                                 #
 #  Inputs for the Cloudflare post stage --- creates DNS records for the cluster.                  #
 #                                                                                                 #
-#    enabled       --- Enable this module                                                         #
-#    config        --- Configuration object                                                       #
-#      cluster_url --- Cluster FQDNs: main, apiserver, dns                                        #
-#      dualstack   --- Also create AAAA records                                                   #
-#    secrets       --- Sensitive configuration                                                    #
-#      api_token   --- Cloudflare API token                                                       #
-#      zone_id     --- Cloudflare Zone ID                                                         #
-#                                                                                                 #
-#    Dependency outputs (passed via deps variable):                                               #
-#      nodes (name, role, ipv4_address, ipv6_address)                                             #
-#      tailscale.ipv4_addresses, tailscale.ipv6_addresses                                         #
+#    enabled        --- Enable this module                                                        #
+#    config         --- Configuration object                                                      #
+#      cluster_url  --- Cluster FQDNs                                                             #
+#        dns        --- DNS domain for services (e.g., srv.example.com)                           #
+#        main       --- Main cluster FQDN for load balancer (e.g., example.com)                   #
+#        apiserver  --- API server FQDN (e.g., k8s.example.com)                                   #
+#      dualstack    --- Also create AAAA records for IPv6                                         #
+#    secrets        --- Sensitive configuration                                                   #
+#      api_token    --- Cloudflare API token                                                      #
+#      zone_id      --- Cloudflare Zone ID                                                        #
+#    nodes          --- Map of nodes with IPs from hetzner/post                                   #
+#      name         --- Node hostname                                                             #
+#      role         --- controlplane or worker                                                    #
+#      ipv4_address --- Public IPv4 address                                                       #
+#      ipv6_address --- Public IPv6 address                                                       #
+#    tailscale_ipv4 --- Map of Tailscale IPv4 addresses (preferred for controlplane)              #
+#    tailscale_ipv6 --- Map of Tailscale IPv6 addresses (preferred for controlplane)              #
+#    rootvars       --- Root configuration from parent stack                                      #
 ## ============================================================================================= ##
 variable "enabled" {
   description = "Enable this module"

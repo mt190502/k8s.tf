@@ -16,6 +16,9 @@ output "machine_configurations" {
 
 output "machine_secrets" {
   description = "Talos machine secrets --- passed to talos/post for apply and bootstrap"
-  value       = try(talos_machine_secrets.this[0], null)
-  sensitive   = true
+  value = length(var.config.nodes) > 0 ? {
+    client_configuration = talos_machine_secrets.this[0].client_configuration
+    machine_secrets      = talos_machine_secrets.this[0].machine_secrets
+  } : null
+  sensitive = true
 }

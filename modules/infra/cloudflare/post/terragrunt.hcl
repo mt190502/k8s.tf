@@ -52,7 +52,7 @@ generate "secrets" {
 #  Dependencies -  enforce apply order and wire outputs from upstream modules as inputs.          #
 ## --------------------------------------------------------------------------------------------- ##
 dependency "hetzner_post" {
-  enabled      = values.rootvars.hetzner.enabled
+  enabled      = try(values.rootvars.hetzner.enabled, false)
   config_path  = "../../hetzner/post"
   skip_outputs = contains(include.common.locals.skip_outputs_commands, get_terraform_command())
   mock_outputs = {
@@ -64,7 +64,7 @@ dependency "hetzner_post" {
 }
 
 dependency "tailscale_post" {
-  enabled      = values.rootvars.tailscale.enabled
+  enabled      = try(values.rootvars.tailscale.enabled, false)
   config_path  = "../../tailscale/post"
   skip_outputs = contains(include.common.locals.skip_outputs_commands, get_terraform_command())
   mock_outputs = {
@@ -94,20 +94,21 @@ inputs = {
     dualstack = try(values.config.dualstack, true)
   }
   deps = {
-    nodes = values.rootvars.hetzner.enabled ? {
-      for name, node in try(dependency.hetzner_post.outputs.nodes, {}) : name => {
+    nodes = try(values.rootvars.hetzner.enabled, false) ? {
+      for name, node in dependency.hetzner_post.outputs.nodes : name => {
         name         = node.name
         role         = node.role
         ipv4_address = node.ipv4_address
         ipv6_address = node.ipv6_address
       }
     } : {}
-    tailscale = values.rootvars.tailscale.enabled ? {
-      ipv4_addresses = try(dependency.tailscale_post.outputs.node_ipv4, {})
-      ipv6_addresses = try(dependency.tailscale_post.outputs.node_ipv6, {})
+    tailscale = try(values.rootvars.tailscale.enabled, false) ? {
+      ipv4_addresses = dependency.tailscale_post.outputs.node_ipv4
+      ipv6_addresses = dependency.tailscale_post.outputs.node_ipv6
       } : {
       ipv4_addresses = {}
       ipv6_addresses = {}
     }
   }
+  rootvars = try(values.rootvars, {})
 }

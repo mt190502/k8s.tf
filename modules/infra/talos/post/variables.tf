@@ -2,22 +2,23 @@
 #  modules/infra/talos/post/variables.tf                                                          #
 #                                                                                                 #
 #  Inputs for the Talos post stage --- applies configs, bootstraps etcd, retrieves kubeconfig.    #
-#  Values come from talos/pre, hetzner/post, and tailscale/post outputs.                          #
 #                                                                                                 #
-#    enabled               --- Enable this module                                                 #
-#    config                --- Configuration object                                               #
-#      cluster_name        --- Cluster name (for talos_client_configuration)                      #
-#      cluster_endpoint    --- API server hostname/IP, no scheme or port                          #
-#      dualstack           --- When true, IPv6 addresses are included in the node list            #
-#      first_controlplane  --- Name of the first controlplane node (bootstrap target)             #
+#    enabled                        --- Enable this module                                        #
+#    config                         --- Configuration object                                      #
+#      cluster_name                 --- Cluster name (for talos_client_configuration)             #
+#      cluster_endpoint             --- API server hostname/IP, no scheme or port                 #
+#      dualstack                    --- When true, IPv6 addresses are included in the node list   #
+#      first_controlplane           --- Name of the first controlplane node (bootstrap target)    #
 #                                                                                                 #
-#    Dependency outputs (passed via deps variable):                                               #
-#      talos.machine_configurations, talos.machine_secrets                                        #
-#      nodes (name, role, arch, location, ipv4_address, ipv6_address, private_ip, taints)         #
-#      tailscale.ipv4_addresses, tailscale.ipv6_addresses                                         #
+#    deps                           --- Outputs from upstream modules                             #
+#      talos.machine_configurations --- Per-node rendered machine config strings                  #
+#      talos.machine_secrets        --- Talos TLS credentials (client_configuration)              #
+#      nodes                        --- Node metadata from hetzner/post (optional)                #
+#      tailscale.ipv4_addresses     --- Tailscale IPv4 addresses per node                         #
+#      tailscale.ipv6_addresses     --- Tailscale IPv6 addresses per node                         #
+#      node_ips                     --- Computed node IPs for talosctl                            #
 #                                                                                                 #
-#    Terragrunt-only inputs (not passed to Terraform):                                            #
-#      hetzner_enabled, tailscale_enabled --- Control dependency data flow from stack units       #
+#    rootvars                       --- Root configuration from parent stack                      #
 ## ============================================================================================= ##
 variable "enabled" {
   description = "Enable this module"
@@ -40,15 +41,15 @@ variable "deps" {
   type = object({
     talos = object({
       machine_configurations = map(string)
-      machine_secrets = object({
+      machine_secrets = optional(object({
         client_configuration = object({
           ca_certificate     = string
           client_certificate = string
           client_key         = string
         })
-      })
+      }))
     })
-    nodes = map(object({
+    nodes = optional(map(object({
       name         = string
       role         = string
       arch         = string
@@ -57,11 +58,12 @@ variable "deps" {
       ipv6_address = string
       private_ip   = optional(string)
       taints       = list(string)
-    }))
-    tailscale = object({
+    })))
+    tailscale = optional(object({
       ipv4_addresses = map(string)
       ipv6_addresses = map(string)
-    })
+    }))
+    node_ips = map(string)
   })
 }
 

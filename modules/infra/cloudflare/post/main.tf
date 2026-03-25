@@ -42,7 +42,7 @@ resource "cloudflare_dns_record" "masters" {
   }
   zone_id = var.secrets.zone_id
   name    = var.config.cluster_url.apiserver
-  content = lookup(var.deps.tailscale.ipv4_addresses, each.value.name, each.value.ipv4_address)
+  content = lookup(var.deps.tailscale.ipv4_addresses, each.value.name, "") != "" ? var.deps.tailscale.ipv4_addresses[each.value.name] : each.value.ipv4_address
   comment = each.value.name
   type    = "A"
   ttl     = 60
@@ -55,7 +55,7 @@ resource "cloudflare_dns_record" "masters_v6" {
   } : {}
   zone_id = var.secrets.zone_id
   name    = var.config.cluster_url.apiserver
-  content = lookup(var.deps.tailscale.ipv6_addresses, each.value.name, each.value.ipv6_address)
+  content = lookup(var.deps.tailscale.ipv6_addresses, each.value.name, "") != "" ? var.deps.tailscale.ipv6_addresses[each.value.name] : each.value.ipv6_address
   comment = each.value.name
   type    = "AAAA"
   ttl     = 60

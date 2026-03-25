@@ -7,8 +7,9 @@
 #   - versions.cilium, versions.kubernetes, versions.talos                                        #
 #   - cluster_name, cluster_url, ipcfg (cluster identity + networking)                            #
 #   - dualstack, kubeprism, kubespan (feature flags)                                              #
-#   - nodes (list: name, role, taints)                                                            #
+#   - nodes (list: name, role, arch, taints)                                                      #
 #   - secrets.auth_key (sensitive)                                                                #
+#   - rootvars (hetzner.private_network.enabled, tailscale.enabled)                               #
 #                                                                                                 #
 #  Apply order:                                                                                   #
 #   [talos/pre] -> hetzner/post -> tailscale/post -> talos/post -> cloudflare/post                #
@@ -44,7 +45,7 @@ generate "secrets" {
   if_exists = "overwrite_terragrunt"
   contents  = <<-EOF
     secrets = {
-      auth_key = "${values.secrets.auth_key}"
+      auth_key = "${try(values.secrets.auth_key, "") != "" ? values.secrets.auth_key : include.common.locals.mock_tailscale_auth_key}"
     }
   EOF
 }

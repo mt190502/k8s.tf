@@ -11,7 +11,7 @@
 #  Copyright (c) 2026 Taha. All rights reserved.                                                  #
 #  Licensed under the AGPL License. See LICENSE in the project root for license information.      #
 ## ============================================================================================= ##
-.PHONY: default generate plan apply destroy clean decrypt encrypt build infra-plan infra-apply infra-destroy manifests-plan manifests-apply manifests-destroy
+.PHONY: default generate plan apply destroy clean decrypt encrypt build infra-plan infra-apply infra-destroy manifests-plan manifests-apply manifests-destroy _check_values
 .SILENT:
 
 ## --------------------------------------------------------------------------------------------- ##
@@ -43,12 +43,29 @@ export TERRAGRUNT_SECRETS = $(SECRETS)
 export STACK_ENV = $(ENV)
 STACK_FILE = $(ENV).stack.hcl
 STACK_DIR  = .terragrunt-stack
+VALUES_FILE = $(ENV).values.hcl
 TG_RUN_ALL = terragrunt --working-dir "$(STACK_DIR)" run --all
 TG_RUN_INFRA = terragrunt --working-dir "$(STACK_DIR)/infra/.terragrunt-stack" run --all
 TG_RUN_MANIFESTS = terragrunt --working-dir "$(STACK_DIR)/manifests/.terragrunt-stack" run --all --non-interactive
 STACK_NESTED_DIRS = $(STACK_DIR)/.terragrunt-stack $(STACK_DIR)/*/.terragrunt-stack $(STACK_DIR)/*/*/.terragrunt-stack
 STACK_DEEP_NESTED_DIRS = $(STACK_DIR)/.terragrunt-stack $(STACK_DIR)/*/*/.terragrunt-stack
 KUBE_CONTEXT ?= admin@$(shell awk -F'"' '/^[[:space:]]*cluster_name[[:space:]]*=/{print $$2; exit}' $(ENV).values.hcl)
+
+##~ ---------------------------------------------------------------------------- ~##
+#  Mock mode check --- prevents apply/destroy when using mock values               #
+##~ ---------------------------------------------------------------------------- ~##
+_check_values:
+	@if ! grep -qE '^\s*infra\s*=\s*\{' $(VALUES_FILE); then \
+		echo ""; \
+		echo "╔══════════════════════════════════════════════════════════════════╗"; \
+		echo "║  ERROR: Mock mode detected                                       ║"; \
+		echo "║                                                                  ║"; \
+		echo "║  Cannot run apply/destroy with mock values.                      ║"; \
+		echo "║  Please configure $(VALUES_FILE) with real infrastructure.       ║"; \
+		echo "╚══════════════════════════════════════════════════════════════════╝"; \
+		echo ""; \
+		exit 1; \
+	fi
 
 
 
@@ -147,12 +164,12 @@ infra-plan: generate
 	$(TG_RUN_INFRA) plan -- -show-sensitive
 	rm -rf $(STACK_NESTED_DIRS)
 
-infra-apply: generate
+infra-apply: _check_values generate
 	echo "Applying infra units..."
 	$(TG_RUN_INFRA) apply
 	rm -rf $(STACK_NESTED_DIRS)
 
-infra-destroy:
+infra-destroy: _check_values
 	clear
 	if [ ! -d "$(STACK_DIR)/infra/.terragrunt-stack" ]; then \
 		echo "Error: Infra stack does not appear to be generated. Please run 'make infra-plan' or 'make infra-apply' first."; \
@@ -174,13 +191,13 @@ manifests-plan: generate
 	$(TG_RUN_MANIFESTS) plan -- -show-sensitive
 	rm -rf $(STACK_NESTED_DIRS)
 
-manifests-apply: generate
+manifests-apply: _check_values generate
 	kubectl cluster-info > /dev/null || { echo "Error: kubeconfig is not valid or cluster is not reachable. Please check your kubeconfig and cluster status."; exit 1; }
 	echo "Applying manifest units..."
 	$(TG_RUN_MANIFESTS) apply
 	rm -rf $(STACK_NESTED_DIRS)
 
-manifests-destroy:
+manifests-destroy: _check_values
 	clear
 	kubectl cluster-info > /dev/null || { echo "Error: kubeconfig is not valid or cluster is not reachable. Please check your kubeconfig and cluster status."; exit 1; }
 	echo "Destroying manifest units..."
@@ -203,7 +220,7 @@ plan: generate
 	fi
 	rm -rf $(STACK_NESTED_DIRS)
 
-apply: generate
+apply: _check_values generate
 	$(TG_RUN_INFRA) apply
 	if kubectl cluster-info > /dev/null 2>&1; then \
 		$(TG_RUN_MANIFESTS) apply; \
@@ -212,7 +229,7 @@ apply: generate
 	fi
 	rm -rf $(STACK_NESTED_DIRS)
 
-destroy:
+destroy: _check_values
 	clear
 	if [ ! -d "$(STACK_DIR)" ]; then \
 		echo "Error: Stack does not appear to be generated. Please run 'make generate' first."; \

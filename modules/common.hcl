@@ -44,9 +44,9 @@ locals {
   ## --------------------------------------------------------------------------------------------- ##
   #  Shared mock outputs for dependency blocks (plan/validate without state).                       #
   ## --------------------------------------------------------------------------------------------- ##
-  skip_outputs_commands                   = ["plan", "validate", "init", "destroy"]
+  skip_outputs_commands                   = ["validate", "init", "destroy"]
   mock_outputs_allowed_terraform_commands = ["validate", "plan", "init", "destroy"]
-  mock_outputs_merge_strategy_with_state  = "no_merge"
+  mock_outputs_merge_strategy_with_state  = "shallow"
 
   mock_node_full = {
     name         = "mock-node"
@@ -94,6 +94,125 @@ locals {
   mock_tailscale_oauth_id     = "mock-tailscale-client-id"
   mock_tailscale_oauth_secret = "mock-tailscale-client-secret"
   mock_tailscale_tailnet      = "mock-tailnet"
+
+  ## --------------------------------------------------------------------------------------------- ##
+  #  Full mock infrastructure configuration for testing/development.                                #
+  #  Used when values.hcl is empty or missing infrastructure config.                                #
+  ## --------------------------------------------------------------------------------------------- ##
+  mock_infra = {
+    kubernetes = {
+      cluster_name = "mock-cluster"
+      cluster_url = {
+        dns       = "mock.local"
+        main      = "srv.mock.local"
+        apiserver = "k8s.srv.mock.local"
+      }
+      ipcfg = {
+        pod = {
+          ipv4 = "10.244.0.0/16"
+          ipv6 = "2001:db8:42:0::/56"
+        }
+        service = {
+          ipv4 = "10.96.0.0/12"
+          ipv6 = "2001:db8:42:1::/112"
+        }
+      }
+      nodes = [
+        { name = "mock-cp1", role = "controlplane", taints = [] },
+        { name = "mock-w1", role = "worker", taints = [] },
+        { name = "mock-w2", role = "worker", taints = [] },
+      ]
+    }
+    cloudflare = {
+      enabled = true
+    }
+    hetzner = {
+      enabled = true
+      assignments = [
+        {
+          selector     = { role = "controlplane" }
+          architecture = "arm64"
+          locations    = ["fsn1", "nbg1", "hel1"]
+          strategy     = "roundrobin"
+        },
+        {
+          selector     = { role = "worker" }
+          architecture = "arm64"
+          locations    = ["fsn1", "nbg1"]
+          strategy     = "roundrobin"
+        }
+      ]
+      firewall = {
+        enabled = true
+        rules = [
+          {
+            short_name  = "https"
+            description = "Allow HTTPS traffic"
+            protocol    = "tcp"
+            direction   = "in"
+            port        = "443"
+            source_ips  = ["0.0.0.0/0", "::/0"]
+          },
+          {
+            short_name  = "tailscale"
+            description = "Allow Tailscale peer connectivity"
+            protocol    = "udp"
+            direction   = "in"
+            port        = "41641"
+            source_ips  = ["0.0.0.0/0", "::/0"]
+          }
+        ]
+      }
+      images = {
+        arm64 = { id = "12345678-arm64", code = "cax11" }
+        amd64 = { id = "87654321-amd64", code = "cx33" }
+      }
+      private_network = {
+        enabled = true
+        cidr    = "10.0.0.0/16"
+      }
+    }
+    tailscale = {
+      enabled = true
+    }
+    talos = {
+      dualstack = true
+      kubespan  = true
+      kubeprism = true
+    }
+    versions = {
+      talos      = "v1.12.0"
+      kubernetes = "v1.35.0"
+      cilium     = "1.19.0"
+    }
+  }
+
+  mock_apps = {
+    longhorn = {
+      enabled = true
+      version = "1.11.0"
+    }
+    reflector = {
+      enabled = true
+      version = "10.0.10"
+    }
+    kube_prometheus_stack = {
+      enabled = true
+      version = "82.1.0"
+    }
+    cnpg = {
+      enabled = true
+      version = "0.27.1"
+    }
+    cert_manager = {
+      enabled    = true
+      version    = "v1.19.0"
+      acme_email = "mock@example.com"
+    }
+    tests = {
+      enabled = true
+    }
+  }
 }
 
 generate "backend" {

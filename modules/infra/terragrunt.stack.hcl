@@ -1,5 +1,13 @@
 ## ============================================================================================= ##
 #  modules/infra/terragrunt.stack.hcl --- Infrastructure sub-stack                                #
+#                                                                                                 #
+#  Units: talos/pre -> hetzner/post -> tailscale/post -> talos/post -> cloudflare/post            #
+#                                                                                                 #
+#  Locals:                                                                                        #
+#    c --- config (cluster settings, node definitions, feature flags)                             #
+#    s --- secrets (API tokens, auth keys)                                                        #
+#    v --- versions (Talos, Kubernetes, Cilium)                                                   #
+#    r --- rootvars (passed through to each unit for feature detection)                           #
 ## ============================================================================================= ##
 locals {
   c = try(values.config, {})
@@ -14,13 +22,14 @@ unit "talos_pre" {
   values = {
     enabled = true
     config = {
-      cluster_name = try(local.c.kubernetes.cluster_name, "")
-      cluster_url  = try(local.c.kubernetes.cluster_url, null)
-      dualstack    = try(local.c.talos.dualstack, true)
-      ipcfg        = try(local.c.kubernetes.ipcfg, null)
-      kubeprism    = try(local.c.talos.kubeprism, true)
-      kubespan     = try(local.c.talos.kubespan, false)
-      nodes        = try(local.c.kubernetes.nodes, [])
+      cluster_name    = try(local.c.kubernetes.cluster_name, "")
+      cluster_url     = try(local.c.kubernetes.cluster_url, null)
+      dualstack       = try(local.c.talos.dualstack, true)
+      ipcfg           = try(local.c.kubernetes.ipcfg, null)
+      kubeprism       = try(local.c.talos.kubeprism, true)
+      kubespan        = try(local.c.talos.kubespan, false)
+      nodes           = try(local.c.hetzner.nodes, try(local.c.kubernetes.nodes, []))
+      private_network = try(local.c.hetzner.private_network, null)
     }
     secrets = {
       auth_key = try(local.s.tailscale.auth_key, "")

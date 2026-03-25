@@ -7,6 +7,21 @@
 #    talos_machine_secrets.this             --- generates TLS credentials for the cluster         #
 #    data.talos_machine_configuration.nodes --- renders machine config per node                   #
 ## ============================================================================================= ##
+locals {
+  private_network_cidr = try(var.rootvars.hetzner.private_network.cidr, "")
+  cluster_cidrs = (
+    try(var.rootvars.hetzner.private_network.enabled, false) && try(var.rootvars.tailscale.enabled, false)
+    ? concat([local.private_network_cidr], ["100.64.0.0/10", "fd7a:115c:a1e0::/48"])
+    : (try(var.rootvars.hetzner.private_network.enabled, false)
+      ? [local.private_network_cidr]
+      : (try(var.rootvars.tailscale.enabled, false)
+        ? ["100.64.0.0/10", "fd7a:115c:a1e0::/48"]
+        : []
+      )
+    )
+  )
+}
+
 resource "talos_machine_secrets" "this" {
   count         = length(var.config.nodes) > 0 ? 1 : 0
   talos_version = var.versions.talos
@@ -22,25 +37,22 @@ data "talos_machine_configuration" "nodes" {
   config_patches = concat(
     each.value.role == "controlplane" ? [
       templatefile("../templates/controlplane.tmpl", {
-        ETCD_CIDRS = var.rootvars.hetzner.enabled && var.rootvars.hetzner.private_network.enabled ? [var.rootvars.hetzner.private_network.cidr] : (var.rootvars.tailscale.enabled ? ["100.64.0.0/10", "fd7a:115c:a1e0::/48"] : [])
+        ETCD_CIDRS = local.cluster_cidrs
       }),
       templatefile("../templates/cilium_postinstall_job.tmpl", {
-        CILIUM_VERSION = var.versions.cilium
-        DUALSTACK      = var.config.dualstack ? "true" : "false"
-        APISERVER_HOST = var.config.kubeprism ? "127.0.0.1" : var.config.cluster_url.apiserver
-        SRV_PORT       = var.config.kubeprism ? "7445" : "6443"
-        CLUSTER_DOMAIN = var.config.cluster_url.dns
-        OPERATOR_REPLICAS = max(1, length([
-          for _, node in var.config.nodes : node
-          if node.role == "controlplane"
-        ]))
+        CILIUM_VERSION    = var.versions.cilium
+        DUALSTACK         = var.config.dualstack ? "true" : "false"
+        APISERVER_HOST    = var.config.kubeprism ? "127.0.0.1" : var.config.cluster_url.apiserver
+        SRV_PORT          = var.config.kubeprism ? "7445" : "6443"
+        CLUSTER_DOMAIN    = var.config.cluster_url.dns
+        OPERATOR_REPLICAS = max(1, length([for node in var.config.nodes : node if node.role == "controlplane"]))
       }),
     ] : [],
     [
       templatefile("../templates/machine.tmpl", {
         CERT_SANS            = values(var.config.cluster_url)
-        KUBELET_NODEIP_CIDRS = var.rootvars.tailscale.enabled ? ["100.64.0.0/10", "fd7a:115c:a1e0::/48"] : []
-        TAILSCALE            = var.rootvars.tailscale.enabled ? "true" : "false"
+        KUBELET_NODEIP_CIDRS = local.cluster_cidrs
+        TAILSCALE            = try(var.rootvars.tailscale.enabled, false) ? "true" : "false"
       }),
       templatefile("../templates/cni.tmpl", {
         DNS_DOMAIN    = var.config.cluster_url.dns
@@ -55,8 +67,7 @@ data "talos_machine_configuration" "nodes" {
       templatefile("../templates/kubespan.tmpl", {
         ENABLED = var.config.kubespan
       }),
-      templatefile("../templates/netcfg.tmpl", {}),
-      var.rootvars.tailscale.enabled ? templatefile("../templates/tailscale.tmpl", {
+      try(var.rootvars.tailscale.enabled, false) ? templatefile("../templates/tailscale.tmpl", {
         TS_AUTHKEY  = var.secrets.auth_key
         TS_HOSTNAME = each.value.name
       }) : ""

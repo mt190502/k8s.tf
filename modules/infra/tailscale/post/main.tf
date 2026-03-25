@@ -4,8 +4,9 @@
 #  Discovers Tailscale device IPs for all nodes after they join the tailnet.                      #
 #  Nodes are created by hetzner/post; this stage waits for them to appear in the API.             #
 #                                                                                                 #
-#    config.dualstack --- also resolve IPv6 addresses                                             #
-#    nodes            --- node map with name and role (must match Talos hostname)                 #
+#    locals.masters/worker/all  --- split nodes by role for parallel data source lookups          #
+#    data.tailscale_device.*    --- waits for each device to appear, extracts IPs                 #
+#    resource.null_resource     --- deletes devices from tailnet on destroy via REST API          #
 ## ============================================================================================= ##
 locals {
   masters = { for name, node in var.deps.nodes : name => node if node.role == "controlplane" }

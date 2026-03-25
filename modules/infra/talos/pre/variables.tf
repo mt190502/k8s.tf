@@ -11,13 +11,14 @@
 #      dualstack      --- Enable dual-stack IPv4/IPv6                                             #
 #      kubeprism      --- Enable KubePrism (local apiserver proxy on port 7445)                   #
 #      kubespan       --- Enable KubeSpan (WireGuard overlay between nodes)                       #
-#      nodes          --- List of all nodes: name, role, taints                                   #
+#      nodes          --- List of all nodes: name, role, arch, taints                             #
 #    secrets          --- Sensitive configuration                                                 #
 #      auth_key       --- Tailscale auth key injected into each node's machine config             #
 #    versions         --- Version configuration                                                   #
 #      cilium         --- Cilium chart version for the post-install job patch                     #
 #      kubernetes     --- Kubernetes version                                                      #
 #      talos          --- Talos version (used when generating machine secrets)                    #
+#    rootvars         --- Root configuration (hetzner.private_network.enabled, tailscale.enabled) #
 ## ============================================================================================= ##
 variable "enabled" {
   description = "Enable this module"
@@ -50,6 +51,7 @@ variable "config" {
     nodes = list(object({
       name   = string
       role   = string
+      arch   = optional(string)
       taints = list(string)
     }))
   })
