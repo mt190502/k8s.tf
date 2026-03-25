@@ -3,11 +3,24 @@
 #                                                                                                 #
 #  Creates Hetzner Cloud servers for all cluster nodes, and a firewall if enabled.                #
 #                                                                                                 #
-#    hcloud_firewall.fw  --- single firewall applied to all nodes (when enabled)                  #
-#    hcloud_server.nodes --- one server per node; user_data used only on first boot               #
+#    hcloud_network.private       --- private network for internal cluster communication          #
+#    hcloud_network_subnet.private --- subnet for the private network                             #
+#    hcloud_firewall.fw           --- single firewall applied to all nodes (when enabled)         #
+#    hcloud_server.nodes          --- one server per node; user_data used only on first boot      #
 ## ============================================================================================= ##
 provider "hcloud" {
   token = var.secrets.api_token
+}
+
+locals {
+  private_ips = var.config.private_network.enabled ? {
+    for i, node in var.config.nodes :
+    node.name => (
+      node.role == "controlplane"
+      ? "10.0.1.${length([for j, n in var.config.nodes : n if n.role == "controlplane" && j < i]) + 1}"
+      : "10.0.2.${length([for j, n in var.config.nodes : n if n.role == "worker" && j < i]) + 1}"
+    )
+  } : {}
 }
 
 ## --------------------------------------------------------------------------------------------- ##
@@ -25,12 +38,6 @@ resource "hcloud_network_subnet" "private" {
   type         = "cloud"
   network_zone = "eu-central"
   ip_range     = var.config.private_network.cidr
-}
-
-resource "hcloud_server_network" "private" {
-  for_each  = var.config.private_network.enabled ? hcloud_server.nodes : {}
-  server_id = each.value.id
-  subnet_id = hcloud_network_subnet.private[0].id
 }
 
 ## --------------------------------------------------------------------------------------------- ##
@@ -68,8 +75,19 @@ resource "hcloud_server" "nodes" {
     ipv4_enabled = true
     ipv6_enabled = var.config.dualstack
   }
+  dynamic "network" {
+    for_each = var.config.private_network.enabled ? [1] : []
+    content {
+      network_id = hcloud_network.private[0].id
+      ip         = local.private_ips[each.key]
+    }
+  }
   lifecycle {
     ignore_changes = [image, user_data]
   }
-  depends_on = [hcloud_firewall.fw]
+  depends_on = [
+    hcloud_firewall.fw,
+    hcloud_network.private,
+    hcloud_network_subnet.private
+  ]
 }
