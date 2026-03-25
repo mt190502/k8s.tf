@@ -107,8 +107,8 @@ locals {
         ]
       }
       images = {
-        amd64 = { id = "358263593", code = "cx33" }
-        arm64 = { id = "358263592", code = "cax11" }
+        amd64 = { id = "368740932", code = "cx33" }
+        arm64 = { id = "368740925", code = "cax11" }
       }
       private_network = {
         enabled = true
