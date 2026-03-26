@@ -12,6 +12,21 @@ resource "helm_release" "this" {
     <<-EOF
       cron:
         schedule: "*/15 * * * *"
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: ""
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: reflector
+                topologyKey: kubernetes.io/hostname
     EOF
   ]
   depends_on = [kubernetes_namespace_v1.this]

@@ -54,6 +54,7 @@ locals {
     })
   ] : []
   first_controlplane = [for node in local.infra.kubernetes.nodes : node.name if node.role == "controlplane"][0]
+  controlplane_count = length([for node in local.infra.kubernetes.nodes : node if node.role == "controlplane"])
 }
 
 ## --------------------------------------------------------------------------------------------- ##
@@ -125,6 +126,7 @@ stack "manifests" {
         [local.infra.kubernetes.ipcfg.service.ipv4],
         local.infra.talos.dualstack ? [local.infra.kubernetes.ipcfg.service.ipv6] : []
       )
+      controlplane_count = local.controlplane_count
     }
     secrets = {
       cloudflare = {

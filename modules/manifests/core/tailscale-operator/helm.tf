@@ -14,6 +14,21 @@ resource "helm_release" "this" {
         defaultTags: "tag:k8s-operator"
       proxyConfig:
         defaultTags: "tag:k8s-pods"
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: ""
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: tailscale-operator
+                topologyKey: kubernetes.io/hostname
     EOF
   ]
   depends_on = [

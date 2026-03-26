@@ -7,6 +7,50 @@ locals {
   s = try(values.secrets, {})
 }
 
+unit "cert_manager" {
+  source = "./core/cert-manager"
+  path   = "core/cert-manager"
+  values = {
+    enabled = try(local.a.cert_manager.enabled, true)
+    config = {
+      acme_email                     = try(local.a.cert_manager.acme_email, "")
+      dns_domain                     = try(local.c.dns_domain, "")
+      wildcard_reflection_namespaces = try(local.a.reflector.wildcard_reflection_namespaces, [])
+    }
+    secrets = {
+      api_token = try(local.s.cloudflare.api_token, "")
+    }
+    versions = {
+      chart = try(local.a.cert_manager.version, "")
+    }
+  }
+}
+
+unit "cnpg" {
+  source = "./core/cnpg"
+  path   = "core/cnpg"
+  values = {
+    enabled = try(local.a.cnpg.enabled, true)
+    config = {
+      replica_count = try(local.c.controlplane_count, 1)
+    }
+    versions = {
+      chart = try(local.a.cnpg.version, "")
+    }
+  }
+}
+
+unit "kube_prometheus_stack" {
+  source = "./core/kube-prometheus-stack"
+  path   = "core/kube-prometheus-stack"
+  values = {
+    enabled = try(local.a.kube_prometheus_stack.enabled, true)
+    versions = {
+      chart = try(local.a.kube_prometheus_stack.version, "")
+    }
+  }
+}
+
 unit "longhorn" {
   source = "./core/longhorn"
   path   = "core/longhorn"
@@ -28,47 +72,6 @@ unit "reflector" {
     }
     versions = {
       chart = try(local.a.reflector.version, "")
-    }
-  }
-}
-
-unit "cnpg" {
-  source = "./core/cnpg"
-  path   = "core/cnpg"
-  values = {
-    enabled = try(local.a.cnpg.enabled, true)
-    versions = {
-      chart = try(local.a.cnpg.version, "")
-    }
-  }
-}
-
-unit "kube_prometheus_stack" {
-  source = "./core/kube-prometheus-stack"
-  path   = "core/kube-prometheus-stack"
-  values = {
-    enabled = try(local.a.kube_prometheus_stack.enabled, true)
-    versions = {
-      chart = try(local.a.kube_prometheus_stack.version, "")
-    }
-  }
-}
-
-unit "cert_manager" {
-  source = "./core/cert-manager"
-  path   = "core/cert-manager"
-  values = {
-    enabled = try(local.a.cert_manager.enabled, true)
-    config = {
-      acme_email                     = try(local.a.cert_manager.acme_email, "")
-      dns_domain                     = try(local.c.dns_domain, "")
-      wildcard_reflection_namespaces = try(local.a.reflector.wildcard_reflection_namespaces, [])
-    }
-    secrets = {
-      api_token = try(local.s.cloudflare.api_token, "")
-    }
-    versions = {
-      chart = try(local.a.cert_manager.version, "")
     }
   }
 }

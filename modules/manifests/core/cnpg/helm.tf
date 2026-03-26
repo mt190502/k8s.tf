@@ -10,7 +10,22 @@ resource "helm_release" "this" {
   upgrade_install = true
   values = [
     <<-EOF
-      replicaCount: 3
+      replicaCount: ${var.config.replica_count}
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: ""
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: cloudnative-pg
+                topologyKey: kubernetes.io/hostname
     EOF
   ]
   depends_on = [kubernetes_namespace_v1.this]

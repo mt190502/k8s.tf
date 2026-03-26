@@ -138,6 +138,19 @@ locals {
   #  Applications --- set enabled = false to skip deploying an app                                  #
   ## ============================================================================================= ##
   apps = {
+    cert_manager = {
+      enabled    = true
+      version    = "v1.19.3"
+      acme_email = "mt190502@mtaha.dev"
+    }
+    cnpg = {
+      enabled = true
+      version = "0.27.1"
+    }
+    kube_prometheus_stack = {
+      enabled = true
+      version = "82.1.0"
+    }
     longhorn = {
       enabled = true
       version = "1.11.0"
@@ -146,19 +159,6 @@ locals {
       enabled                        = true
       version                        = "10.0.10"
       wildcard_reflection_namespaces = ["adguard-home", "radicale"]
-    }
-    kube_prometheus_stack = {
-      enabled = true
-      version = "82.1.0"
-    }
-    cnpg = {
-      enabled = true
-      version = "0.27.1"
-    }
-    cert_manager = {
-      enabled    = true
-      version    = "v1.19.3"
-      acme_email = "mt190502@mtaha.dev"
     }
     tailscale_operator = {
       enabled = true

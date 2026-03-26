@@ -58,6 +58,9 @@ dependency "longhorn" {
 
 inputs = {
   enabled = try(values.enabled, true)
+  config = {
+    replica_count = try(values.config.replica_count, 1)
+  }
   versions = {
     chart = values.versions.chart
   }
