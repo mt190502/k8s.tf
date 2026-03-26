@@ -62,6 +62,17 @@ unit "longhorn" {
   }
 }
 
+unit "psmdb_operator" {
+  source = "./core/psmdb-operator"
+  path   = "core/psmdb-operator"
+  values = {
+    enabled = try(local.a.psmdb_operator.enabled, true)
+    versions = {
+      chart = try(local.a.psmdb_operator.version, "")
+    }
+  }
+}
+
 unit "reflector" {
   source = "./core/reflector"
   path   = "core/reflector"

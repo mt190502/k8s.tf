@@ -155,6 +155,10 @@ locals {
       enabled = true
       version = "1.11.0"
     }
+    psmdb_operator = {
+      enabled = true
+      version = "1.22.0"
+    }
     reflector = {
       enabled                        = true
       version                        = "10.0.10"
