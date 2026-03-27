@@ -22,7 +22,7 @@ locals {
         "tag:k8s-pods"
       ]
     }
-  })  
+  })
 }
 
 data "external" "subnet_router_exists" {

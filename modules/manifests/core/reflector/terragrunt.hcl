@@ -61,7 +61,5 @@ inputs = {
   config = {
     wildcard_reflection_namespaces = try(values.config.wildcard_reflection_namespaces, [])
   }
-  versions = {
-    chart = values.versions.chart
-  }
+  chart_version = try(values.chart_version, "")
 }

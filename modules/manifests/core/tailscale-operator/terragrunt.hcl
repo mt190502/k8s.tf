@@ -73,7 +73,10 @@ inputs = {
   config = {
     subnet_router_advertised_cidrs = try(values.config.subnet_router_advertised_cidrs, [])
   }
-  versions = {
-    chart = values.versions.chart
+  secrets = {
+    auth_key      = try(values.secrets.auth_key, "")
+    client_id     = try(values.secrets.client_id, "")
+    client_secret = try(values.secrets.client_secret, "")
   }
+  chart_version = try(values.chart_version, "")
 }

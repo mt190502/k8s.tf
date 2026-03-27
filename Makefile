@@ -19,6 +19,7 @@
 ## --------------------------------------------------------------------------------------------- ##
 #~ Default environment is 'prod', but you can specify 'dev' or others as needed.
 ENV ?= prod
+TARGET ?= all
 
 ##~ ---------------------------------------------------------------------------- ~##
 #  Provider plugin cache — shared across all units so tofu init only downloads    #
@@ -38,6 +39,18 @@ SECRETS ?= $(PWD)/secrets.hcl
 export TERRAGRUNT_SECRETS = $(SECRETS)
 
 ##~ ---------------------------------------------------------------------------- ~##
+#  Manifests target selector                                                       #
+#  TARGET can be: all (default), apps, or infra (core)                             #
+##~ ---------------------------------------------------------------------------- ~##
+ifeq ($(TARGET),apps)
+  MANIFESTS_WORK_DIR = $(STACK_DIR)/manifests/.terragrunt-stack/apps
+else ifeq ($(TARGET),infra)
+  MANIFESTS_WORK_DIR = $(STACK_DIR)/manifests/.terragrunt-stack/core
+else
+  MANIFESTS_WORK_DIR = $(STACK_DIR)/manifests/.terragrunt-stack
+endif
+
+##~ ---------------------------------------------------------------------------- ~##
 #  Stack targets                                                                   #
 ##~ ---------------------------------------------------------------------------- ~##
 export STACK_ENV = $(ENV)
@@ -46,7 +59,7 @@ STACK_DIR  = .terragrunt-stack
 VALUES_FILE = $(ENV).values.hcl
 TG_RUN_ALL = terragrunt --working-dir "$(STACK_DIR)" run --all
 TG_RUN_INFRA = terragrunt --working-dir "$(STACK_DIR)/infra/.terragrunt-stack" run --all
-TG_RUN_MANIFESTS = terragrunt --working-dir "$(STACK_DIR)/manifests/.terragrunt-stack" run --all --non-interactive
+TG_RUN_MANIFESTS = terragrunt --working-dir "$(MANIFESTS_WORK_DIR)" run --all
 STACK_NESTED_DIRS = $(STACK_DIR)/.terragrunt-stack $(STACK_DIR)/*/.terragrunt-stack $(STACK_DIR)/*/*/.terragrunt-stack
 STACK_DEEP_NESTED_DIRS = $(STACK_DIR)/.terragrunt-stack $(STACK_DIR)/*/*/.terragrunt-stack
 KUBE_CONTEXT ?= admin@$(shell awk -F'"' '/^[[:space:]]*cluster_name[[:space:]]*=/{print $$2; exit}' $(ENV).values.hcl)
@@ -122,9 +135,9 @@ default:
 	echo "   infra-apply        - Apply infra units only                       (ENV=prod|dev, SECRETS=path.hcl)"
 	echo "   infra-destroy      - DANGER: Destroy infra units only             (ENV=prod|dev, SECRETS=path.hcl)"
 	echo " manifests:"
-	echo "   manifests-plan     - Plan core manifest units only                (ENV=prod|dev, SECRETS=path.hcl)"
-	echo "   manifests-apply    - Apply core manifest units only               (ENV=prod|dev, SECRETS=path.hcl)"
-	echo "   manifests-destroy  - DANGER: Destroy core manifest units only     (ENV=prod|dev, SECRETS=path.hcl)"
+	echo "   manifests-plan     - Plan manifest units                          (ENV=prod|dev, SECRETS=path.hcl, TARGET=all|apps|infra)"
+	echo "   manifests-apply    - Apply manifest units                         (ENV=prod|dev, SECRETS=path.hcl, TARGET=all|apps|infra)"
+	echo "   manifests-destroy  - DANGER: Destroy manifest units               (ENV=prod|dev, SECRETS=path.hcl, TARGET=all|apps|infra)"
 	echo " all:"
 	echo "   plan               - Plan all units (infra + manifests)           (ENV=prod|dev, SECRETS=path.hcl)"
 	echo "   apply              - Apply all units (infra + manifests)          (ENV=prod|dev, SECRETS=path.hcl)"
@@ -242,6 +255,11 @@ destroy: _check_values
 	rm -rf $(STACK_DIR) .terraform
 
 clean:
+	read -p 'Are you sure you want to clean the stack? (y/n): ' -r answer; \
+	if [ "$$answer" != "y" ]; then \
+        echo "Aborted."; \
+        exit 1; \
+    fi
 	terragrunt stack clean || true
 	rm -rf $(STACK_DIR) .terraform/
 	echo "Cleaned $(STACK_DIR)"
@@ -267,7 +285,7 @@ build:
 ##~ ---------------------------------------------------------------------------- ~##
 lint:
 	echo "Linting all files (*.hcl) ..."
-	terragrunt hcl fmt || true 
+	terragrunt hcl fmt || true
 	echo "Linting Terraform files (*.tf) ..."
 	cd modules && tofu fmt -recursive
 	echo "Linting completed successfully!"

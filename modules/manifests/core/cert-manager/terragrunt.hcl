@@ -86,7 +86,8 @@ inputs = {
     dns_domain                     = try(values.config.dns_domain, "")
     wildcard_reflection_namespaces = try(values.config.wildcard_reflection_namespaces, [])
   }
-  versions = {
-    chart = values.versions.chart
+  secrets = {
+    api_token = try(values.secrets.api_token, "")
   }
+  chart_version = try(values.chart_version, "")
 }

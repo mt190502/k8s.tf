@@ -5,12 +5,12 @@ resource "helm_release" "this" {
   name            = "cloudnative-pg"
   repository      = "https://cloudnative-pg.github.io/charts"
   chart           = "cloudnative-pg"
-  version         = var.versions.chart
+  version         = var.chart_version
   namespace       = kubernetes_namespace_v1.this.metadata[0].name
   upgrade_install = true
   values = [
     <<-EOF
-      replicaCount: ${var.config.replica_count}
+      replicaCount: ${var.config.controlplane_count}
       tolerations:
         - key: node-role.kubernetes.io/control-plane
           operator: Exists

@@ -1,9 +1,8 @@
 ## ============================================================================================= ##
 #  modules/manifests/core/kube-prometheus-stack/variables.tf                                      #
 #                                                                                                 #
-#    enabled  --- Enable this module                                                              #
-#    versions --- Version configuration                                                           #
-#      chart  --- kube-prometheus-stack Helm chart version                                        #
+#    enabled       --- Enable this module                                                         #
+#    chart_version --- kube-prometheus-stack Helm chart version                                   #
 ## ============================================================================================= ##
 variable "enabled" {
   description = "Enable this module"
@@ -11,9 +10,8 @@ variable "enabled" {
   default     = true
 }
 
-variable "versions" {
-  description = "kube-prometheus-stack version configuration"
-  type = object({
-    chart = string
-  })
+variable "chart_version" {
+  description = "kube-prometheus-stack Helm chart version"
+  type        = string
+  default     = ""
 }

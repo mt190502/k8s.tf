@@ -137,39 +137,108 @@ locals {
   ## ============================================================================================= ##
   #  Applications --- set enabled = false to skip deploying an app                                  #
   ## ============================================================================================= ##
-  apps = {
-    cert_manager = {
-      enabled    = true
-      version    = "v1.19.3"
-      acme_email = "mt190502@mtaha.dev"
+  manifests = {
+    apps = {
+      adguard-home = {
+        enabled = true
+        version = ""
+      }
+      anki = {
+        enabled = true
+        version = ""
+      }
+      jellyfin = {
+        enabled = true
+        version = ""
+      }
+      miniflux = {
+        enabled = true
+        version = ""
+      }
+      nextcloud = {
+        enabled = true
+        version = ""
+      }
+      nightscout = {
+        enabled = true
+        config = {
+          env = {
+            ALARM_URGENT_HIGH  = "off"
+            ALARM_HIGH         = "off"
+            ALARM_LOW          = "off"
+            ALARM_URGENT_LOW   = "off"
+            BG_LOW             = "60"
+            BG_HIGH            = "200"
+            BG_TARGET_TOP      = "180"
+            BG_TARGET_BOTTOM   = "70"
+            CUSTOM_TITLE       = "Taha's CGM"
+            THEME              = "colorblindfriendly"
+            TIME_FORMAT        = "24"
+            SHOW_PLUGINS       = "careportal iob cob cors dbsize basal"
+            TZ                 = "Europe/Istanbul"
+            AUTH_DEFAULT_ROLES = "readable"
+            ENABLE             = "careportal iob cob cors rawbg"
+            NODE_ENV           = "production"
+            INSECURE_USE_HTTP  = "true"
+          }
+        }
+        version = "15.0.3"
+      }
+      paperless-ngx = {
+        enabled = true
+        version = ""
+      }
+      radicale = {
+        enabled = true
+        version = ""
+      }
+      redmine = {
+        enabled = true
+        version = ""
+      }
+      umami = {
+        enabled = true
+        version = ""
+      }
     }
-    cnpg = {
-      enabled = true
-      version = "0.27.1"
-    }
-    kube_prometheus_stack = {
-      enabled = true
-      version = "82.1.0"
-    }
-    longhorn = {
-      enabled = true
-      version = "1.11.0"
-    }
-    psmdb_operator = {
-      enabled = true
-      version = "1.22.0"
-    }
-    reflector = {
-      enabled                        = true
-      version                        = "10.0.10"
-      wildcard_reflection_namespaces = ["adguard-home", "radicale"]
-    }
-    tailscale_operator = {
-      enabled = true
-      version = "1.94.2"
-    }
-    tests = {
-      enabled = false
+    core = {
+      cert_manager = {
+        enabled = true
+        config = {
+          acme_email = "mt190502@mtaha.dev"
+        }
+        version = "v1.19.3"
+      }
+      cnpg = {
+        enabled = true
+        version = "0.27.1"
+      }
+      kube_prometheus_stack = {
+        enabled = true
+        version = "82.1.0"
+      }
+      longhorn = {
+        enabled = true
+        version = "1.11.0"
+      }
+      psmdb_operator = {
+        enabled = true
+        version = "1.22.0"
+      }
+      reflector = {
+        enabled = true
+        config = {
+          wildcard_reflection_namespaces = ["adguard-home", "radicale"]
+        }
+        version = "10.0.10"
+      }
+      tailscale_operator = {
+        enabled = true
+        version = "1.94.2"
+      }
+      tests = {
+        enabled = false
+      }
     }
   }
 }

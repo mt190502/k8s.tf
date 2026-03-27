@@ -1,9 +1,8 @@
 ## ============================================================================================= ##
 #  modules/manifests/core/longhorn/variables.tf                                                   #
 #                                                                                                 #
-#    enabled  --- Enable this module                                                              #
-#    versions --- Version configuration                                                           #
-#      chart  --- Longhorn Helm chart version                                                     #
+#    enabled       --- Enable this module                                                         #
+#    chart_version --- Longhorn Helm chart version                                                #
 ## ============================================================================================= ##
 variable "enabled" {
   description = "Enable this module"
@@ -11,9 +10,8 @@ variable "enabled" {
   default     = true
 }
 
-variable "versions" {
-  description = "Longhorn version configuration"
-  type = object({
-    chart = string
-  })
+variable "chart_version" {
+  description = "Longhorn Helm chart version"
+  type        = string
+  default     = ""
 }

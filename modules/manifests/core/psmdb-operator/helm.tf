@@ -5,11 +5,12 @@ resource "helm_release" "this" {
   name            = "psmdb-operator"
   repository      = "https://percona.github.io/percona-helm-charts"
   chart           = "psmdb-operator"
-  version         = var.versions.chart
+  version         = var.chart_version
   namespace       = kubernetes_namespace_v1.this.metadata[0].name
   upgrade_install = true
   values = [
     <<-EOF
+      watchAllNamespaces: true
       tolerations:
         - key: node-role.kubernetes.io/control-plane
           operator: Exists

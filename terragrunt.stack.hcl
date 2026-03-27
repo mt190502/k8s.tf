@@ -22,10 +22,11 @@
 #   make apply ENV=prod                                                                           #
 ## ============================================================================================= ##
 locals {
-  v     = read_terragrunt_config("${get_repo_root()}/${get_env("STACK_ENV", "dev")}.values.hcl").locals
-  s     = read_terragrunt_config(get_env("TERRAGRUNT_SECRETS", "${get_repo_root()}/secrets.hcl")).locals
-  c     = read_terragrunt_config("${get_repo_root()}/modules/common.hcl")
-  infra = try(local.v.infra, null) != null ? local.v.infra : local.c.locals.mock_infra
+  v         = read_terragrunt_config("${get_repo_root()}/${get_env("STACK_ENV", "dev")}.values.hcl").locals
+  s         = read_terragrunt_config(get_env("TERRAGRUNT_SECRETS", "${get_repo_root()}/secrets.hcl")).locals
+  c         = read_terragrunt_config("${get_repo_root()}/modules/common.hcl")
+  infra     = try(local.v.infra, null) != null ? local.v.infra : local.c.locals.mock_infra
+  manifests = try(local.v.manifests, {})
   node_assignments = {
     for idx, node in local.infra.kubernetes.nodes : node.name => {
       node       = node
@@ -94,17 +95,17 @@ stack "infra" {
     }
     secrets = {
       hetzner = {
-        api_token = try(local.s.hetzner.api_token, "")
+        api_token = try(local.s.infra.hetzner.api_token, "")
       }
       tailscale = {
-        auth_key      = try(local.s.tailscale.auth_key, "")
-        client_id     = try(local.s.tailscale.client_id, "")
-        client_secret = try(local.s.tailscale.client_secret, "")
-        tailnet       = try(local.s.tailscale.tailnet, "")
+        auth_key      = try(local.s.infra.tailscale.auth_key, "")
+        client_id     = try(local.s.infra.tailscale.client_id, "")
+        client_secret = try(local.s.infra.tailscale.client_secret, "")
+        tailnet       = try(local.s.infra.tailscale.tailnet, "")
       }
       cloudflare = {
-        api_token = try(local.s.cloudflare.api_token, "")
-        zone_id   = try(local.s.cloudflare.zone_id, "")
+        api_token = try(local.s.infra.cloudflare.api_token, "")
+        zone_id   = try(local.s.infra.cloudflare.zone_id, "")
       }
     }
     versions = {
@@ -120,24 +121,52 @@ stack "manifests" {
   source = "./modules/manifests"
   path   = "manifests"
   values = {
-    config = {
-      dns_domain = local.infra.kubernetes.cluster_url.dns
-      subnet_router_advertised_cidrs = concat(
-        [local.infra.kubernetes.ipcfg.service.ipv4],
-        local.infra.talos.dualstack ? [local.infra.kubernetes.ipcfg.service.ipv6] : []
+    core = {
+      cert_manager = merge(
+        try(local.manifests.core.cert_manager, {}),
+        {
+          config = merge(
+            try(local.manifests.core.cert_manager.config, {}),
+            { dns_domain = local.infra.kubernetes.cluster_url.dns }
+          )
+          secrets = {
+            api_token = try(local.s.infra.cloudflare.api_token, "")
+          }
+        }
       )
-      controlplane_count = local.controlplane_count
+      cnpg = merge(
+        try(local.manifests.core.cnpg, {}),
+        {
+          config = merge(
+            try(local.manifests.core.cnpg.config, {}),
+            { controlplane_count = local.controlplane_count }
+          )
+        }
+      )
+      kube_prometheus_stack = try(local.manifests.core.kube_prometheus_stack, {})
+      longhorn              = try(local.manifests.core.longhorn, {})
+      psmdb_operator        = try(local.manifests.core.psmdb_operator, {})
+      reflector             = try(local.manifests.core.reflector, {})
+      tailscale_operator = merge(
+        try(local.manifests.core.tailscale_operator, {}),
+        {
+          config = merge(
+            try(local.manifests.core.tailscale_operator.config, {}),
+            {
+              subnet_router_advertised_cidrs = concat(
+                [local.infra.kubernetes.ipcfg.service.ipv4],
+                local.infra.talos.dualstack ? [local.infra.kubernetes.ipcfg.service.ipv6] : []
+              )
+            }
+          )
+          secrets = {
+            auth_key      = try(local.s.infra.tailscale.auth_key, "")
+            client_id     = try(local.s.infra.tailscale.client_id, "")
+            client_secret = try(local.s.infra.tailscale.client_secret, "")
+          }
+        }
+      )
+      tests = try(local.manifests.core.tests, { enabled = false })
     }
-    secrets = {
-      cloudflare = {
-        api_token = try(local.s.cloudflare.api_token, "")
-      }
-      tailscale = {
-        auth_key      = try(local.s.tailscale.auth_key, "")
-        client_id     = try(local.s.tailscale.client_id, "")
-        client_secret = try(local.s.tailscale.client_secret, "")
-      }
-    }
-    apps = try(local.v.apps, {})
   }
 }

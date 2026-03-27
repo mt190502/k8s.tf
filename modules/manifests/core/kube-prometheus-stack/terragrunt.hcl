@@ -57,8 +57,6 @@ dependency "longhorn" {
 }
 
 inputs = {
-  enabled = try(values.enabled, true)
-  versions = {
-    chart = values.versions.chart
-  }
+  enabled       = try(values.enabled, true)
+  chart_version = try(values.chart_version, "")
 }
