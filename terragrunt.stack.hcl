@@ -168,5 +168,18 @@ stack "manifests" {
       )
       tests = try(local.manifests.core.tests, { enabled = false })
     }
+    apps = {
+      nightscout = merge(
+        try(local.manifests.apps.nightscout, {}),
+        {
+          secrets = {
+            api_secret = try(local.s.apps.nightscout.api_secret, "")
+          }
+        }
+      )
+    }
+    rootvars = {
+      cluster_url = local.infra.kubernetes.cluster_url
+    }
   }
 }

@@ -101,3 +101,17 @@ unit "tests" {
     }
   }
 }
+
+## --------------------------------------------------------------------------------------------- ##
+#  App manifests units                                                                            #
+## --------------------------------------------------------------------------------------------- ##
+unit "nightscout" {
+  source = "./apps/nightscout"
+  path   = "apps/nightscout"
+  values = {
+    enabled       = try(local.apps.nightscout.enabled, false)
+    config        = merge(try(local.apps.nightscout.config, {}), { domain = local.rootvars.cluster_url.dns })
+    secrets       = try(local.apps.nightscout.secrets, { api_secret = "" })
+    image_version = try(local.apps.nightscout.version, "")
+  }
+}
