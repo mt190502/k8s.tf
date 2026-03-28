@@ -3,12 +3,22 @@
 #                                                                                                 #
 #    enabled             --- Enable this module                                                   #
 #    config              --- Configuration object                                                 #
-#      replicas          --- Configure desired replica count                                      #
-#      env               --- Environment variables for Nightscout                                 #
+#      domain            --- Base domain for HTTPRoute hostname                                   #
+#      env               --- Environment variables (map of key-value)                             #
 #      gateway_name      --- Gateway name (from cert-manager)                                     #
 #      gateway_namespace --- Gateway namespace (from cert-manager)                                #
-#      domain            --- Base domain for HTTPRoute hostname                                   #
-#    image_version       --- Nightscout image version                                             #
+#      hostname          --- HTTPRoute hostname subdomain (e.g., "app" -> app.{domain})           #
+#      image             --- Container image (e.g., "nginx")                                      #
+#      mongo             --- MongoDB related options                                              #
+#        limits          --- Resource limits for mongo instances (cpu, memory)                    #
+#        requests        --- Resource requests for mongo instances (cpu, memory)                  #
+#        replicas        --- Desired mongo instance count                                         #
+#        storage_size    --- Volume size for mongo instances                                      #
+#      name              --- Application name (used for resources)                                #
+#      port              --- Container port                                                       #
+#      replicas          --- Desired replica count (for Deployment/StatefulSet)                   #
+#    secrets             --- Secrets object (map of sensitive values)                             #
+#    image_version       --- Image version tag                                                    #
 ## ============================================================================================= ##
 variable "enabled" {
   description = "Enable this module"
@@ -17,30 +27,36 @@ variable "enabled" {
 }
 
 variable "config" {
-  description = "Nightscout configuration"
+  description = "Application configuration"
   type = object({
-    replicas          = optional(number)
+    domain            = optional(string)
     env               = optional(map(string))
     gateway_name      = optional(string)
     gateway_namespace = optional(string)
-    domain            = optional(string)
+    hostname          = optional(string)
+    image             = optional(string, "nightscout/cgm-remote-monitor")
+    mongo = optional(object({
+      limits       = optional(map(string))
+      requests     = optional(map(string))
+      replicas     = optional(number, 1)
+      storage_size = optional(string, "1Gi")
+    }))
+    name     = optional(string, "nightscout")
+    port     = optional(number, 1337)
+    replicas = optional(number, 1)
   })
-  default = {
-    replicas = 1
-    env      = {}
-  }
+  default = {}
 }
 
 variable "secrets" {
-  description = "Nightscout secrets"
-  type = object({
-    api_secret = string
-  })
-  sensitive = true
+  description = "Application secrets"
+  type        = map(string)
+  sensitive   = true
+  default     = {}
 }
 
 variable "image_version" {
-  description = "Nightscout image version"
+  description = "Application image version"
   type        = string
   default     = ""
 }

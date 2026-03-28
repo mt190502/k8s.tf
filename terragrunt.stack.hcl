@@ -173,7 +173,7 @@ stack "manifests" {
         try(local.manifests.apps.nightscout, {}),
         {
           secrets = {
-            api_secret = try(local.s.apps.nightscout.api_secret, "")
+            api_secret = try(local.s.manifests.apps.nightscout.api_secret, "")
           }
         }
       )

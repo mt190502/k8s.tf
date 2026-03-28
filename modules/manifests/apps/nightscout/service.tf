@@ -1,23 +1,24 @@
 ## ============================================================================================= ##
 #  modules/manifests/apps/nightscout/service.tf                                                   #
 #                                                                                                 #
-#  ClusterIP Service for Nightscout application - exposes port 1337 for HTTPRoute backend.        #
+#  ClusterIP Service for the application - exposes pods for internal cluster traffic.             #
+#  Used as HTTPRoute backend for Gateway API ingress.                                             #
 ## ============================================================================================= ##
 resource "kubernetes_service_v1" "this" {
+  count = var.config.port != null ? 1 : 0
   metadata {
-    name      = "nightscout"
+    name      = "${var.config.name}-service"
     namespace = kubernetes_namespace_v1.this.metadata[0].name
   }
   spec {
     selector = {
-      "app.kubernetes.io/name" = "nightscout"
+      "app.kubernetes.io/name" = var.config.name
     }
     port {
-      port        = 1337
-      target_port = 1337
+      port        = var.config.port
+      target_port = var.config.port
     }
+    type = "ClusterIP"
   }
-  depends_on = [
-    kubernetes_namespace_v1.this
-  ]
+  depends_on = [kubernetes_namespace_v1.this]
 }

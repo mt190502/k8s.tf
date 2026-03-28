@@ -1,14 +1,15 @@
 ## ============================================================================================= ##
-#  modules/manifests/apps/nightscout/secret.tf                                                    #
+#  modules/manifests/apps/nightscout/secret.tf                                                      #
+#                                                                                                 #
+#  Kubernetes Secret for application-sensitive data.                                              #
+#  Add secret keys as needed for your application (passwords, tokens, keys).                      #
 ## ============================================================================================= ##
 resource "kubernetes_secret_v1" "this" {
   metadata {
-    name      = "api-secret"
+    name      = "${var.config.name}-secret"
     namespace = kubernetes_namespace_v1.this.metadata[0].name
   }
-  data = {
-    api_secret = var.secrets.api_secret
-  }
+  data       = var.secrets
   type       = "Opaque"
   depends_on = [kubernetes_namespace_v1.this]
 }

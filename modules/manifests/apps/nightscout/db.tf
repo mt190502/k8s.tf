@@ -1,48 +1,53 @@
 ## ============================================================================================= ##
 #  modules/manifests/apps/nightscout/db.tf                                                        #
 #                                                                                                 #
-#  PerconaServerMongoDB (PSMDB) cluster for Nightscout - 3-node replica set with persistent       #
-#  storage. Uses databaseAdmin credentials from auto-generated secret.                            #
+#  PerconaServerMongoDB (PSMDB) cluster                                                           #
+#  Requires psmdb-operator to be installed. Uses databaseAdmin credentials from                   #
+#  auto-generated secret.                                                                         #
+#                                                                                                 #
+#  Connection string format:                                                                      #
+#    mongodb://databaseAdmin:{password}@{app}-mongo-rs0.{namespace}.svc.cluster.local:27017/{db}  #
+#    ?replicaSet=rs0&authSource=admin                                                             #
 ## ============================================================================================= ##
 resource "kubernetes_manifest" "mongo" {
   manifest = {
-    "apiVersion" = "psmdb.percona.com/v1"
-    "kind"       = "PerconaServerMongoDB"
-    "metadata" = {
-      "name"      = "nightscout-mongo"
-      "namespace" = kubernetes_namespace_v1.this.metadata[0].name
+    apiVersion = "psmdb.percona.com/v1"
+    kind       = "PerconaServerMongoDB"
+    metadata = {
+      name      = "${var.config.name}-mongo"
+      namespace = kubernetes_namespace_v1.this.metadata[0].name
     }
-    "spec" = {
-      "crVersion"       = "1.22.0"
-      "image"           = "percona/percona-server-mongodb:8.0.19-7"
-      "imagePullPolicy" = "Always"
-      "updateStrategy"  = "SmartUpdate"
-      "secrets" = {
-        "users"         = "nightscout-mongo-users"
-        "encryptionKey" = "nightscout-mongo-encryption-key"
+    spec = {
+      crVersion       = "1.22.0"
+      image           = "percona/percona-server-mongodb:8.0.19-7"
+      imagePullPolicy = "Always"
+      updateStrategy  = "SmartUpdate"
+      secrets = {
+        users         = "${var.config.name}-mongo-users"
+        encryptionKey = "${var.config.name}-mongo-encryption-key"
       }
-      "replsets" = [
+      replsets = [
         {
-          "name" = "rs0"
-          "size" = 3
-          "affinity" = {
-            "antiAffinityTopologyKey" = "kubernetes.io/hostname"
+          name = "rs0"
+          size = try(var.config.mongo.replicas, var.config.replicas)
+          affinity = {
+            antiAffinityTopologyKey = "kubernetes.io/hostname"
           }
-          "resources" = {
-            "limits" = {
-              "cpu"    = "1"
-              "memory" = "1Gi"
-            }
-            "requests" = {
-              "cpu"    = "300m"
-              "memory" = "512Mi"
-            }
+          resources = {
+            limits = var.config.mongo.limits == null ? {
+              cpu    = "500m"
+              memory = "512Mi"
+            } : var.config.mongo.limits
+            requests = var.config.mongo.requests == null ? {
+              cpu    = "250m"
+              memory = "256Mi"
+            } : var.config.mongo.requests
           }
-          "volumeSpec" = {
-            "persistentVolumeClaim" = {
-              "resources" = {
-                "requests" = {
-                  "storage" = "2Gi"
+          volumeSpec = {
+            persistentVolumeClaim = {
+              resources = {
+                requests = {
+                  storage = var.config.mongo.storage_size == null ? "1Gi" : var.config.mongo.storage_size
                 }
               }
             }

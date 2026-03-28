@@ -181,6 +181,11 @@ locals {
             NODE_ENV           = "production"
             INSECURE_USE_HTTP  = "true"
           }
+          hostname = "t1d"
+          mongo = {
+            replicas     = 3
+            storage_size = "2Gi"
+          }
         }
         version = "15.0.3"
       }

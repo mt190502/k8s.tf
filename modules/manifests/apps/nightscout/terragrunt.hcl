@@ -49,7 +49,7 @@ generate "versions" {
 }
 
 ## --------------------------------------------------------------------------------------------- ##
-#  Dependencies -  enforce apply order and wire outputs from upstream modules as inputs.          #
+#  Dependencies - enforce apply order and wire outputs from upstream modules.                     #
 ## --------------------------------------------------------------------------------------------- ##
 dependency "cert_manager" {
   config_path = "../../core/cert-manager"
@@ -61,7 +61,7 @@ dependency "cert_manager" {
   mock_outputs_merge_strategy_with_state  = include.common.locals.mock_outputs_merge_strategy_with_state
 }
 
-dependency "psmdb-operator" {
+dependency "psmdb_operator" {
   config_path  = "../../core/psmdb-operator"
   skip_outputs = true
 }
@@ -75,6 +75,6 @@ inputs = {
       gateway_namespace = dependency.cert_manager.outputs.namespace
     }
   )
-  secrets       = try(values.secrets, { api_secret = "" })
+  secrets       = try(values.secrets, {})
   image_version = try(values.image_version, "")
 }
