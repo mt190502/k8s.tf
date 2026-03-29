@@ -139,7 +139,7 @@ locals {
         {
           selector     = { role = "worker" }
           architecture = "arm64"
-          locations    = ["fsn1", "nbg1"]
+          locations    = ["fsn1", "nbg1", "hel1"]
           strategy     = "roundrobin"
         }
       ]
