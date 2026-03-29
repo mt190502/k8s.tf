@@ -22,14 +22,15 @@ unit "talos_pre" {
   values = {
     enabled = true
     config = {
-      cluster_name    = try(local.c.kubernetes.cluster_name, "")
-      cluster_url     = try(local.c.kubernetes.cluster_url, null)
-      dualstack       = try(local.c.talos.dualstack, true)
-      ipcfg           = try(local.c.kubernetes.ipcfg, null)
-      kubeprism       = try(local.c.talos.kubeprism, true)
-      kubespan        = try(local.c.talos.kubespan, false)
-      nodes           = try(local.c.hetzner.nodes, try(local.c.kubernetes.nodes, []))
-      private_network = try(local.c.hetzner.private_network, null)
+      cluster_name      = try(local.c.kubernetes.cluster_name, "")
+      cluster_url       = try(local.c.kubernetes.cluster_url, null)
+      dualstack         = try(local.c.talos.dualstack, true)
+      ipcfg             = try(local.c.kubernetes.ipcfg, null)
+      kubeprism         = try(local.c.talos.kubeprism, true)
+      kubespan          = try(local.c.talos.kubespan, false)
+      nodes             = try(local.c.hetzner.nodes, try(local.c.kubernetes.nodes, []))
+      preferred_gateway = try(local.c.kubernetes.preferred_gateway, "cilium")
+      private_network   = try(local.c.hetzner.private_network, null)
     }
     secrets = {
       auth_key = try(local.s.tailscale.auth_key, "")

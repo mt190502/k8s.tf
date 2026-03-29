@@ -122,6 +122,7 @@ locals {
         { name = "mock-w1", role = "worker", taints = [] },
         { name = "mock-w2", role = "worker", taints = [] },
       ]
+      preferred_gateway = "cilium"
     }
     cloudflare = {
       enabled = true
@@ -208,6 +209,10 @@ locals {
       enabled    = true
       version    = "v1.19.0"
       acme_email = "mock@example.com"
+    }
+    traefik = {
+      enabled = false
+      version = "39.0.6"
     }
     tests = {
       enabled = true

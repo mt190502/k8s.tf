@@ -85,6 +85,7 @@ inputs = {
     acme_email                     = try(values.config.acme_email, "")
     dns_domain                     = try(values.config.dns_domain, "")
     wildcard_reflection_namespaces = try(values.config.wildcard_reflection_namespaces, [])
+    preferred_gateway              = try(values.rootvars.preferred_gateway, "cilium")
   }
   secrets = {
     api_token = try(values.secrets.api_token, "")

@@ -1,24 +1,20 @@
 ## ============================================================================================= ##
-#  modules/manifests/core/cert-manager/gateway.tf                                                 #
+#  modules/manifests/core/traefik/gateway.tf                                                      #
 #                                                                                                 #
-#  Creates the shared Cilium Gateway (HTTPS :443, *.dns_domain) in cert-manager namespace.        #
-#  Only created when preferred_gateway = "cilium".                                                #
-#  TLS is terminated with the wildcard certificate from wildcard.tf.                              #
+#  Creates the shared Gateway (HTTPS :443, *.dns_domain) for Traefik.                             #
+#  TLS is terminated with the wildcard certificate from cert-manager.                             #
+#  Uses null_resource + kubectl because the kubernetes provider does not support CRDs well.       #
 ## ============================================================================================= ##
 resource "kubernetes_manifest" "gateway" {
-  count = var.config.preferred_gateway == "cilium" ? 1 : 0
   manifest = {
     apiVersion = "gateway.networking.k8s.io/v1"
     kind       = "Gateway"
     metadata = {
-      name      = "cilium-gateway"
+      name      = "traefik-gateway"
       namespace = kubernetes_namespace_v1.this.metadata[0].name
-      annotations = {
-        "cert-manager.io/cluster-issuer" = local.clusterissuer_name
-      }
     }
     spec = {
-      gatewayClassName = "cilium"
+      gatewayClassName = "traefik"
       listeners = [
         {
           name     = "websecure"
@@ -29,8 +25,8 @@ resource "kubernetes_manifest" "gateway" {
             mode = "Terminate"
             certificateRefs = [
               {
-                name      = local.certificate_name
-                namespace = kubernetes_namespace_v1.this.metadata[0].name
+                name      = var.config.tls.secret_name
+                namespace = var.config.tls.secret_namespace
               }
             ]
           }
@@ -44,7 +40,7 @@ resource "kubernetes_manifest" "gateway" {
     }
   }
   depends_on = [
-    null_resource.clusterissuer,
-    null_resource.certificate,
+    helm_release.this,
+    kubernetes_manifest.gatewayclass,
   ]
 }

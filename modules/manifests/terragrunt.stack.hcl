@@ -4,7 +4,7 @@
 locals {
   apps     = try(values.apps, {})
   core     = try(values.core, {})
-  rootvars = try(values.rootvars, { cluster_url = { dns = "mock.local" } })
+  rootvars = try(values.rootvars, { cluster_url = { dns = "mock.local" }, preferred_gateway = "cilium" })
 }
 
 ## --------------------------------------------------------------------------------------------- ##
@@ -22,6 +22,7 @@ unit "cert_manager" {
     }
     secrets       = try(local.core.cert_manager.secrets, { api_token = "" })
     chart_version = try(local.core.cert_manager.version, "")
+    rootvars      = local.rootvars
   }
 }
 
@@ -86,6 +87,19 @@ unit "tailscale_operator" {
     }
     secrets       = try(local.core.tailscale_operator.secrets, { auth_key = "", client_id = "", client_secret = "" })
     chart_version = try(local.core.tailscale_operator.version, "")
+  }
+}
+
+unit "traefik" {
+  source = "./core/traefik"
+  path   = "core/traefik"
+  values = {
+    enabled = local.rootvars.preferred_gateway == "traefik"
+    config = {
+      gateway_name = try(local.core.traefik.config.gateway_name, "traefik-gateway")
+      dns_domain   = local.rootvars.cluster_url.dns
+    }
+    versions = try(local.core.traefik.versions, { main = "", crds = "" })
   }
 }
 

@@ -86,6 +86,7 @@ stack "infra" {
         first_controlplane = local.first_controlplane
         ipcfg              = local.infra.kubernetes.ipcfg
         nodes              = local.infra.kubernetes.nodes
+        preferred_gateway  = local.infra.kubernetes.preferred_gateway
       }
       talos = {
         dualstack = local.infra.talos.dualstack
@@ -166,6 +167,16 @@ stack "manifests" {
           }
         }
       )
+      traefik = merge(
+        try(local.manifests.core.traefik, {}),
+        {
+          enabled = local.infra.kubernetes.preferred_gateway == "traefik"
+          config = merge(
+            try(local.manifests.core.traefik.config, {}),
+            { gateway_name = "traefik-gateway" }
+          )
+        }
+      )
       tests = try(local.manifests.core.tests, { enabled = false })
     }
     apps = {
@@ -189,7 +200,8 @@ stack "manifests" {
       )
     }
     rootvars = {
-      cluster_url = local.infra.kubernetes.cluster_url
+      cluster_url       = local.infra.kubernetes.cluster_url
+      preferred_gateway = local.infra.kubernetes.preferred_gateway
     }
   }
 }

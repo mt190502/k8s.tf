@@ -22,6 +22,7 @@ variable "config" {
     acme_email                     = string
     dns_domain                     = string
     wildcard_reflection_namespaces = list(string)
+    preferred_gateway              = optional(string, "cilium")
   })
 }
 

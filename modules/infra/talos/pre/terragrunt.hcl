@@ -53,13 +53,14 @@ generate "secrets" {
 inputs = {
   enabled = try(values.enabled, true)
   config = {
-    cluster_name = try(values.config.cluster_name, "")
-    cluster_url  = try(values.config.cluster_url, null)
-    dualstack    = try(values.config.dualstack, true)
-    ipcfg        = try(values.config.ipcfg, null)
-    kubeprism    = try(values.config.kubeprism, true)
-    kubespan     = try(values.config.kubespan, false)
-    nodes        = try(values.config.nodes, [])
+    cluster_name      = try(values.config.cluster_name, "")
+    cluster_url       = try(values.config.cluster_url, null)
+    dualstack         = try(values.config.dualstack, true)
+    ipcfg             = try(values.config.ipcfg, null)
+    kubeprism         = try(values.config.kubeprism, true)
+    kubespan          = try(values.config.kubespan, false)
+    nodes             = try(values.config.nodes, [])
+    preferred_gateway = try(values.config.preferred_gateway, "cilium")
   }
   versions = {
     cilium     = try(values.versions.cilium, "")

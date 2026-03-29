@@ -40,12 +40,13 @@ data "talos_machine_configuration" "nodes" {
         ETCD_CIDRS = local.cluster_cidrs
       }),
       templatefile("../templates/cilium_postinstall_job.tmpl", {
-        CILIUM_VERSION    = var.versions.cilium
-        DUALSTACK         = var.config.dualstack ? "true" : "false"
         APISERVER_HOST    = var.config.kubeprism ? "127.0.0.1" : var.config.cluster_url.apiserver
-        SRV_PORT          = var.config.kubeprism ? "7445" : "6443"
+        CILIUM_VERSION    = var.versions.cilium
         CLUSTER_DOMAIN    = var.config.cluster_url.dns
+        DUALSTACK         = var.config.dualstack ? "true" : "false"
         OPERATOR_REPLICAS = max(1, length([for node in var.config.nodes : node if node.role == "controlplane"]))
+        PREFERRED_GATEWAY = var.config.preferred_gateway
+        SRV_PORT          = var.config.kubeprism ? "7445" : "6443"
       }),
     ] : [],
     [

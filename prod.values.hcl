@@ -37,6 +37,7 @@ locals {
         { name = "w2", role = "worker", taints = [] },
         { name = "w3", role = "worker", taints = [] },
       ]
+      preferred_gateway = "traefik"
     }
 
     ## --------------------------------------------------------------------------------------------- ##
@@ -247,6 +248,12 @@ locals {
       tailscale_operator = {
         enabled = true
         version = "1.94.2"
+      }
+      traefik = {
+        versions = {
+          main = "39.0.6"
+          crds = "1.16.0"
+        }
       }
       tests = {
         enabled = false

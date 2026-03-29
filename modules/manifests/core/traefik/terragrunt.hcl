@@ -1,10 +1,10 @@
 ## ============================================================================================= ##
-#  modules/manifests/apps/nightscout/terragrunt.hcl                                               #
+#  modules/manifests/core/traefik/terragrunt.hcl                                                  #
 #                                                                                                 #
-#  Terragrunt wrapper for Nightscout (CGM data visualization app) manifests.                      #
+#  Terragrunt wrapper for Traefik (Gateway API ingress controller).                               #
 #  Config is provided from stack values.                                                          #
 #                                                                                                 #
-#  Apply order: psmdb-operator -> [nightscout]                                                    #
+#  Apply order: cert-manager -> [traefik]                                                         #
 ## ============================================================================================= ##
 include "common" {
   path   = find_in_parent_folders("modules/common.hcl")
@@ -12,7 +12,7 @@ include "common" {
 }
 
 exclude {
-  if      = !try(values.enabled, true)
+  if      = !try(values.enabled, false)
   actions = ["all"]
 }
 
@@ -48,33 +48,25 @@ generate "versions" {
   EOF
 }
 
-## --------------------------------------------------------------------------------------------- ##
-#  Dependencies - enforce apply order and wire outputs from upstream modules.                     #
-## --------------------------------------------------------------------------------------------- ##
 dependency "cert_manager" {
-  config_path = "../../core/cert-manager"
+  config_path = "../cert-manager"
   mock_outputs = {
-    gateway_name      = "mock-gateway"
-    gateway_namespace = "mock-namespace"
+    certificate_name      = "wildcard-mock.local-tls"
+    certificate_namespace = "cert-manager"
   }
   mock_outputs_allowed_terraform_commands = include.common.locals.mock_outputs_allowed_terraform_commands
   mock_outputs_merge_strategy_with_state  = include.common.locals.mock_outputs_merge_strategy_with_state
 }
 
-dependency "psmdb_operator" {
-  config_path  = "../../core/psmdb-operator"
-  skip_outputs = true
-}
-
 inputs = {
-  enabled = try(values.enabled, true)
-  config = merge(
-    try(values.config, {}),
-    {
-      gateway_name      = dependency.cert_manager.outputs.gateway_name
-      gateway_namespace = dependency.cert_manager.outputs.gateway_namespace
+  enabled = try(values.enabled, false)
+  config = {
+    gateway_name = try(values.config.gateway_name, "traefik-gateway")
+    dns_domain   = try(values.config.dns_domain, include.common.locals.infra.kubernetes.cluster_url.dns)
+    tls = {
+      secret_name      = dependency.cert_manager.outputs.certificate_name
+      secret_namespace = dependency.cert_manager.outputs.certificate_namespace
     }
-  )
-  secrets       = try(values.secrets, {})
-  image_version = try(values.image_version, "")
+  }
+  versions = try(values.versions, { main = "", crds = "" })
 }
