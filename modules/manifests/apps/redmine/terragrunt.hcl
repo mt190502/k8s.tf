@@ -1,10 +1,14 @@
 ## ============================================================================================= ##
-#  modules/manifests/apps/nightscout/terragrunt.hcl                                               #
+#  modules/manifests/apps/redmine/terragrunt.hcl                                                  #
 #                                                                                                 #
-#  Terragrunt wrapper for Nightscout (CGM data visualization app) manifests.                      #
+#  Terragrunt wrapper for redmine manifests.                                                      #
 #  Config is provided from stack values.                                                          #
 #                                                                                                 #
-#  Apply order: psmdb-operator -> [nightscout]                                                    #
+#  Dependencies:                                                                                  #
+#    - cert-manager: Optional, Provides gateway_name and gateway_namespace for HTTPRoute          #
+#    - cnpg: Optional, for PostgreSQL databases                                                   #
+#                                                                                                 #
+#  Apply order: cnpg -> [redmine]                                                                 #
 ## ============================================================================================= ##
 include "common" {
   path   = find_in_parent_folders("modules/common.hcl")
@@ -32,6 +36,7 @@ generate "providers" {
         config_path = "~/.kube/config"
       }
     }
+    provider "null" {}
   EOF
 }
 
@@ -43,6 +48,7 @@ generate "versions" {
       required_providers {
         kubernetes = { source = "hashicorp/kubernetes", version = "${include.common.locals.providers.kubernetes.version}" }
         helm       = { source = "hashicorp/helm",       version = "${include.common.locals.providers.helm.version}" }
+        null       = { source = "hashicorp/null",       version = "${include.common.locals.providers.null.version}" }
       }
     }
   EOF
@@ -61,15 +67,15 @@ dependency "cert_manager" {
   mock_outputs_merge_strategy_with_state  = include.common.locals.mock_outputs_merge_strategy_with_state
 }
 
-dependency "psmdb_operator" {
-  config_path  = "../../core/psmdb-operator"
+dependency "cnpg" {
+  config_path  = "../../core/cnpg"
   skip_outputs = true
 }
 
 inputs = {
   enabled = try(values.enabled, true)
   config  = merge(
-    try(values.config, {}),
+    try(values.config, {}), 
     {
       gateway_name      = dependency.cert_manager.outputs.gateway_name
       gateway_namespace = dependency.cert_manager.outputs.gateway_namespace

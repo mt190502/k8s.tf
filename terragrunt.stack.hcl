@@ -177,6 +177,16 @@ stack "manifests" {
           }
         }
       )
+      redmine = merge(
+        try(local.manifests.apps.redmine, {}),
+        {
+          secrets = {
+            pg = {
+              password = try(local.s.manifests.apps.redmine.pg.password, "")
+            }
+          }
+        }
+      )
     }
     rootvars = {
       cluster_url = local.infra.kubernetes.cluster_url

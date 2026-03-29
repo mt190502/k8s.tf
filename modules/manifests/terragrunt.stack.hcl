@@ -115,3 +115,14 @@ unit "nightscout" {
     image_version = try(local.apps.nightscout.version, "")
   }
 }
+
+unit "redmine" {
+  source = "./apps/redmine"
+  path   = "apps/redmine"
+  values = {
+    enabled       = try(local.apps.redmine.enabled, false)
+    config        = merge(try(local.apps.redmine.config, {}), { domain = local.rootvars.cluster_url.dns })
+    secrets       = try(local.apps.redmine.secrets, { pg = { password = "" } })
+    image_version = try(local.apps.redmine.version, "")
+  }
+}

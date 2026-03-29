@@ -4,15 +4,15 @@
 #  Outputs for the Cert Manager module --- Gateway name and namespace for use by                  #
 #  testing suite and other modules.                                                               #
 #                                                                                                 #
-#    gateway_name --- Name of the Gateway resource created by cert-manager                        #
-#    namespace    --- Namespace where cert-manager is deployed                                    #
+#    gateway_name      --- Name of the Gateway resource created by cert-manager                   #
+#    gateway_namespace --- Namespace where cert-manager is deployed                               #
 ## ============================================================================================= ##
 output "gateway_name" {
   description = "Name of the Gateway resource created by cert-manager"
   value       = local.gateway_name
 }
 
-output "namespace" {
+output "gateway_namespace" {
   description = "Namespace where cert-manager is deployed"
   value       = kubernetes_namespace_v1.this.metadata[0].name
 }

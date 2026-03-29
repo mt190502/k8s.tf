@@ -199,7 +199,14 @@ locals {
       }
       redmine = {
         enabled = true
-        version = ""
+        config = {
+          hostname = "red"
+          pg = {
+            replicas     = 3
+            storage_size = "1Gi"
+          }
+        }
+        version = "6.1.2"
       }
       umami = {
         enabled = true
