@@ -188,6 +188,15 @@ stack "manifests" {
           }
         }
       )
+      radicale = merge(
+        try(local.manifests.apps.radicale, {}),
+        {
+          secrets = {
+            username = try(local.s.manifests.apps.radicale.username, "")
+            password = try(local.s.manifests.apps.radicale.password, "")
+          }
+        }
+      )
       redmine = merge(
         try(local.manifests.apps.redmine, {}),
         {

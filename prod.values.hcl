@@ -196,7 +196,10 @@ locals {
       }
       radicale = {
         enabled = true
-        version = ""
+        config = {
+          hostname = "dav"
+        }
+        version = "3.6.1.0"
       }
       redmine = {
         enabled = true

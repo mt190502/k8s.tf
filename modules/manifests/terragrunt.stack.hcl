@@ -130,6 +130,17 @@ unit "nightscout" {
   }
 }
 
+unit "radicale" {
+  source = "./apps/radicale"
+  path   = "apps/radicale"
+  values = {
+    enabled       = try(local.apps.radicale.enabled, false)
+    config        = merge(try(local.apps.radicale.config, {}), { domain = local.rootvars.cluster_url.dns, preferred_gateway = local.rootvars.preferred_gateway })
+    secrets       = try(local.apps.radicale.secrets, {})
+    image_version = try(local.apps.radicale.version, "")
+  }
+}
+
 unit "redmine" {
   source = "./apps/redmine"
   path   = "apps/redmine"
