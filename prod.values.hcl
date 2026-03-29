@@ -201,7 +201,8 @@ locals {
       redmine = {
         enabled = true
         config = {
-          hostname = "red"
+          basic_auth = true
+          hostname   = "red"
           pg = {
             replicas     = 3
             storage_size = "1Gi"

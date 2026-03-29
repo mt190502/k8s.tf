@@ -3,6 +3,7 @@
 #                                                                                                 #
 #    enabled             --- Enable this module                                                   #
 #    config              --- Configuration object                                                 #
+#      basic_auth        --- Enable basic authentication support (only for Traefik Gateway)       #
 #      chart             --- (helm.tf) Helm chart name                                            #
 #      domain            --- Base domain for HTTPRoute hostname                                   #
 #      env               --- Environment variables (map of key-value)                             #
@@ -22,6 +23,7 @@
 #        requests        --- Resource requests for postgres instances (cpu, memory)               #
 #        replicas        --- Desired postgres instance count                                      #
 #        storage_size    --- Volume size for postgres instances                                   #
+#      preferred_gateway --- Preferred Gateway for basic auth (e.g., "traefik")                   #
 #      replicas          --- Desired replica count (for Deployment/StatefulSet)                   #
 #      repository        --- (helm.tf) Helm chart repo URL                                        #
 #      resources         --- Resource requests and limits for the application                     #
@@ -41,6 +43,7 @@ variable "enabled" {
 variable "config" {
   description = "Application configuration"
   type = object({
+    basic_auth        = optional(bool, false)
     chart             = optional(string)
     domain            = optional(string)
     env               = optional(map(string))
@@ -62,9 +65,10 @@ variable "config" {
       replicas     = optional(number, 1)
       storage_size = optional(string, "1Gi")
     }))
-    replicas     = optional(number, 1)
-    repository   = optional(string, "https://changeme.local/helm-charts")
-    storage_size = optional(string, "1Gi")
+    preferred_gateway = optional(string, "cilium")
+    replicas          = optional(number, 1)
+    repository        = optional(string, "https://changeme.local/helm-charts")
+    storage_size      = optional(string, "1Gi")
   })
   default = {}
 }

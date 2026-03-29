@@ -3,6 +3,7 @@
 #                                                                                                 #
 #    enabled             --- Enable this module                                                   #
 #    config              --- Configuration object                                                 #
+#      basic_auth        --- Enable basic authentication support (only for Traefik Gateway)       #
 #      domain            --- Base domain for HTTPRoute hostname                                   #
 #      env               --- Environment variables (map of key-value)                             #
 #      gateway_name      --- Gateway name (from cert-manager)                                     #
@@ -16,6 +17,7 @@
 #        requests        --- Resource requests for postgres instances (cpu, memory)               #
 #        replicas        --- Desired postgres instance count                                      #
 #        storage_size    --- Volume size for postgres instances                                   #
+#      preferred_gateway --- Preferred Gateway for basic auth (e.g., "traefik")                   #
 #      replicas          --- Desired replica count (for Deployment/StatefulSet)                   #
 #      resources         --- Resource requests and limits for the application                     #
 #        limits          --- Resource limits for the application (cpu, memory)                    #
@@ -33,6 +35,7 @@ variable "enabled" {
 variable "config" {
   description = "Application configuration"
   type = object({
+    basic_auth        = optional(bool, false)
     domain            = optional(string)
     env               = optional(map(string))
     gateway_name      = optional(string)
@@ -47,7 +50,8 @@ variable "config" {
       replicas     = optional(number, 1)
       storage_size = optional(string, "1Gi")
     }))
-    replicas = optional(number, 1)
+    preferred_gateway = optional(string, "cilium")
+    replicas          = optional(number, 1)
     resources = optional(object({
       limits   = optional(map(string))
       requests = optional(map(string))

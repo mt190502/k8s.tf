@@ -124,7 +124,7 @@ unit "nightscout" {
   path   = "apps/nightscout"
   values = {
     enabled       = try(local.apps.nightscout.enabled, false)
-    config        = merge(try(local.apps.nightscout.config, {}), { domain = local.rootvars.cluster_url.dns })
+    config        = merge(try(local.apps.nightscout.config, {}), { domain = local.rootvars.cluster_url.dns, preferred_gateway = local.rootvars.preferred_gateway })
     secrets       = try(local.apps.nightscout.secrets, { api_secret = "" })
     image_version = try(local.apps.nightscout.version, "")
   }
@@ -135,8 +135,8 @@ unit "redmine" {
   path   = "apps/redmine"
   values = {
     enabled       = try(local.apps.redmine.enabled, false)
-    config        = merge(try(local.apps.redmine.config, {}), { domain = local.rootvars.cluster_url.dns })
-    secrets       = try(local.apps.redmine.secrets, { pg = { password = "" } })
+    config        = merge(try(local.apps.redmine.config, {}), { domain = local.rootvars.cluster_url.dns, preferred_gateway = local.rootvars.preferred_gateway })
+    secrets       = try(local.apps.redmine.secrets, {})
     image_version = try(local.apps.redmine.version, "")
   }
 }

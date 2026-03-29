@@ -192,6 +192,7 @@ stack "manifests" {
         try(local.manifests.apps.redmine, {}),
         {
           secrets = {
+            basic_auth = try(local.s.manifests.apps.redmine.basic_auth, try(local.s.manifests.apps.misc.basic_auth, { username = "", password_hash = "" }))
             pg = {
               password = try(local.s.manifests.apps.redmine.pg.password, "")
             }
