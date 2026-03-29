@@ -125,6 +125,8 @@ cluster:
                       --set k8sServiceHost=$KUBERNETES_SERVICE_HOST \
                       --set k8sServicePort=$KUBERNETES_SERVICE_PORT \
                       --set kubeProxyReplacement=true \
+                      --set socketLB.enabled=true \
+                      --set socketLB.hostNamespaceOnly=true \
                       --set operator.replicas=${OPERATOR_REPLICAS} \
                       --set operator.useHostNetwork=true \
                       --set routingMode=tunnel \
