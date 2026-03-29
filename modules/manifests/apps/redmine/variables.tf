@@ -17,6 +17,9 @@
 #        replicas        --- Desired postgres instance count                                      #
 #        storage_size    --- Volume size for postgres instances                                   #
 #      replicas          --- Desired replica count (for Deployment/StatefulSet)                   #
+#      resources         --- Resource requests and limits for the application                     #
+#        limits          --- Resource limits for the application (cpu, memory)                    #
+#        requests        --- Resource requests for the application (cpu, memory)                  #
 #    secrets             --- Secrets object (map of sensitive values)                             #
 #    storage_size        --- Volume size for main application                                     #
 #    image_version       --- Image version tag                                                    #
@@ -44,7 +47,11 @@ variable "config" {
       replicas     = optional(number, 1)
       storage_size = optional(string, "1Gi")
     }))
-    replicas     = optional(number, 1)
+    replicas = optional(number, 1)
+    resources = optional(object({
+      limits   = optional(map(string))
+      requests = optional(map(string))
+    }))
     storage_size = optional(string, "1Gi")
   })
   default = {}

@@ -24,6 +24,9 @@
 #        storage_size    --- Volume size for postgres instances                                   #
 #      replicas          --- Desired replica count (for Deployment/StatefulSet)                   #
 #      repository        --- (helm.tf) Helm chart repo URL                                        #
+#      resources         --- Resource requests and limits for the application                     #
+#        limits          --- Resource limits for the application (cpu, memory)                    #
+#        requests        --- Resource requests for the application (cpu, memory)                  #
 #    secrets             --- Secrets object (map of sensitive values)                             #
 #    storage_size        --- Volume size for main application                                     #
 #    chart_version       --- (helm.tf) Helm chart version tag                                     #

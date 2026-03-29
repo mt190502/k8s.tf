@@ -17,6 +17,9 @@
 #      name              --- Application name (used for resources)                                #
 #      port              --- Container port                                                       #
 #      replicas          --- Desired replica count (for Deployment/StatefulSet)                   #
+#      resources         --- Resource requests and limits for the application                     #
+#        limits          --- Resource limits for the application (cpu, memory)                    #
+#        requests        --- Resource requests for the application (cpu, memory)                  #
 #    secrets             --- Secrets object (map of sensitive values)                             #
 #    image_version       --- Image version tag                                                    #
 ## ============================================================================================= ##
@@ -44,6 +47,10 @@ variable "config" {
     name     = optional(string, "nightscout")
     port     = optional(number, 1337)
     replicas = optional(number, 1)
+    resources = optional(object({
+      limits   = optional(map(string))
+      requests = optional(map(string))
+    }))
   })
   default = {}
 }

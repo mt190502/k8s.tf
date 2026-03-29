@@ -75,6 +75,19 @@ resource "kubernetes_deployment_v1" "this" {
               value = env.value
             }
           }
+          dynamic "resources" {
+            for_each = var.config.resources != null ? [1] : []
+            content {
+              limits = (var.config.resources.limits != null || var.config.resources.limits != {}) ? var.config.resources.limits : ((var.config.resources.requests == null || var.config.resources.requests == {}) ? {
+                cpu    = "1"
+                memory = "1Gi"
+              } : {})
+              requests = (var.config.resources.requests != null || var.config.resources.requests != {}) ? var.config.resources.requests : ((var.config.resources.limits == null || var.config.resources.limits == {}) ? {
+                cpu    = "500m"
+                memory = "512Mi"
+              } : {})
+            }
+          }
         }
       }
     }

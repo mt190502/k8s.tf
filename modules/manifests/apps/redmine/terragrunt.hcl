@@ -74,13 +74,13 @@ dependency "cnpg" {
 
 inputs = {
   enabled = try(values.enabled, true)
-  config  = merge(
-    try(values.config, {}), 
+  config = merge(
+    try(values.config, {}),
     {
       gateway_name      = dependency.cert_manager.outputs.gateway_name
       gateway_namespace = dependency.cert_manager.outputs.gateway_namespace
     }
   )
-  secrets = try(values.secrets, {})
+  secrets       = try(values.secrets, {})
   image_version = try(values.image_version, "")
 }

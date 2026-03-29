@@ -37,7 +37,7 @@ resource "kubernetes_manifest" "postgres" {
         initdb = {
           database = var.config.name
           owner    = var.config.name
-          secret   = {
+          secret = {
             name = kubernetes_secret_v1.postgres[0].metadata[0].name
           }
         }

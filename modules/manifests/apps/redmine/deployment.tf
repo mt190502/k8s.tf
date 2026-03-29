@@ -52,7 +52,7 @@ resource "kubernetes_deployment_v1" "this" {
             value_from {
               secret_key_ref {
                 name = kubernetes_secret_v1.postgres.metadata[0].name
-                key = "database"
+                key  = "database"
               }
             }
           }
@@ -61,7 +61,7 @@ resource "kubernetes_deployment_v1" "this" {
             value_from {
               secret_key_ref {
                 name = kubernetes_secret_v1.postgres.metadata[0].name
-                key = "username"
+                key  = "username"
               }
             }
           }
@@ -70,12 +70,12 @@ resource "kubernetes_deployment_v1" "this" {
             value_from {
               secret_key_ref {
                 name = kubernetes_secret_v1.postgres.metadata[0].name
-                key = "password"
+                key  = "password"
               }
             }
           }
           env {
-            name = "REDMINE_DB_POSTGRES"
+            name  = "REDMINE_DB_POSTGRES"
             value = "${var.config.name}-postgres-rw"
           }
           dynamic "env" {
@@ -85,21 +85,34 @@ resource "kubernetes_deployment_v1" "this" {
               value = env.value
             }
           }
+          dynamic "resources" {
+            for_each = var.config.resources != null ? [1] : []
+            content {
+              limits = (var.config.resources.limits != null || var.config.resources.limits != {}) ? var.config.resources.limits : ((var.config.resources.requests == null || var.config.resources.requests == {}) ? {
+                cpu    = "1"
+                memory = "1Gi"
+              } : {})
+              requests = (var.config.resources.requests != null || var.config.resources.requests != {}) ? var.config.resources.requests : ((var.config.resources.limits == null || var.config.resources.limits == {}) ? {
+                cpu    = "500m"
+                memory = "512Mi"
+              } : {})
+            }
+          }
           volume_mount {
-            name = "${var.config.name}-data"
+            name       = "${var.config.name}-data"
             mount_path = "/usr/src/redmine/files"
-            sub_path = "files"
+            sub_path   = "files"
           }
           volume_mount {
-            name = "${var.config.name}-data"
+            name       = "${var.config.name}-data"
             mount_path = "/usr/src/redmine/plugins"
-            sub_path = "plugins"
+            sub_path   = "plugins"
           }
           volume_mount {
-            name = "${var.config.name}-data"
+            name       = "${var.config.name}-data"
             mount_path = "/usr/src/redmine/themes"
-            sub_path = "themes"
-          }         
+            sub_path   = "themes"
+          }
         }
         volume {
           name = "${var.config.name}-data"
