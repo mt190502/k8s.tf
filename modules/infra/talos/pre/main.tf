@@ -78,3 +78,21 @@ data "talos_machine_configuration" "nodes" {
     talos_machine_secrets.this,
   ]
 }
+
+resource "null_resource" "delete_old_cilium_job" {
+  count = length(var.config.nodes) > 0 ? 1 : 0
+  triggers = {
+    APISERVER_HOST    = var.config.kubeprism ? "127.0.0.1" : var.config.cluster_url.apiserver
+    CILIUM_VERSION    = var.versions.cilium
+    CLUSTER_DOMAIN    = var.config.cluster_url.dns
+    DUALSTACK         = var.config.dualstack ? "true" : "false"
+    OPERATOR_REPLICAS = max(1, length([for node in var.config.nodes : node if node.role == "controlplane"]))
+    PREFERRED_GATEWAY = var.config.preferred_gateway
+    SRV_PORT          = var.config.kubeprism ? "7445" : "6443"
+  }
+  provisioner "local-exec" {
+    command = <<-CMD
+      kubectl delete job -n kube-system -l app=helm-install-cilium --ignore-not-found=true
+    CMD
+  }
+}

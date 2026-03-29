@@ -6,12 +6,13 @@
 #  Uses null_resource + kubectl because the kubernetes provider does not support CRDs well.       #
 ## ============================================================================================= ##
 resource "kubernetes_manifest" "gateway" {
+  count = var.enabled ? 1 : 0
   manifest = {
     apiVersion = "gateway.networking.k8s.io/v1"
     kind       = "Gateway"
     metadata = {
       name      = "traefik-gateway"
-      namespace = kubernetes_namespace_v1.this.metadata[0].name
+      namespace = kubernetes_namespace_v1.this[0].metadata[0].name
     }
     spec = {
       gatewayClassName = "traefik"
@@ -41,6 +42,5 @@ resource "kubernetes_manifest" "gateway" {
   }
   depends_on = [
     helm_release.this,
-    kubernetes_manifest.gatewayclass,
   ]
 }

@@ -5,6 +5,7 @@
 #  Required by Gateway API for cross-namespace certificate references.                            #
 ## ============================================================================================= ##
 resource "kubernetes_manifest" "referencegrant" {
+  count = var.enabled ? 1 : 0
   manifest = {
     apiVersion = "gateway.networking.k8s.io/v1"
     kind       = "ReferenceGrant"
@@ -17,7 +18,7 @@ resource "kubernetes_manifest" "referencegrant" {
         {
           group     = "gateway.networking.k8s.io"
           kind      = "Gateway"
-          namespace = kubernetes_namespace_v1.this.metadata[0].name
+          namespace = kubernetes_namespace_v1.this[0].metadata[0].name
         }
       ]
       to = [

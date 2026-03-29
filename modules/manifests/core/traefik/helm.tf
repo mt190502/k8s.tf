@@ -21,6 +21,17 @@ resource "null_resource" "crds" {
     CMD
   }
 
+  provisioner "local-exec" {
+    on_failure = continue
+    when       = destroy
+    command    = <<-CMD
+      helm template traefik-crds oci://ghcr.io/traefik/helm/traefik-crds \
+        --version ${self.triggers.crd_version} \
+        --set traefik=true \
+        --set gatewayAPI=false | kubectl delete -f -
+    CMD
+  }
+
   depends_on = [kubernetes_namespace_v1.this]
 }
 
@@ -30,7 +41,7 @@ resource "helm_release" "this" {
   repository      = "https://traefik.github.io/charts"
   chart           = "traefik"
   version         = var.versions.main
-  namespace       = kubernetes_namespace_v1.this.metadata[0].name
+  namespace       = kubernetes_namespace_v1.this[0].metadata[0].name
   upgrade_install = true
   skip_crds       = true
   values = [
