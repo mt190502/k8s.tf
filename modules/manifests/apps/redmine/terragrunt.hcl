@@ -15,11 +15,6 @@ include "common" {
   expose = true
 }
 
-exclude {
-  if      = !try(values.enabled, true)
-  actions = ["all"]
-}
-
 terraform {
   source = "./"
 }

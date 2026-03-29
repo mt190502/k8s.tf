@@ -21,11 +21,6 @@ include "common" {
   expose = true
 }
 
-exclude {
-  if      = !try(values.enabled, true)
-  actions = ["all"]
-}
-
 terraform {
   source = "./"
 }
@@ -65,8 +60,8 @@ generate "versions" {
 # dependency "cert_manager" {
 #   config_path = "../../core/cert-manager"
 #   mock_outputs = {
-#     gateway_name = "mock-gateway"
-#     namespace    = "mock-namespace"
+#     gateway_name      = "mock-gateway"
+#     gateway_namespace = "mock-namespace"
 #   }
 #   mock_outputs_allowed_terraform_commands = include.common.locals.mock_outputs_allowed_terraform_commands
 #   mock_outputs_merge_strategy_with_state  = include.common.locals.mock_outputs_merge_strategy_with_state
@@ -90,7 +85,7 @@ inputs = {
     try(values.config, {}),
     {
       gateway_name      = dependency.cert_manager.outputs.gateway_name
-      gateway_namespace = dependency.cert_manager.outputs.namespace
+      gateway_namespace = dependency.cert_manager.outputs.gateway_namespace
       preferred_gateway = values.config.preferred_gateway != null ? values.config.preferred_gateway : "cilium"
     }
   )

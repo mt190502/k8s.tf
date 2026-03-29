@@ -68,7 +68,11 @@ variable "config" {
     preferred_gateway = optional(string, "cilium")
     replicas          = optional(number, 1)
     repository        = optional(string, "https://changeme.local/helm-charts")
-    storage_size      = optional(string, "1Gi")
+    resources = optional(object({
+      limits   = optional(map(string))
+      requests = optional(map(string))
+    }))
+    storage_size = optional(string, "1Gi")
   })
   default = {}
 }
