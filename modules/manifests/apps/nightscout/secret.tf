@@ -9,7 +9,7 @@ resource "kubernetes_secret_v1" "this" {
     name      = "${var.config.name}-secret"
     namespace = kubernetes_namespace_v1.this.metadata[0].name
   }
-  data       = var.secrets
+  data       = var.secrets.app
   type       = "Opaque"
   depends_on = [kubernetes_namespace_v1.this]
 }

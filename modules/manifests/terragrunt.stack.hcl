@@ -125,7 +125,7 @@ unit "nightscout" {
   values = {
     enabled       = try(local.apps.nightscout.enabled, false)
     config        = merge(try(local.apps.nightscout.config, {}), { domain = local.rootvars.cluster_url.dns, preferred_gateway = local.rootvars.preferred_gateway })
-    secrets       = try(local.apps.nightscout.secrets, { api_secret = "" })
+    secrets       = try(local.apps.nightscout.secrets, {})
     image_version = try(local.apps.nightscout.version, "")
   }
 }
