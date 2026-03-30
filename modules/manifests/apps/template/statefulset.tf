@@ -5,9 +5,10 @@
 #  storage. Each pod gets a stable hostname (pod-0, pod-1, etc.).                                 #
 ## ============================================================================================= ##
 resource "kubernetes_stateful_set_v1" "this" {
+  count = var.enabled ? 1 : 0
   metadata {
     name      = var.config.name
-    namespace = kubernetes_namespace_v1.this.metadata[0].name
+    namespace = kubernetes_namespace_v1.this[0].metadata[0].name
     labels = {
       "app.kubernetes.io/name" = var.config.name
     }

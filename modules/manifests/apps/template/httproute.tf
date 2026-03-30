@@ -6,13 +6,13 @@
 #  Hostname: {hostname}.{domain}                                                                  #
 ## ============================================================================================= ##
 resource "kubernetes_manifest" "httproute" {
-  count = var.config.hostname != null ? 1 : 0
+  count = (var.enabled && var.config.hostname != null) ? 1 : 0
   manifest = {
     apiVersion = "gateway.networking.k8s.io/v1"
     kind       = "HTTPRoute"
     metadata = {
       name      = var.config.name
-      namespace = kubernetes_namespace_v1.this.metadata[0].name
+      namespace = kubernetes_namespace_v1.this[0].metadata[0].name
     }
     spec = {
       parentRefs = [
@@ -57,10 +57,10 @@ resource "kubernetes_manifest" "httproute" {
 }
 
 resource "kubernetes_secret_v1" "basic_auth" {
-  count = (var.config.basic_auth && var.config.preferred_gateway == "traefik") ? 1 : 0
+  count = (var.enabled && var.config.basic_auth && var.config.preferred_gateway == "traefik") ? 1 : 0
   metadata {
     name      = "${var.config.name}-basic-auth"
-    namespace = kubernetes_namespace_v1.this.metadata[0].name
+    namespace = kubernetes_namespace_v1.this[0].metadata[0].name
   }
   type = "Opaque"
   data = {
@@ -69,13 +69,13 @@ resource "kubernetes_secret_v1" "basic_auth" {
 }
 
 resource "kubernetes_manifest" "basic_auth_middleware" {
-  count = (var.enabled && var.config.basic_auth) ? 1 : 0
+  count = (var.enabled && var.config.basic_auth && var.config.preferred_gateway == "traefik") ? 1 : 0
   manifest = {
     apiVersion = "traefik.io/v1alpha1"
     kind       = "Middleware"
     metadata = {
       name      = "${var.config.name}-basic-auth"
-      namespace = kubernetes_namespace_v1.this.metadata[0].name
+      namespace = kubernetes_namespace_v1.this[0].metadata[0].name
     }
     spec = {
       basicAuth = {

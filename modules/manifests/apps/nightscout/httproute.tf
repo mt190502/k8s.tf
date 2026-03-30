@@ -6,13 +6,13 @@
 #  Hostname: {hostname}.{domain}                                                                  #
 ## ============================================================================================= ##
 resource "kubernetes_manifest" "httproute" {
-  count = var.config.hostname != null ? 1 : 0
+  count = (var.enabled && var.config.hostname != null) ? 1 : 0
   manifest = {
     apiVersion = "gateway.networking.k8s.io/v1"
     kind       = "HTTPRoute"
     metadata = {
       name      = var.config.name
-      namespace = kubernetes_namespace_v1.this.metadata[0].name
+      namespace = kubernetes_namespace_v1.this[0].metadata[0].name
     }
     spec = {
       parentRefs = [

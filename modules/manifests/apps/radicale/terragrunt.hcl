@@ -7,12 +7,6 @@
 #  Dependencies:                                                                                  #
 #    - cert-manager: Optional, Provides gateway_name and gateway_namespace for HTTPRoute          #
 #    - cnpg: Optional, for PostgreSQL databases                                                   #
-#    - psmdb-operator: Optional, for MongoDB databases                                            #
-#                                                                                                 #
-#  Usage: Copy this radicale to your app directory and customize:                                 #
-#    1. Replace "radicale" with your app name                                                     #
-#    2. Add/remove dependencies as needed                                                         #
-#    3. Update inputs to match your variables.tf                                                  #
 #                                                                                                 #
 #  Apply order: (cert-manager/cnpg/psmdb-operator) -> [radicale]                                  #
 ## ============================================================================================= ##

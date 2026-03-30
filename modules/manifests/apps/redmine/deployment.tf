@@ -5,10 +5,10 @@
 #  Uses environment variables from config and secrets from Kubernetes Secret.                     #
 ## ============================================================================================= ##
 resource "kubernetes_deployment_v1" "this" {
-  count = var.config.replicas != null ? 1 : 0
+  count = (var.enabled && var.config.replicas != null) ? 1 : 0
   metadata {
     name      = var.config.name
-    namespace = kubernetes_namespace_v1.this.metadata[0].name
+    namespace = kubernetes_namespace_v1.this[0].metadata[0].name
     labels = {
       "app.kubernetes.io/name" = var.config.name
     }
@@ -51,7 +51,7 @@ resource "kubernetes_deployment_v1" "this" {
             name = "REDMINE_DB_DATABASE"
             value_from {
               secret_key_ref {
-                name = kubernetes_secret_v1.postgres.metadata[0].name
+                name = kubernetes_secret_v1.postgres[0].metadata[0].name
                 key  = "database"
               }
             }
@@ -60,7 +60,7 @@ resource "kubernetes_deployment_v1" "this" {
             name = "REDMINE_DB_USERNAME"
             value_from {
               secret_key_ref {
-                name = kubernetes_secret_v1.postgres.metadata[0].name
+                name = kubernetes_secret_v1.postgres[0].metadata[0].name
                 key  = "username"
               }
             }
@@ -69,7 +69,7 @@ resource "kubernetes_deployment_v1" "this" {
             name = "REDMINE_DB_PASSWORD"
             value_from {
               secret_key_ref {
-                name = kubernetes_secret_v1.postgres.metadata[0].name
+                name = kubernetes_secret_v1.postgres[0].metadata[0].name
                 key  = "password"
               }
             }
@@ -117,7 +117,7 @@ resource "kubernetes_deployment_v1" "this" {
         volume {
           name = "${var.config.name}-data"
           persistent_volume_claim {
-            claim_name = kubernetes_persistent_volume_claim_v1.this.metadata[0].name
+            claim_name = kubernetes_persistent_volume_claim_v1.this[0].metadata[0].name
           }
         }
       }

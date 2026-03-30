@@ -5,10 +5,10 @@
 #  Used as HTTPRoute backend for Gateway API ingress.                                             #
 ## ============================================================================================= ##
 resource "kubernetes_service_v1" "this" {
-  count = var.config.port != null ? 1 : 0
+  count = (var.enabled && var.config.port != null) ? 1 : 0
   metadata {
     name      = var.config.name
-    namespace = kubernetes_namespace_v1.this.metadata[0].name
+    namespace = kubernetes_namespace_v1.this[0].metadata[0].name
   }
   spec {
     selector = {

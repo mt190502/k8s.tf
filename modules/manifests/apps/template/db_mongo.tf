@@ -10,12 +10,13 @@
 #    ?replicaSet=rs0&authSource=admin                                                             #
 ## ============================================================================================= ##
 resource "kubernetes_manifest" "mongo" {
+  count = var.enabled ? 1 : 0
   manifest = {
     apiVersion = "psmdb.percona.com/v1"
     kind       = "PerconaServerMongoDB"
     metadata = {
       name      = "${var.config.name}-mongo"
-      namespace = kubernetes_namespace_v1.this.metadata[0].name
+      namespace = kubernetes_namespace_v1.this[0].metadata[0].name
     }
     spec = {
       crVersion       = "1.22.0"

@@ -79,7 +79,7 @@ variable "config" {
 
 variable "secrets" {
   description = "Application secrets"
-  type        = map(string)
+  type        = map(map(string))
   sensitive   = true
   default     = {}
 }

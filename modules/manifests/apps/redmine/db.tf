@@ -9,9 +9,10 @@
 #    postgresql://{owner}:{password}@{app}-postgres-rw.{namespace}.svc.cluster.local:5432/{db}    #
 ## ============================================================================================= ##
 resource "kubernetes_secret_v1" "postgres" {
+  count = var.enabled ? 1 : 0
   metadata {
     name      = "${var.config.name}-postgres-secret"
-    namespace = kubernetes_namespace_v1.this.metadata[0].name
+    namespace = kubernetes_namespace_v1.this[0].metadata[0].name
   }
   data = {
     database = var.config.name
@@ -23,12 +24,13 @@ resource "kubernetes_secret_v1" "postgres" {
 }
 
 resource "kubernetes_manifest" "postgres" {
+  count = var.enabled ? 1 : 0
   manifest = {
     apiVersion = "postgresql.cnpg.io/v1"
     kind       = "Cluster"
     metadata = {
       name      = "${var.config.name}-postgres"
-      namespace = kubernetes_namespace_v1.this.metadata[0].name
+      namespace = kubernetes_namespace_v1.this[0].metadata[0].name
     }
     spec = {
       instances             = var.config.pg.replicas
@@ -38,7 +40,7 @@ resource "kubernetes_manifest" "postgres" {
           database = var.config.name
           owner    = var.config.name
           secret = {
-            name = kubernetes_secret_v1.postgres.metadata[0].name
+            name = kubernetes_secret_v1.postgres[0].metadata[0].name
           }
         }
       }
