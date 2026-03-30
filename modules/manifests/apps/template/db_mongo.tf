@@ -1,5 +1,5 @@
 ## ============================================================================================= ##
-#  modules/manifests/apps/template/db_mongo.tf                                                    #
+#  modules/manifests/apps/<<<template>>>/db_mongo.tf                                              #
 #                                                                                                 #
 #  PerconaServerMongoDB (PSMDB) cluster                                                           #
 #  Requires psmdb-operator to be installed. Uses databaseAdmin credentials from                   #

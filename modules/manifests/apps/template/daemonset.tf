@@ -1,5 +1,5 @@
 ## ============================================================================================= ##
-#  modules/manifests/apps/apps/template/daemonset.tf                                              #
+#  modules/manifests/apps/<<<template>>>/daemonset.tf                                             #
 #                                                                                                 #
 #  DaemonSet ensures a pod runs on every node (or selected nodes) - useful for system             #
 #  agents, log collectors, monitoring daemons.                                                    #

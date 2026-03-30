@@ -1,7 +1,7 @@
 ## ============================================================================================= ##
-#  modules/manifests/apps/template/terragrunt.hcl                                                 #
+#  modules/manifests/apps/<<<template>>>/terragrunt.hcl                                           #
 #                                                                                                 #
-#  Terragrunt wrapper for template manifests.                                                     #
+#  Terragrunt wrapper for <<<template>>> manifests.                                               #
 #  Config is provided from stack values.                                                          #
 #                                                                                                 #
 #  Dependencies:                                                                                  #
@@ -14,7 +14,7 @@
 #    2. Add/remove dependencies as needed                                                         #
 #    3. Update inputs to match your variables.tf                                                  #
 #                                                                                                 #
-#  Apply order: (cert-manager/cnpg/psmdb-operator) -> [template]                                  #
+#  Apply order: (cert-manager/cnpg/psmdb-operator) -> [<<<template>>>]                            #
 ## ============================================================================================= ##
 include "common" {
   path   = find_in_parent_folders("modules/common.hcl")

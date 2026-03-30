@@ -1,5 +1,5 @@
 ## ============================================================================================= ##
-#  modules/manifests/apps/template/deployment.tf                                                  #
+#  modules/manifests/apps/<<<template>>>/deployment.tf                                            #
 #                                                                                                 #
 #  Deployment for stateless applications - manages replica pods with rolling updates.             #
 #  Uses environment variables from config and secrets from Kubernetes Secret.                     #

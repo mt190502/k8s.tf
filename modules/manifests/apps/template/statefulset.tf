@@ -1,5 +1,5 @@
 ## ============================================================================================= ##
-#  modules/manifests/apps/template/statefulset.tf                                                 #
+#  modules/manifests/apps/<<<template>>>/statefulset.tf                                           #
 #                                                                                                 #
 #  StatefulSet for stateful applications - provides stable network identity and persistent        #
 #  storage. Each pod gets a stable hostname (pod-0, pod-1, etc.).                                 #

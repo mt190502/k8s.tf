@@ -1,5 +1,5 @@
 ## ============================================================================================= ##
-#  modules/manifests/apps/template/httproute.tf                                                   #
+#  modules/manifests/apps/<<<template>>>/httproute.tf                                             #
 #                                                                                                 #
 #  HTTPRoute for Gateway API ingress - routes traffic from Gateway to Service.                    #
 #  Requires cert-manager Gateway to be configured.                                                #

@@ -1,5 +1,5 @@
 ## ============================================================================================= ##
-#  modules/manifests/apps/template/namespace.tf                                                   #
+#  modules/manifests/apps/<<<template>>>/namespace.tf                                             #
 #                                                                                                 #
 #  Namespace for the application - isolates resources within the cluster.                         #
 ## ============================================================================================= ##

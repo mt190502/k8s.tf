@@ -1,5 +1,5 @@
 ## ============================================================================================= ##
-#  modules/manifests/apps/template/pvc.tf                                                         #
+#  modules/manifests/apps/<<<template>>>/pvc.tf                                                   #
 #                                                                                                 #
 #  PersistentVolumeClaim for applications requiring persistent storage.                           #
 #  Mount this PVC in Deployment/StatefulSet containers.                                           #

@@ -1,5 +1,5 @@
 ## ============================================================================================= ##
-#  modules/manifests/apps/template/db_postgres.tf                                                 #
+#  modules/manifests/apps/<<<template>>>/db_postgres.tf                                           #
 #                                                                                                 #
 #  CloudNativePG (CNPG) PostgreSQL cluster - managed by cnpg operator.                            #
 #  Requires cnpg-operator to be installed. Creates database with owner credentials                #

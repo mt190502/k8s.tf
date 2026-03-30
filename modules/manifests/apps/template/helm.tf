@@ -1,5 +1,5 @@
 ## ============================================================================================= ##
-#  modules/manifests/apps/template/helm.tf                                                        #
+#  modules/manifests/apps/<<<template>>>/helm.tf                                                  #
 #                                                                                                 #
 #  Helm Release for deploying applications via Helm charts.                                       #
 #  Configure repository, chart name, values, and set parameters.                                  #

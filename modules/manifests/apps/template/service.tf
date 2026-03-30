@@ -1,5 +1,5 @@
 ## ============================================================================================= ##
-#  modules/manifests/apps/template/service.tf                                                     #
+#  modules/manifests/apps/<<<template>>>/service.tf                                               #
 #                                                                                                 #
 #  ClusterIP Service for the application - exposes pods for internal cluster traffic.             #
 #  Used as HTTPRoute backend for Gateway API ingress.                                             #

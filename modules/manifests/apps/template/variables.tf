@@ -1,5 +1,5 @@
 ## ============================================================================================= ##
-#  modules/manifests/apps/template/variables.tf                                                   #
+#  modules/manifests/apps/<<<template>>>/variables.tf                                             #
 #                                                                                                 #
 #    enabled             --- Enable this module                                                   #
 #    config              --- Configuration object                                                 #

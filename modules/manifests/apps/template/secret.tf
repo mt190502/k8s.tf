@@ -1,5 +1,5 @@
 ## ============================================================================================= ##
-#  modules/manifests/apps/template/secret.tf                                                      #
+#  modules/manifests/apps/<<<template>>>/secret.tf                                                #
 #                                                                                                 #
 #  Kubernetes Secret for application-sensitive data.                                              #
 #  Add secret keys as needed for your application (passwords, tokens, keys).                      #
