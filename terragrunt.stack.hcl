@@ -180,6 +180,20 @@ stack "manifests" {
       tests = try(local.manifests.core.tests, { enabled = false })
     }
     apps = {
+      miniflux = merge(
+        try(local.manifests.apps.miniflux, {}),
+        {
+          secrets = {
+            app = {
+              admin_username = try(local.s.manifests.apps.miniflux.app.admin_username, "")
+              admin_password = try(local.s.manifests.apps.miniflux.app.admin_password, "")
+            }
+            pg = {
+              password = try(local.s.manifests.apps.miniflux.pg.password, "")
+            }
+          }
+        }
+      )
       nightscout = merge(
         try(local.manifests.apps.nightscout, {}),
         {

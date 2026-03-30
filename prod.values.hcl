@@ -154,7 +154,14 @@ locals {
       }
       miniflux = {
         enabled = true
-        version = ""
+        config = {
+          hostname = "rss"
+          pg = {
+            replicas     = 1
+            storage_size = "1Gi"
+          }
+        }
+        version = "2.2.18"
       }
       nextcloud = {
         enabled = true

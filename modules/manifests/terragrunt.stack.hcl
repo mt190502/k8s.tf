@@ -119,6 +119,17 @@ unit "tests" {
 ## --------------------------------------------------------------------------------------------- ##
 #  App manifests units                                                                            #
 ## --------------------------------------------------------------------------------------------- ##
+unit "miniflux" {
+  source = "./apps/miniflux"
+  path   = "apps/miniflux"
+  values = {
+    enabled       = try(local.apps.miniflux.enabled, false)
+    config        = merge(try(local.apps.miniflux.config, {}), { domain = local.rootvars.cluster_url.dns, preferred_gateway = local.rootvars.preferred_gateway })
+    secrets       = try(local.apps.miniflux.secrets, {})
+    image_version = try(local.apps.miniflux.version, "")
+  }
+}
+
 unit "nightscout" {
   source = "./apps/nightscout"
   path   = "apps/nightscout"
