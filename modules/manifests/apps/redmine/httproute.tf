@@ -4,8 +4,30 @@
 #  HTTPRoute for Gateway API ingress - routes traffic from Gateway to Service.                    #
 #  Requires cert-manager Gateway to be configured.                                                #
 #  Hostname: {hostname}.{domain}                                                                  #
-#  Attaches Traefik Middleware for basic auth via extensionRef.                                   #
+#                                                                                                 #
+#  Features:                                                                                      #
+#    - Redirect root path / to /my/page via Traefik Middleware                                    #
+#    - Basic auth support via Traefik Middleware                                                  #
 ## ============================================================================================= ##
+resource "kubernetes_manifest" "redirect_middleware" {
+  count = (var.enabled && var.config.hostname != null && var.config.preferred_gateway == "traefik") ? 1 : 0
+  manifest = {
+    apiVersion = "traefik.io/v1alpha1"
+    kind       = "Middleware"
+    metadata = {
+      name      = "${var.config.name}-redirect-root"
+      namespace = kubernetes_namespace_v1.this[0].metadata[0].name
+    }
+    spec = {
+      redirectRegex = {
+        regex       = "^https?://${var.config.hostname}.${var.config.domain}/$"
+        replacement = "https://${var.config.hostname}.${var.config.domain}/my/page"
+        permanent   = true
+      }
+    }
+  }
+}
+
 resource "kubernetes_manifest" "httproute" {
   count = (var.enabled && var.config.hostname != null) ? 1 : 0
   manifest = {
@@ -30,15 +52,37 @@ resource "kubernetes_manifest" "httproute" {
           matches = [
             {
               path = {
-                type  = "PathPrefix"
+                type  = "Exact"
                 value = "/"
               }
             }
           ]
-          backendRefs = [
+          filters = flatten([
+            var.config.preferred_gateway == "traefik" ? [{
+              type = "ExtensionRef"
+              extensionRef = {
+                group = "traefik.io"
+                kind  = "Middleware"
+                name  = "${var.config.name}-redirect-root"
+              }
+            }] : [],
+            var.config.basic_auth && var.config.preferred_gateway == "traefik" ? [{
+              type = "ExtensionRef"
+              extensionRef = {
+                group = "traefik.io"
+                kind  = "Middleware"
+                name  = "${var.config.name}-basic-auth"
+              }
+            }] : []
+          ])
+        },
+        {
+          matches = [
             {
-              name = kubernetes_service_v1.this[0].metadata[0].name
-              port = var.config.port
+              path = {
+                type  = "PathPrefix"
+                value = "/"
+              }
             }
           ]
           filters = flatten([
@@ -51,10 +95,17 @@ resource "kubernetes_manifest" "httproute" {
               }
             }] : []
           ])
+          backendRefs = [
+            {
+              name = kubernetes_service_v1.this[0].metadata[0].name
+              port = var.config.port
+            }
+          ]
         }
       ]
     }
   }
+  depends_on = [kubernetes_manifest.redirect_middleware]
 }
 
 resource "kubernetes_secret_v1" "basic_auth" {
