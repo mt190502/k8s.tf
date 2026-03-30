@@ -180,6 +180,16 @@ stack "manifests" {
       tests = try(local.manifests.core.tests, { enabled = false })
     }
     apps = {
+      anki = merge(
+        try(local.manifests.apps.anki, {}),
+        {
+          secrets = {
+            app = {
+              accounts = try(local.s.manifests.apps.anki.app.accounts, [])
+            }
+          }
+        }
+      )
       miniflux = merge(
         try(local.manifests.apps.miniflux, {}),
         {

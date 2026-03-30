@@ -146,7 +146,10 @@ locals {
       }
       anki = {
         enabled = true
-        version = ""
+        config = {
+          hostname = "anki"
+        }
+        version = "25.09.2"
       }
       jellyfin = {
         enabled = true
