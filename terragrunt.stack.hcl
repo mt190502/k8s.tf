@@ -208,6 +208,20 @@ stack "manifests" {
           }
         }
       )
+      umami = merge(
+        try(local.manifests.apps.umami, {}),
+        {
+          secrets = {
+            app = {
+              app_secret = try(local.s.manifests.apps.umami.app.app_secret, "")
+            }
+            basic_auth = try(local.s.manifests.apps.umami.basic_auth, try(local.s.manifests.apps.misc.basic_auth, { username = "", password_hash = "" }))
+            pg = {
+              password = try(local.s.manifests.apps.umami.pg.password, "")
+            }
+          }
+        }
+      )
     }
     rootvars = {
       cluster_url       = local.infra.kubernetes.cluster_url

@@ -151,3 +151,14 @@ unit "redmine" {
     image_version = try(local.apps.redmine.version, "")
   }
 }
+
+unit "umami" {
+  source = "./apps/umami"
+  path   = "apps/umami"
+  values = {
+    enabled       = try(local.apps.umami.enabled, false)
+    config        = merge(try(local.apps.umami.config, {}), { domain = local.rootvars.cluster_url.dns, preferred_gateway = local.rootvars.preferred_gateway })
+    secrets       = try(local.apps.umami.secrets, {})
+    image_version = try(local.apps.umami.version, "")
+  }
+}

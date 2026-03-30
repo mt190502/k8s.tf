@@ -215,7 +215,14 @@ locals {
       }
       umami = {
         enabled = true
-        version = ""
+        config = {
+          hostname = "umami"
+          pg = {
+            replicas     = 2
+            storage_size = "1Gi"
+          }
+        }
+        version = "3.0.3"
       }
     }
     core = {
