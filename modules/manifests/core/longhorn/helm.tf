@@ -10,10 +10,17 @@ resource "helm_release" "this" {
   upgrade_install = true
   values = [
     <<-EOF
-      preUpgradeChecker:
-        jobEnabled: false
+      image:
+        longhorn:
+          instanceManager:
+            tag: v1.11.0-hotfix-1
+          manager:
+            tag: v1.11.0-hotfix-1
       longhornUI:
         replicas: 3
+      preUpgradeChecker:
+        jobEnabled: false
+        upgradeVersionCheck: false
     EOF
   ]
   depends_on = [kubernetes_namespace_v1.this]
