@@ -1,0 +1,90 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":semanticCommits",
+    ":ignoreModulesAndTests"
+  ],
+  "timezone": "Europe/Istanbul",
+  "schedule": ["* 0,12 * * *"],
+  "prHourlyLimit": 0,
+  "prConcurrentLimit": 5,
+  "branchConcurrentLimit": 10,
+  "rebaseWhen": "conflicted",
+  "labels": ["dependencies"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update versions in prod.values.hcl with renovate annotations",
+      "managerFilePatterns": ["prod.values.hcl"],
+      "matchStrings": [
+        "#\\s*renovate:\\s*datasource=(?<datasource>.*?)\\s+depName=(?<depName>.*?)(\\s+registryUrl=(?<registryUrl>.*?))?\\s+(?:version|talos|kubernetes|cilium|main|crds)\\s*=\\s*\"(?<currentValue>[^\"]+)\""
+      ]
+    },
+    {
+      "customType": "regex",
+      "description": "Update Terraform provider versions in common.hcl",
+      "managerFilePatterns": ["modules/common.hcl"],
+      "matchStrings": [
+        "#\\s*renovate:\\s*datasource=(?<datasource>.*?)\\s+depName=(?<depName>.*?)\\s+\\w+\\s*=\\s*\\{\\s*version\\s*=\\s*\"(?<currentValue>[^\"]+)\""
+      ]
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Group infrastructure versions (Talos, Kubernetes, Cilium)",
+      "matchPackageNames": [
+        "siderolabs/talos",
+        "kubernetes/kubernetes",
+        "cilium/cilium"
+      ],
+      "groupName": "infrastructure",
+      "groupSlug": "infra-versions"
+    },
+    {
+      "description": "Group core Helm charts",
+      "matchDatasources": ["helm"],
+      "groupName": "core-helm-charts",
+      "groupSlug": "core-charts"
+    },
+    {
+      "description": "Group Docker images for applications",
+      "matchDatasources": ["docker"],
+      "groupName": "app-images",
+      "groupSlug": "app-docker"
+    },
+    {
+      "description": "Group Terraform providers",
+      "matchDatasources": ["terraform-provider"],
+      "groupName": "terraform-providers",
+      "groupSlug": "tf-providers"
+    },
+    {
+      "description": "Automerge patch updates for Docker images",
+      "matchDatasources": ["docker"],
+      "matchUpdateTypes": ["patch"],
+      "automerge": true
+    },
+    {
+      "description": "Automerge minor updates for Helm charts",
+      "matchDatasources": ["helm"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true
+    },
+    {
+      "description": "Require approval for major Kubernetes updates",
+      "matchPackageNames": ["kubernetes/kubernetes"],
+      "matchUpdateTypes": ["major"],
+      "labels": ["major-k8s-update"],
+      "reviewers": ["team:platform"]
+    },
+    {
+      "description": "Use loose versioning for app images without semver",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["mt190502/docker-anki-sync-server", "nightscout/cgm-remote-monitor"],
+      "versioning": "loose"
+    }
+  ],
+  "ignoreDeps": [],
+  "pinDigests": false
+}
