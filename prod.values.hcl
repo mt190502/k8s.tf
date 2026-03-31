@@ -129,8 +129,11 @@ locals {
     #  Versions                                                                                       #
     ## --------------------------------------------------------------------------------------------- ##
     versions = {
+      # renovate: datasource=github-releases depName=siderolabs/talos
       talos      = "v1.12.6"
+      # renovate: datasource=github-releases depName=kubernetes/kubernetes
       kubernetes = "v1.35.2"
+      # renovate: datasource=github-releases depName=cilium/cilium
       cilium     = "1.19.1"
     }
   }
@@ -140,20 +143,13 @@ locals {
   ## ============================================================================================= ##
   manifests = {
     apps = {
-      adguard-home = {
-        enabled = true
-        version = ""
-      }
       anki = {
         enabled = true
         config = {
           hostname = "anki"
         }
+        # renovate: datasource=docker depName=ghcr.io/mt190502/docker-anki-sync-server
         version = "25.09.2"
-      }
-      jellyfin = {
-        enabled = true
-        version = ""
       }
       miniflux = {
         enabled = true
@@ -164,11 +160,8 @@ locals {
             storage_size = "1Gi"
           }
         }
+        # renovate: datasource=docker depName=miniflux/miniflux
         version = "2.2.18"
-      }
-      nextcloud = {
-        enabled = true
-        version = ""
       }
       nightscout = {
         enabled = true
@@ -198,17 +191,15 @@ locals {
             storage_size = "2Gi"
           }
         }
+        # renovate: datasource=docker depName=nightscout/cgm-remote-monitor
         version = "15.0.3"
-      }
-      paperless-ngx = {
-        enabled = true
-        version = ""
       }
       radicale = {
         enabled = true
         config = {
           hostname = "dav"
         }
+        # renovate: datasource=docker depName=tomsquest/docker-radicale
         version = "3.6.1.0"
       }
       redmine = {
@@ -221,6 +212,7 @@ locals {
             storage_size = "1Gi"
           }
         }
+        # renovate: datasource=docker depName=redmine
         version = "6.1.2"
       }
       umami = {
@@ -232,6 +224,7 @@ locals {
             storage_size = "1Gi"
           }
         }
+        # renovate: datasource=docker depName=ghcr.io/umami-software/umami
         version = "3.0.3"
       }
     }
@@ -241,38 +234,47 @@ locals {
         config = {
           acme_email = "mt190502@mtaha.dev"
         }
+        # renovate: datasource=helm depName=cert-manager registryUrl=https://charts.jetstack.io
         version = "v1.19.3"
       }
       cnpg = {
         enabled = true
+        # renovate: datasource=helm depName=cloudnative-pg registryUrl=https://cloudnative-pg.github.io/charts
         version = "0.27.1"
       }
       kube_prometheus_stack = {
         enabled = true
+        # renovate: datasource=helm depName=kube-prometheus-stack registryUrl=https://prometheus-community.github.io/helm-charts
         version = "82.1.0"
       }
       longhorn = {
         enabled = true
-        version = "1.11.0"
+        # renovate: datasource=helm depName=longhorn registryUrl=https://charts.longhorn.io
+        version = "1.11.1"
       }
       psmdb_operator = {
         enabled = true
+        # renovate: datasource=helm depName=psmdb-db registryUrl=https://percona.github.io/percona-helm-charts
         version = "1.22.0"
       }
       reflector = {
         enabled = true
         config = {
-          wildcard_reflection_namespaces = ["adguard-home", "radicale"]
+          wildcard_reflection_namespaces = ["radicale"]
         }
+        # renovate: datasource=helm depName=reflector registryUrl=https://emberstack.github.io/helm-charts
         version = "10.0.10"
       }
       tailscale_operator = {
         enabled = true
+        # renovate: datasource=helm depName=tailscale-operator registryUrl=https://pkgs.tailscale.com/helmcharts
         version = "1.94.2"
       }
       traefik = {
         versions = {
+          # renovate: datasource=helm depName=traefik registryUrl=https://traefik.github.io/charts
           main = "39.0.6"
+          # renovate: datasource=helm depName=traefik-crds registryUrl=https://traefik.github.io/charts
           crds = "1.16.0"
         }
       }
