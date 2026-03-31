@@ -254,8 +254,8 @@ locals {
       }
       psmdb_operator = {
         enabled = true
-        # renovate: datasource=helm depName=psmdb-db registryUrl=https://percona.github.io/percona-helm-charts
-        version = "1.22.1"
+        # renovate: datasource=helm depName=psmdb-operator registryUrl=https://percona.github.io/percona-helm-charts
+        version = "1.22.0"
       }
       reflector = {
         enabled = true
