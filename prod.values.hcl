@@ -235,7 +235,7 @@ locals {
           acme_email = "mt190502@mtaha.dev"
         }
         # renovate: datasource=helm depName=cert-manager registryUrl=https://charts.jetstack.io
-        version = "v1.19.3"
+        version = "v1.20.1"
       }
       cnpg = {
         enabled = true
@@ -245,7 +245,7 @@ locals {
       kube_prometheus_stack = {
         enabled = true
         # renovate: datasource=helm depName=kube-prometheus-stack registryUrl=https://prometheus-community.github.io/helm-charts
-        version = "82.1.0"
+        version = "82.16.0"
       }
       longhorn = {
         enabled = true
@@ -255,7 +255,7 @@ locals {
       psmdb_operator = {
         enabled = true
         # renovate: datasource=helm depName=psmdb-db registryUrl=https://percona.github.io/percona-helm-charts
-        version = "1.22.0"
+        version = "1.22.1"
       }
       reflector = {
         enabled = true
@@ -263,7 +263,7 @@ locals {
           wildcard_reflection_namespaces = ["radicale"]
         }
         # renovate: datasource=helm depName=reflector registryUrl=https://emberstack.github.io/helm-charts
-        version = "10.0.10"
+        version = "10.0.25"
       }
       tailscale_operator = {
         enabled = true
@@ -273,7 +273,7 @@ locals {
       traefik = {
         versions = {
           # renovate: datasource=helm depName=traefik registryUrl=https://traefik.github.io/charts
-          main = "39.0.6"
+          main = "39.0.7"
           # renovate: datasource=helm depName=traefik-crds registryUrl=https://traefik.github.io/charts
           crds = "1.16.0"
         }
