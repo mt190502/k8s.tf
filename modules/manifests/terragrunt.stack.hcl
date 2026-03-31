@@ -119,6 +119,17 @@ unit "tests" {
 ## --------------------------------------------------------------------------------------------- ##
 #  App manifests units                                                                            #
 ## --------------------------------------------------------------------------------------------- ##
+unit "anki" {
+  source = "./apps/anki"
+  path   = "apps/anki"
+  values = {
+    enabled       = try(local.apps.anki.enabled, false)
+    config        = merge(try(local.apps.anki.config, {}), { domain = local.rootvars.cluster_url.dns, preferred_gateway = local.rootvars.preferred_gateway })
+    secrets       = try(local.apps.anki.secrets, {})
+    image_version = try(local.apps.anki.version, "")
+  }
+}
+
 unit "miniflux" {
   source = "./apps/miniflux"
   path   = "apps/miniflux"
