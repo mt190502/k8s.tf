@@ -240,7 +240,7 @@ locals {
       cnpg = {
         enabled = true
         # renovate: datasource=helm depName=cloudnative-pg registryUrl=https://cloudnative-pg.github.io/charts
-        version = "0.27.1"
+        version = "0.28.0"
       }
       kube_prometheus_stack = {
         enabled = true
@@ -263,7 +263,7 @@ locals {
           wildcard_reflection_namespaces = ["radicale"]
         }
         # renovate: datasource=helm depName=reflector registryUrl=https://emberstack.github.io/helm-charts
-        version = "10.0.25"
+        version = "10.0.26"
       }
       tailscale_operator = {
         enabled = true
