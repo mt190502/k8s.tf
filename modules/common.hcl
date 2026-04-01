@@ -34,19 +34,19 @@ locals {
     # renovate: datasource=terraform-provider depName=cloudflare/cloudflare
     cloudflare = { version = "~> 5.18.0" }
     # renovate: datasource=terraform-provider depName=hashicorp/external
-    external   = { version = "~> 2.3.1" }
+    external = { version = "~> 2.3.1" }
     # renovate: datasource=terraform-provider depName=hetznercloud/hcloud
-    hcloud     = { version = "~> 1.60.1" }
+    hcloud = { version = "~> 1.60.1" }
     # renovate: datasource=terraform-provider depName=hashicorp/helm
-    helm       = { version = "~> 3.1.1" }
+    helm = { version = "~> 3.1.1" }
     # renovate: datasource=terraform-provider depName=hashicorp/kubernetes
     kubernetes = { version = "~> 3.0.1" }
     # renovate: datasource=terraform-provider depName=hashicorp/null
-    null       = { version = "~> 3.2.4" }
+    null = { version = "~> 3.2.4" }
     # renovate: datasource=terraform-provider depName=tailscale/tailscale
-    tailscale  = { version = "~> 0.28.0" }
+    tailscale = { version = "~> 0.28.0" }
     # renovate: datasource=terraform-provider depName=siderolabs/talos
-    talos      = { version = "~> 0.10.1" }
+    talos = { version = "~> 0.10.1" }
   }
 
   ## --------------------------------------------------------------------------------------------- ##

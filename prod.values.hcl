@@ -130,11 +130,11 @@ locals {
     ## --------------------------------------------------------------------------------------------- ##
     versions = {
       # renovate: datasource=github-releases depName=siderolabs/talos
-      talos      = "v1.12.6"
+      talos = "v1.12.6"
       # renovate: datasource=github-releases depName=kubernetes/kubernetes
       kubernetes = "v1.35.2"
       # renovate: datasource=github-releases depName=cilium/cilium
-      cilium     = "1.19.1"
+      cilium = "1.19.1"
     }
   }
 

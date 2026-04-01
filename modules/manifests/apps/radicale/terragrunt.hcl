@@ -5,10 +5,9 @@
 #  Config is provided from stack values.                                                          #
 #                                                                                                 #
 #  Dependencies:                                                                                  #
-#    - cert-manager: Optional, Provides gateway_name and gateway_namespace for HTTPRoute          #
-#    - cnpg: Optional, for PostgreSQL databases                                                   #
+#    - cert-manager: Provides gateway_name and gateway_namespace for HTTPRoute                    #
 #                                                                                                 #
-#  Apply order: (cert-manager/cnpg/psmdb-operator) -> [radicale]                                  #
+#  Apply order: cert-manager -> [radicale]                                                        #
 ## ============================================================================================= ##
 include "common" {
   path   = find_in_parent_folders("modules/common.hcl")
@@ -69,7 +68,7 @@ inputs = {
       certificate_name  = dependency.cert_manager.outputs.certificate_name
       gateway_name      = dependency.cert_manager.outputs.gateway_name
       gateway_namespace = dependency.cert_manager.outputs.gateway_namespace
-      preferred_gateway = values.config.preferred_gateway != null ? values.config.preferred_gateway : "cilium"
+      preferred_gateway = try(values.config.preferred_gateway, "cilium")
     }
   )
   secrets       = try(values.secrets, {})

@@ -84,9 +84,10 @@ inputs = {
   config = merge(
     try(values.config, {}),
     {
-      gateway_name      = dependency.cert_manager.outputs.gateway_name
-      gateway_namespace = dependency.cert_manager.outputs.gateway_namespace
-      preferred_gateway = values.config.preferred_gateway != null ? values.config.preferred_gateway : "cilium"
+      #~ Uncomment if using cert_manager dependency
+      # gateway_name      = dependency.cert_manager.outputs.gateway_name
+      # gateway_namespace = dependency.cert_manager.outputs.gateway_namespace
+      preferred_gateway = try(values.config.preferred_gateway, "cilium")
     }
   )
   secrets       = try(values.secrets, {})

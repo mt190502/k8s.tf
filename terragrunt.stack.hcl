@@ -60,6 +60,8 @@ locals {
 
 ## --------------------------------------------------------------------------------------------- ##
 #  Root wiring: infra stack + manifests stack                                                     #
+#                                                                                                 #
+#  Each sub-stack receives raw values and handles its own normalization/secret injection.         #
 ## --------------------------------------------------------------------------------------------- ##
 stack "infra" {
   source = "./modules/infra"

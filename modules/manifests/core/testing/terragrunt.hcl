@@ -47,8 +47,8 @@ generate "versions" {
 dependency "cert_manager" {
   config_path = "../cert-manager"
   mock_outputs = {
-    gateway_name = "mock-gateway"
-    namespace    = "mock-namespace"
+    gateway_name      = "mock-gateway"
+    gateway_namespace = "mock-namespace"
   }
   mock_outputs_allowed_terraform_commands = include.common.locals.mock_outputs_allowed_terraform_commands
   mock_outputs_merge_strategy_with_state  = include.common.locals.mock_outputs_merge_strategy_with_state
@@ -59,6 +59,6 @@ inputs = {
   config = {
     domain       = try(values.config.domain, "mock.local")
     gateway_name = dependency.cert_manager.outputs.gateway_name
-    namespace    = dependency.cert_manager.outputs.namespace
+    namespace    = dependency.cert_manager.outputs.gateway_namespace
   }
 }
