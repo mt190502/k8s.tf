@@ -192,7 +192,7 @@ locals {
           }
         }
         # renovate: datasource=docker depName=nightscout/cgm-remote-monitor
-        version = "15.0.6"
+        version = "15.0.3"
       }
       radicale = {
         enabled = true
