@@ -6,10 +6,12 @@ with **Hetzner Cloud** for compute, **Tailscale** for node-to-node networking,
 **Cloudflare DNS** for domain management, and core cluster services including storage,
 observability, and certificate management.
 
-**Key Features:**
-- Multi-region Talos Kubernetes clusters with dual-stack networking
-- Cilium CNI with WireGuard encryption for pod-to-pod communication
-- Gateway API for ingress with Envoy load balancing
+**Key Features (prod.values.hcl):**
+- Multi-region Talos Kubernetes clusters with IPv4/IPv6 dual-stack networking
+- Cilium CNI for pod networking (WireGuard optional, currently disabled)
+- Traefik Gateway API for ingress with HTTPS/QUIC support
+- Tailscale mesh for secure node-to-node communication (Kubespan disabled)
+- Mixed architecture: ARM64 control planes, AMD64 workers
 - SOPS + age encryption for sensitive configuration
 - Terragrunt stack-based deployment with dependency management
 - Centralized mock outputs for plan/destroy without applied state
@@ -31,40 +33,43 @@ graph TD
       storage_longhorn["Longhorn"]
     end
     tailscale["Tailscale<br>(node-to-node)<br>(UDP/41641)"]
-    cilium_wg["Cilium WireGuard<br>(pod-to-pod)<br>(UDP/51871)"]
     subgraph NETWORK_STACK["Node Networking Stack"]
       route["HTTPRoute"]
       gateway["Gateway API"]
-      envoy["Cilium Envoy"]
+      gwprovider["Traefik Gateway"]
     end
-    subgraph K8S["Apps"]
+    subgraph CORE["Core Services"]
       cert["Cert Manager"]
       monitoring["Kube Prometheus Stack"]
       reflector["Reflector"]
       pg["CloudNative-PG"]
+      psmdb["PSMDB Operator"]
+      tso["Tailscale Operator"]
+      traefik["Traefik"]
+    end
+    subgraph APPS["Applications"]
+      anki["Anki"]
+      miniflux["Miniflux"]
+      nightscout["Nightscout"]
+      radicale["Radicale"]
+      redmine["Redmine"]
+      umami["Umami"]
     end
 
-    subgraph CLUSTER1["Cluster Group 1"]
+    subgraph CLUSTER1["Hetzner Cloud"]
       subgraph HEL1["🇫🇮 Helsinki"]
-        m1a["m1 (CP)"]
-        w1a["w1"]
+        m1a["m1 (CP/arm64)"]
+        w1a["w1 (amd64)"]
       end
 
       subgraph NBG1["🇩🇪 Nuremberg"]
-        m2a["m2 (CP)"]
-        w2a["w2"]
+        m2a["m2 (CP/arm64)"]
+        w2a["w2 (amd64)"]
       end
 
       subgraph FSN1["🇩🇪 Falkenstein"]
-        m3a["m3 (CP)"]
-        w3a["w3"]
-      end
-    end
-
-    subgraph CLUSTER2["Cluster Group 2<br>(ClusterMesh W.I.P)"]
-      subgraph LOC1["Another Location"]
-        m1b["m1 (CP)"]
-        w1b["w1"]
+        m3a["m3 (CP/arm64)"]
+        w3a["w3 (amd64)"]
       end
     end
   end
@@ -75,61 +80,51 @@ graph TD
   cloudflare -->|:443| w2a
   cloudflare -->|:443| m3a
   cloudflare -->|:443| w3a
-  cloudflare -->|:443| m1b
-  cloudflare -->|:443| w1b
 
-  route <--> gateway <--> envoy
+  route <--> gateway <--> gwprovider
   m1a <-.-> route
   w1a <-.-> route
   m2a <-.-> route
   w2a <-.-> route
   m3a <-.-> route
   w3a <-.-> route
-  m1b <-.-> route
-  w1b <-.-> route
 
-  cilium_wg <-.-> m1a
-  cilium_wg <-.-> w1a
-  cilium_wg <-.-> m2a
-  cilium_wg <-.-> w2a
-  cilium_wg <-.-> m3a
-  cilium_wg <-.-> w3a
-  cilium_wg <-.-> m1b
-  cilium_wg <-.-> w1b
   tailscale <-.-> m1a
   tailscale <-.-> w1a
   tailscale <-.-> m2a
   tailscale <-.-> w2a
   tailscale <-.-> m3a
   tailscale <-.-> w3a
-  envoy <---> K8S
-  K8S <---> STORAGE_STACK
+  gwprovider <---> CORE
+  CORE <---> STORAGE_STACK
+  CORE --> APPS
 
   classDef infra fill:#0ea5e9,stroke:#0369a1,color:#fff;
   classDef network fill:#8b5cf6,stroke:#5b21b6,color:#fff;
-  classDef app fill:#10b981,stroke:#065f46,color:#fff;
-  classDef storage fill:#f59e0b,stroke:#92400e,color:#fff;
+  classDef core fill:#10b981,stroke:#065f46,color:#fff;
+  classDef app fill:#f59e0b,stroke:#92400e,color:#fff;
+  classDef storage fill:#6366f1,stroke:#4338ca,color:#fff;
   classDef node fill:#ef4444,stroke:#7f1d1d,color:#fff;
 
   class domain,cloudflare infra;
-  class route,gateway,envoy,cilium_wg,tailscale network;
-  class cert,monitoring,reflector,pg,K8S app;
+  class route,gateway,gwprovider,tailscale network;
+  class cert,monitoring,reflector,pg,psmdb,tso,traefik core;
+  class anki,miniflux,nightscout,radicale,redmine,umami app;
   class storage_s3,storage_longhorn storage;
-  class m1a,w1a,m2a,w2a,m3a,w3a,m1b,w1b node;
+  class m1a,w1a,m2a,w2a,m3a,w3a node;
 
   style TALOS fill:#111827,stroke:#374151,color:#fff
-  style STORAGE_STACK fill:#1f2937,stroke:#f59e0b,color:#fff
+  style STORAGE_STACK fill:#1f2937,stroke:#6366f1,color:#fff
   style NETWORK_STACK fill:#1f2937,stroke:#8b5cf6,color:#fff
-  style K8S fill:#1f2937,stroke:#10b981,color:#fff
+  style CORE fill:#1f2937,stroke:#10b981,color:#fff
+  style APPS fill:#1f2937,stroke:#f59e0b,color:#fff
   style CLUSTER1 fill:#1f2937,stroke:#3b82f6,color:#fff
-  style CLUSTER2 fill:#1f2937,stroke:#6366f1,color:#fff,stroke-dasharray:5,5
   style HEL1 fill:#020617,stroke:#3b82f6,color:#fff
   style NBG1 fill:#020617,stroke:#3b82f6,color:#fff
   style FSN1 fill:#020617,stroke:#3b82f6,color:#fff
-  style LOC1 fill:#020617,stroke:#6366f1,color:#fff,stroke-dasharray:5,5
 
-  linkStyle default stroke:#fff,stroke-width:2px; 
-	style storage_s3 stroke-width:1px,stroke-dasharray:5 5,stroke:#FFFFFF,fill:#737373
+  linkStyle default stroke:#fff,stroke-width:2px;
+  style storage_s3 stroke-width:1px,stroke-dasharray:5 5,stroke:#FFFFFF,fill:#737373
 ```
 
 <br>
@@ -197,7 +192,7 @@ All shared configuration lives under `locals` in `prod.values.hcl`. Sensitive va
 | Layer              | Content                                                                                                                                                                  |
 |:------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
 | **Infrastructure** | Talos machine secrets, patch templates, Hetzner servers + firewall, Tailscale devices, Talos bootstrap, kubeconfig, Cloudflare DNS records                              |
-| **Manifests**      | Longhorn, Reflector, CloudNativePG (CNPG), kube-prometheus-stack, cert-manager, plus optional **testing** unit (nginx, echoserver)                                        |
+| **Manifests**      | Longhorn, Reflector, CloudNativePG, PSMDB, kube-prometheus-stack, cert-manager, Traefik, Tailscale Operator, plus apps (anki, miniflux, nightscout, radicale, redmine, umami) |
 
 ---
 
@@ -229,18 +224,31 @@ graph TD
 
     subgraph MANIFESTS["Stack: manifests"]
       direction TB
-      LH["longhorn"]
-      RF["reflector"]
-      CNPG["cnpg"]
-      KPS["kube-prometheus-stack"]
-      CM["cert-manager"]
-      TS["testing"]
+      subgraph CORE["Core"]
+        LH["longhorn"]
+        RF["reflector"]
+        CNPG["cnpg"]
+        PSMDB["psmdb-operator"]
+        KPS["kube-prometheus-stack"]
+        TSO["tailscale-operator"]
+        CM["cert-manager"]
+        TF["traefik"]
+        TS["testing"]
+      end
+      subgraph APPS["Apps"]
+        ANKI["anki"]
+        MINI["miniflux"]
+        NS["nightscout"]
+        RAD["radicale"]
+        RED["redmine"]
+        UMA["umami"]
+      end
       CP -.->|DNS / API ready| LH
-      LH --> RF
-      LH --> CNPG
-      LH --> KPS
-      KPS --> CM
-      CM --> TS
+      LH --> RF & CNPG & PSMDB & KPS & TSO
+      RF & CNPG & KPS --> CM
+      CM --> TF & TS
+      CM & CNPG --> ANKI & MINI & RAD & RED & UMA
+      CM & PSMDB --> NS
     end
   end
 
@@ -255,16 +263,18 @@ graph TD
   CM -.-> LE
 
   classDef infraTarget fill:#0ea5e9,stroke:#0369a1,color:#fff;     
-  classDef appTarget fill:#10b981,stroke:#065f46,color:#fff;       
+  classDef coreTarget fill:#10b981,stroke:#065f46,color:#fff;       
+  classDef appTarget fill:#f59e0b,stroke:#92400e,color:#fff;       
   classDef inputTarget fill:#1f2937,stroke:#374151,color:#fff;     
   classDef internalTarget fill:#ef4444,stroke:#7f1d1d,color:#fff;  
   classDef externalTarget fill:#111827,stroke:#6b7280,color:#fff;
 
   class INPUTS inputTarget;
   class TP,HP,TSP,TAP,CP infraTarget;
-  class LH,RF,CNPG,KPS,CM,TS appTarget;
+  class LH,RF,CNPG,PSMDB,KPS,TSO,CM,TF,TS coreTarget;
+  class ANKI,MINI,NS,RAD,RED,UMA appTarget;
   class HZ,TSn,CF,TPn,LE,V,S internalTarget;
-  class INFRA,MANIFESTS inputTarget;
+  class INFRA,MANIFESTS,CORE,APPS inputTarget;
   class MODULES externalTarget;
 
   linkStyle default stroke:#fff,stroke-width:2px;
@@ -306,13 +316,24 @@ graph TD
 │   │       └── post/                  # DNS records (A/AAAA/CNAME)
 │   └── manifests/                     # Application modules
 │       ├── terragrunt.stack.hcl       # Defines manifests stack units and dependencies
-│       └── core/
-│           ├── longhorn/              # Distributed block storage
-│           ├── reflector/             # Secret/configmap reflection
-│           ├── cnpg/                  # CloudNativePG operator
-│           ├── kube-prometheus-stack/ # Monitoring stack
-│           ├── cert-manager/          # ACME certificates + Gateway
-│           └── testing/               # Smoke tests (nginx, echoserver)
+│       ├── core/
+│       │   ├── longhorn/              # Distributed block storage
+│       │   ├── reflector/             # Secret/configmap reflection
+│       │   ├── cnpg/                  # CloudNativePG operator
+│       │   ├── psmdb-operator/        # Percona MongoDB operator
+│       │   ├── kube-prometheus-stack/ # Monitoring stack
+│       │   ├── tailscale-operator/    # Tailscale Kubernetes operator
+│       │   ├── cert-manager/          # ACME certificates + Gateway
+│       │   ├── traefik/               # Traefik Gateway API provider
+│       │   └── testing/               # Smoke tests (nginx, echoserver)
+│       └── apps/
+│           ├── template/              # App template for new applications
+│           ├── anki/                  # Anki sync server
+│           ├── miniflux/              # RSS reader
+│           ├── nightscout/            # CGM data visualization
+│           ├── radicale/              # CalDAV/CardDAV server
+│           ├── redmine/               # Project management
+│           └── umami/                 # Web analytics
 │
 └── packer/                            # Optional Talos image build for Hetzner
     ├── hetzner.pkr.hcl                # Packer template
