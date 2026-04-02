@@ -245,7 +245,7 @@ locals {
       kube_prometheus_stack = {
         enabled = true
         # renovate: datasource=helm depName=kube-prometheus-stack registryUrl=https://prometheus-community.github.io/helm-charts
-        version = "82.16.0"
+        version = "82.16.1"
       }
       longhorn = {
         enabled = true
