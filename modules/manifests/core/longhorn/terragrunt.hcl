@@ -2,8 +2,7 @@
 #  modules/manifests/core/longhorn/terragrunt.hcl                                                 #
 #                                                                                                 #
 #  Terragrunt wrapper for Longhorn (cluster storage).                                             #
-#  Applies only after talos/post and cloudflare/post are complete.                                #
-#  Runs readiness checks before apply, then unlocks other core manifest units.                    #
+#  First manifest unit to apply after infra stack completes.                                      #
 #                                                                                                 #
 #  Apply order: (infra) cloudflare/post -> [longhorn] -> reflector/cnpg/kps -> cert-manager -> .. #
 ## ============================================================================================= ##
@@ -19,64 +18,6 @@ exclude {
 
 terraform {
   source = "./"
-  before_hook "wait_for_cluster" {
-    commands = ["apply"]
-    execute = [
-      "sh", "-c",
-      <<-EOT
-        set -euo pipefail
-
-        echo "Waiting for API server DNS to propagate..."
-        APISERVER=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}' | sed 's|https://||' | cut -d: -f1)
-        DEADLINE=$(( $(date +%s) + 300 ))
-        until host "$APISERVER" 1.1.1.1 >/dev/null 2>&1; do
-          if [ "$(date +%s)" -ge "$DEADLINE" ]; then
-            echo "Timed out waiting for DNS propagation of $APISERVER"
-            exit 1
-          fi
-          echo "  $APISERVER not yet resolvable, retrying in 5s..."
-          sleep 5
-        done
-        echo "DNS resolved --- $APISERVER is live."
-
-        echo "Waiting for node objects to appear..."
-        DEADLINE=$(( $(date +%s) + 600 ))
-        until kubectl get nodes --no-headers 2>/dev/null | grep -q .; do
-          if [ "$(date +%s)" -ge "$DEADLINE" ]; then
-            echo "Timed out waiting for Kubernetes node objects to appear"
-            exit 1
-          fi
-          echo "  no nodes found yet, retrying in 5s..."
-          sleep 5
-        done
-
-        echo "Waiting for all nodes to be Ready..."
-        kubectl wait node --all \
-          --for=condition=Ready \
-          --timeout=600s
-
-        echo "Waiting for kube-system pods to appear..."
-        DEADLINE=$(( $(date +%s) + 600 ))
-        until kubectl get pod -n kube-system --no-headers 2>/dev/null | grep -q .; do
-          if [ "$(date +%s)" -ge "$DEADLINE" ]; then
-            echo "Timed out waiting for kube-system pods to appear"
-            exit 1
-          fi
-          echo "  no kube-system pods found yet, retrying in 5s..."
-          sleep 5
-        done
-
-        echo "Waiting for all kube-system pods to be Running or Succeeded..."
-        kubectl wait pod --all \
-          --namespace=kube-system \
-          --for=condition=Ready \
-          --timeout=600s \
-          --field-selector=status.phase!=Succeeded
-
-        echo "Cluster is ready --- proceeding with manifest units."
-      EOT
-    ]
-  }
 }
 
 generate "providers" {
