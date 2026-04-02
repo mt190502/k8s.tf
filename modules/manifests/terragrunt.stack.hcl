@@ -62,6 +62,14 @@ unit "cnpg" {
   }
 }
 
+unit "dnsutils" {
+  source = "./core/dnsutils"
+  path   = "core/dnsutils"
+  values = {
+    enabled = try(local.core.dnsutils.enabled, false)
+  }
+}
+
 unit "kube_prometheus_stack" {
   source = "./core/kube-prometheus-stack"
   path   = "core/kube-prometheus-stack"
