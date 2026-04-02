@@ -37,6 +37,7 @@ locals {
         { name = "w2", role = "worker", taints = [] },
         { name = "w3", role = "worker", taints = [] },
       ]
+      overwrite_dns = false
       preferred_gateway = "traefik"
     }
 
@@ -241,6 +242,9 @@ locals {
         enabled = true
         # renovate: datasource=helm depName=cloudnative-pg registryUrl=https://cloudnative-pg.github.io/charts
         version = "0.28.0"
+      }
+      dnsutils = {
+        enabled = true
       }
       kube_prometheus_stack = {
         enabled = true

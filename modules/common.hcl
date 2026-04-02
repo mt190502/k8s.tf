@@ -131,6 +131,7 @@ locals {
         { name = "mock-w2", role = "worker", taints = [] },
       ]
       preferred_gateway = "cilium"
+      overwrite_dns = false
     }
     cloudflare = {
       enabled = true

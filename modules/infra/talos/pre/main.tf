@@ -9,6 +9,11 @@
 ## ============================================================================================= ##
 locals {
   private_network_cidr = try(var.rootvars.hetzner.private_network.cidr, "")
+  cluster_domain = (
+    var.config.overwrite_dns
+    ? try(var.config.cluster_url.internal, var.config.cluster_url.dns)
+    : "cluster.local"
+  )
   cluster_cidrs = (
     try(var.rootvars.hetzner.private_network.enabled, false) && try(var.rootvars.tailscale.enabled, false)
     ? concat([local.private_network_cidr], ["100.64.0.0/10", "fd7a:115c:a1e0::/48"])
@@ -42,7 +47,7 @@ data "talos_machine_configuration" "nodes" {
       templatefile("../templates/cilium_postinstall_job.tmpl", {
         APISERVER_HOST    = var.config.kubeprism ? "127.0.0.1" : var.config.cluster_url.apiserver
         CILIUM_VERSION    = var.versions.cilium
-        CLUSTER_DOMAIN    = var.config.cluster_url.dns
+        CLUSTER_DOMAIN    = local.cluster_domain
         DUALSTACK         = var.config.dualstack ? "true" : "false"
         OPERATOR_REPLICAS = max(1, length([for node in var.config.nodes : node if node.role == "controlplane"]))
         PREFERRED_GATEWAY = var.config.preferred_gateway
@@ -56,7 +61,7 @@ data "talos_machine_configuration" "nodes" {
         TAILSCALE            = try(var.rootvars.tailscale.enabled, false) ? "true" : "false"
       }),
       templatefile("../templates/cni.tmpl", {
-        DNS_DOMAIN    = var.config.cluster_url.dns
+        DNS_DOMAIN    = local.cluster_domain
         POD_CIDRS     = concat([var.config.ipcfg.pod.ipv4], var.config.dualstack ? [var.config.ipcfg.pod.ipv6] : [])
         SERVICE_CIDRS = concat([var.config.ipcfg.service.ipv4], var.config.dualstack ? [var.config.ipcfg.service.ipv6] : [])
       }),
@@ -84,7 +89,7 @@ resource "null_resource" "delete_old_cilium_job" {
   triggers = {
     APISERVER_HOST    = var.config.kubeprism ? "127.0.0.1" : var.config.cluster_url.apiserver
     CILIUM_VERSION    = var.versions.cilium
-    CLUSTER_DOMAIN    = var.config.cluster_url.dns
+    CLUSTER_DOMAIN    = local.cluster_domain
     DUALSTACK         = var.config.dualstack ? "true" : "false"
     OPERATOR_REPLICAS = max(1, length([for node in var.config.nodes : node if node.role == "controlplane"]))
     PREFERRED_GATEWAY = var.config.preferred_gateway

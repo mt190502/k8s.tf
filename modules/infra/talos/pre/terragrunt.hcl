@@ -60,6 +60,7 @@ inputs = {
     kubeprism         = try(values.config.kubeprism, true)
     kubespan          = try(values.config.kubespan, false)
     nodes             = try(values.config.nodes, [])
+    overwrite_dns     = try(values.config.overwrite_dns, false)
     preferred_gateway = try(values.config.preferred_gateway, "cilium")
   }
   versions = {

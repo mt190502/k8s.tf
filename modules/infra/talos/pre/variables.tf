@@ -54,6 +54,7 @@ variable "config" {
       arch   = optional(string)
       taints = list(string)
     }))
+    overwrite_dns     = bool
     preferred_gateway = string
   })
 }

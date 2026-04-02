@@ -83,6 +83,7 @@ unit "talos_pre" {
       kubeprism         = try(values.infra.talos.kubeprism, true)
       kubespan          = try(values.infra.talos.kubespan, false)
       nodes             = local.nodes
+      overwrite_dns     = try(values.infra.kubernetes.overwrite_dns, false)
       preferred_gateway = try(values.infra.kubernetes.preferred_gateway, "cilium")
       private_network   = try(values.infra.hetzner.private_network, null)
     }
