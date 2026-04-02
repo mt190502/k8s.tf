@@ -11,7 +11,7 @@ resource "kubernetes_manifest" "gateway" {
     apiVersion = "gateway.networking.k8s.io/v1"
     kind       = "Gateway"
     metadata = {
-      name      = "traefik-gateway"
+      name      = var.config.gateway_name
       namespace = kubernetes_namespace_v1.this[0].metadata[0].name
     }
     spec = {
