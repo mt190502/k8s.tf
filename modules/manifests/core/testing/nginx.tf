@@ -2,9 +2,10 @@
 #  modules/manifests/core/testing/nginx.tf                                                        #
 ## ============================================================================================= ##
 resource "kubernetes_daemon_set_v1" "nginx_daemonset" {
+  count = var.enabled ? 1 : 0
   metadata {
     name      = "nginx"
-    namespace = kubernetes_namespace_v1.testing_namespace.metadata[0].name
+    namespace = kubernetes_namespace_v1.testing_namespace[0].metadata[0].name
     labels = {
       app = "nginx"
     }
@@ -46,9 +47,10 @@ resource "kubernetes_daemon_set_v1" "nginx_daemonset" {
 }
 
 resource "kubernetes_service_v1" "nginx_service" {
+  count = var.enabled ? 1 : 0  
   metadata {
     name      = "nginx-service"
-    namespace = kubernetes_namespace_v1.testing_namespace.metadata[0].name
+    namespace = kubernetes_namespace_v1.testing_namespace[0].metadata[0].name
     labels = {
       app = "nginx"
     }
@@ -69,12 +71,13 @@ resource "kubernetes_service_v1" "nginx_service" {
 }
 
 resource "kubernetes_manifest" "nginx_httproute" {
+  count = var.enabled ? 1 : 0
   manifest = {
     apiVersion = "gateway.networking.k8s.io/v1beta1"
     kind       = "HTTPRoute"
     metadata = {
       name      = "nginx-httproute"
-      namespace = kubernetes_namespace_v1.testing_namespace.metadata[0].name
+      namespace = kubernetes_namespace_v1.testing_namespace[0].metadata[0].name
     }
     spec = {
       parentRefs = [
@@ -98,7 +101,7 @@ resource "kubernetes_manifest" "nginx_httproute" {
           ]
           backendRefs = [
             {
-              name = kubernetes_service_v1.nginx_service.metadata[0].name
+              name = kubernetes_service_v1.nginx_service[0].metadata[0].name
               port = 80
             }
           ]

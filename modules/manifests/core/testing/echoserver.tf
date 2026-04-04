@@ -2,9 +2,10 @@
 #  modules/manifests/core/testing/echoserver.tf                                                   #
 ## ============================================================================================= ##
 resource "kubernetes_daemon_set_v1" "echoserver_daemonset" {
+  count = var.enabled ? 1 : 0
   metadata {
     name      = "echoserver"
-    namespace = kubernetes_namespace_v1.testing_namespace.metadata[0].name
+    namespace = kubernetes_namespace_v1.testing_namespace[0].metadata[0].name
     labels = {
       app = "echoserver"
     }
@@ -54,9 +55,10 @@ resource "kubernetes_daemon_set_v1" "echoserver_daemonset" {
 }
 
 resource "kubernetes_service_v1" "echoserver_service" {
+  count = var.enabled ? 1 : 0
   metadata {
     name      = "echoserver-service"
-    namespace = kubernetes_namespace_v1.testing_namespace.metadata[0].name
+    namespace = kubernetes_namespace_v1.testing_namespace[0].metadata[0].name
     labels = {
       app = "echoserver"
     }
@@ -77,12 +79,13 @@ resource "kubernetes_service_v1" "echoserver_service" {
 }
 
 resource "kubernetes_manifest" "echoserver_httproute" {
+  count = var.enabled ? 1 : 0  
   manifest = {
     apiVersion = "gateway.networking.k8s.io/v1beta1"
     kind       = "HTTPRoute"
     metadata = {
       name      = "echoserver-httproute"
-      namespace = kubernetes_namespace_v1.testing_namespace.metadata[0].name
+      namespace = kubernetes_namespace_v1.testing_namespace[0].metadata[0].name
     }
     spec = {
       parentRefs = [
@@ -106,7 +109,7 @@ resource "kubernetes_manifest" "echoserver_httproute" {
           ]
           backendRefs = [
             {
-              name = kubernetes_service_v1.echoserver_service.metadata[0].name
+              name = kubernetes_service_v1.echoserver_service[0].metadata[0].name
               port = 80
             }
           ]
