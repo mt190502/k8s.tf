@@ -136,6 +136,10 @@ locals {
       kubernetes = "v1.35.2"
       # renovate: datasource=github-releases depName=cilium/cilium
       cilium = "1.19.1"
+      # renovate: datasource=github-releases depName=kubernetes-sigs/metrics-server
+      metrics_server = "v0.8.1"
+      # renovate: datasource=github-releases depName=kubernetes-sigs/gateway-api
+      gateway_api = "v1.5.1"
     }
   }
 
@@ -149,8 +153,6 @@ locals {
         config = {
           hostname = "anki"
         }
-        # renovate: datasource=docker depName=ghcr.io/mt190502/docker-anki-sync-server
-        version = "25.09.2"
       }
       miniflux = {
         enabled = true
@@ -161,8 +163,6 @@ locals {
             storage_size = "1Gi"
           }
         }
-        # renovate: datasource=docker depName=miniflux/miniflux
-        version = "2.2.18"
       }
       nightscout = {
         enabled = true
@@ -192,16 +192,12 @@ locals {
             storage_size = "2Gi"
           }
         }
-        # renovate: datasource=docker depName=nightscout/cgm-remote-monitor
-        version = "15.0.3"
       }
       radicale = {
         enabled = true
         config = {
           hostname = "dav"
         }
-        # renovate: datasource=docker depName=tomsquest/docker-radicale
-        version = "3.6.1.0"
       }
       redmine = {
         enabled = true
@@ -213,8 +209,6 @@ locals {
             storage_size = "1Gi"
           }
         }
-        # renovate: datasource=docker depName=redmine
-        version = "6.1.2"
       }
       umami = {
         enabled = true
@@ -225,8 +219,6 @@ locals {
             storage_size = "1Gi"
           }
         }
-        # renovate: datasource=docker depName=ghcr.io/umami-software/umami
-        version = "3.0.3"
       }
     }
     core = {
@@ -235,52 +227,30 @@ locals {
         config = {
           acme_email = "mt190502@mtaha.dev"
         }
-        # renovate: datasource=helm depName=cert-manager registryUrl=https://charts.jetstack.io
-        version = "v1.20.1"
       }
       cnpg = {
         enabled = true
-        # renovate: datasource=helm depName=cloudnative-pg registryUrl=https://cloudnative-pg.github.io/charts
-        version = "0.28.0"
       }
       dnsutils = {
         enabled = true
       }
       kube_prometheus_stack = {
         enabled = true
-        # renovate: datasource=helm depName=kube-prometheus-stack registryUrl=https://prometheus-community.github.io/helm-charts
-        version = "82.17.0"
       }
       longhorn = {
         enabled = true
-        # renovate: datasource=helm depName=longhorn registryUrl=https://charts.longhorn.io
-        version = "1.11.1"
       }
       psmdb_operator = {
         enabled = true
-        # renovate: datasource=helm depName=psmdb-operator registryUrl=https://percona.github.io/percona-helm-charts
-        version = "1.22.0"
       }
       reflector = {
         enabled = true
         config = {
           wildcard_reflection_namespaces = ["radicale"]
         }
-        # renovate: datasource=helm depName=reflector registryUrl=https://emberstack.github.io/helm-charts
-        version = "10.0.27"
       }
       tailscale_operator = {
         enabled = true
-        # renovate: datasource=helm depName=tailscale-operator registryUrl=https://pkgs.tailscale.com/helmcharts
-        version = "1.94.2"
-      }
-      traefik = {
-        versions = {
-          # renovate: datasource=helm depName=traefik registryUrl=https://traefik.github.io/charts
-          main = "39.0.7"
-          # renovate: datasource=helm depName=traefik-crds registryUrl=https://traefik.github.io/charts
-          crds = "1.16.0"
-        }
       }
       tests = {
         enabled = false

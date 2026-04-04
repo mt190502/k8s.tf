@@ -29,7 +29,7 @@ resource "kubernetes_deployment_v1" "this" {
       spec {
         init_container {
           name  = "${var.config.name}-init"
-          image = "busybox"
+          image = "busybox:latest"
           command = [
             "sh",
             "-c",
@@ -43,7 +43,7 @@ resource "kubernetes_deployment_v1" "this" {
         }
         container {
           name  = var.config.name
-          image = "${var.config.image}:${var.image_version}"
+          image = "nightscout/cgm-remote-monitor:15.0.3"
           port {
             container_port = var.config.port
           }

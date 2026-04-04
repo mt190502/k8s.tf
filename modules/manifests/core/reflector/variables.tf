@@ -4,7 +4,6 @@
 #    enabled                          --- Enable this module                                      #
 #    config                           --- Configuration object                                    #
 #      wildcard_reflection_namespaces --- Namespaces to sync secrets/configmaps to                #
-#    chart_version                    --- Reflector Helm chart version                            #
 ## ============================================================================================= ##
 variable "enabled" {
   description = "Enable this module"
@@ -20,10 +19,4 @@ variable "config" {
   default = {
     wildcard_reflection_namespaces = []
   }
-}
-
-variable "chart_version" {
-  description = "Reflector Helm chart version"
-  type        = string
-  default     = ""
 }

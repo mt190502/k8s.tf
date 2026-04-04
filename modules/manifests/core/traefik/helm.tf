@@ -9,7 +9,8 @@ resource "null_resource" "crds" {
   count = var.enabled ? 1 : 0
 
   triggers = {
-    crd_version = var.versions.crds
+    # renovate: datasource=helm depName=traefik-crds registryUrl=https://traefik.github.io/charts
+    crd_version = "1.16.0"
   }
 
   provisioner "local-exec" {
@@ -40,7 +41,7 @@ resource "helm_release" "this" {
   name            = "traefik"
   repository      = "https://traefik.github.io/charts"
   chart           = "traefik"
-  version         = var.versions.main
+  version         = "39.0.7"
   namespace       = kubernetes_namespace_v1.this[0].metadata[0].name
   upgrade_install = true
   skip_crds       = true

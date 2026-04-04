@@ -30,7 +30,7 @@ generate "versions" {
   contents  = <<-EOF
     terraform {
       required_providers {
-        kubernetes = { source = "hashicorp/kubernetes", version = "${include.common.locals.providers.kubernetes.version}" }
+        kubernetes = { source = "hashicorp/kubernetes", version = "~> 3.0.1" }
       }
     }
   EOF

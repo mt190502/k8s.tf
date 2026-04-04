@@ -8,7 +8,6 @@
 #      client_id                      --- Tailscale client ID                                     #
 #      client_secret                  --- Tailscale client secret                                 #
 #      auth_key                       --- Tailscale authentication key                            #
-#    chart_version                    --- tailscale-operator Helm chart version                   #
 ## ============================================================================================= ##
 variable "enabled" {
   description = "Enable this module"
@@ -31,10 +30,4 @@ variable "secrets" {
     client_secret = string
   })
   sensitive = true
-}
-
-variable "chart_version" {
-  description = "tailscale-operator Helm chart version"
-  type        = string
-  default     = ""
 }

@@ -9,12 +9,12 @@
 #    set { name = "service.port" value = var.config.port }                                        #
 ## ============================================================================================= ##
 resource "helm_release" "this" {
-  count            = (var.enabled && var.chart_version != "") ? 1 : 0
+  count            = var.enabled ? 1 : 0
   name             = var.config.name
   namespace        = kubernetes_namespace_v1.this[0].metadata[0].name
-  repository       = try(var.config.repository, "")
-  chart            = try(var.config.chart, var.config.name)
-  version          = var.chart_version
+  repository       = "https://charts.<<<template>>>.io"
+  chart            = "<<<template>>>"
+  version          = "<<<template>>>"
   create_namespace = false
   upgrade_install  = true
 

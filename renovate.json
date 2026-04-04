@@ -12,31 +12,54 @@
   "branchConcurrentLimit": 10,
   "rebaseWhen": "conflicted",
   "labels": ["dependencies"],
+  "enabledManagers": ["regex", "terraform"],
+  "ignorePaths": ["modules/manifests/apps/template/**"],
   "customManagers": [
     {
       "customType": "regex",
       "description": "Update versions in prod.values.hcl with renovate annotations",
       "managerFilePatterns": ["prod.values.hcl"],
       "matchStrings": [
-        "#\\s*renovate:\\s*datasource=(?<datasource>.*?)\\s+depName=(?<depName>.*?)(\\s+registryUrl=(?<registryUrl>.*?))?\\s+(?:version|talos|kubernetes|cilium|main|crds)\\s*=\\s*\"(?<currentValue>[^\"]+)\""
+        "#\\s*renovate:\\s*datasource=(?<datasource>.*?)\\s+depName=(?<depName>.*?)(\\s+registryUrl=(?<registryUrl>.*?))?\\s+(?:version|talos|kubernetes|cilium|metrics_server|gateway_api)\\s*=\\s*\"(?<currentValue>[^\"]+)\""
       ]
     },
     {
       "customType": "regex",
-      "description": "Update Terraform provider versions in common.hcl",
-      "managerFilePatterns": ["modules/common.hcl"],
+      "description": "Update Terraform provider versions in terragrunt.hcl generate blocks",
+      "managerFilePatterns": ["modules/**/terragrunt.hcl"],
       "matchStrings": [
-        "#\\s*renovate:\\s*datasource=(?<datasource>.*?)\\s+depName=(?<depName>.*?)\\s+\\w+\\s*=\\s*\\{\\s*version\\s*=\\s*\"(?<currentValue>[^\"]+)\""
-      ]
+        "(?<depName>\\w+/\\w+)\\s*=\\s*\\{[^}]*version\\s*=\\s*\"(?<currentValue>[^\"]+)\""
+      ],
+      "datasourceTemplate": "terraform-provider"
+    },
+    {
+      "customType": "regex",
+      "description": "Update Docker images in Terraform files",
+      "managerFilePatterns": ["modules/**/*.tf"],
+      "matchStrings": [
+        "image\\s*=\\s*\"(?<depName>[^:]+):(?<currentValue>[^\"]+)\""
+      ],
+      "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "description": "Update Helm chart versions in helm.tf files",
+      "managerFilePatterns": ["modules/**/helm.tf"],
+      "matchStrings": [
+        "repository\\s*=\\s*\"(?<registryUrl>[^\"]+)\"[\\s\\S]*?chart\\s*=\\s*\"(?<depName>[^\"]+)\"[\\s\\S]*?version\\s*=\\s*\"(?<currentValue>[^\"]+)\""
+      ],
+      "datasourceTemplate": "helm"
     }
   ],
   "packageRules": [
     {
-      "description": "Group infrastructure versions (Talos, Kubernetes, Cilium)",
+      "description": "Group infrastructure versions (Talos, Kubernetes, Cilium, Metrics Server, Gateway API)",
       "matchPackageNames": [
         "siderolabs/talos",
         "kubernetes/kubernetes",
-        "cilium/cilium"
+        "cilium/cilium",
+        "kubernetes-sigs/metrics-server",
+        "kubernetes-sigs/gateway-api"
       ],
       "groupName": "infrastructure",
       "groupSlug": "infra-versions"
@@ -44,12 +67,29 @@
     {
       "description": "Group core Helm charts",
       "matchDatasources": ["helm"],
+      "matchPackageNames": [
+        "cert-manager",
+        "cloudnative-pg",
+        "kube-prometheus-stack",
+        "longhorn",
+        "psmdb-operator",
+        "reflector",
+        "tailscale-operator"
+      ],
       "groupName": "core-helm-charts",
       "groupSlug": "core-charts"
     },
     {
-      "description": "Group Docker images for applications",
+      "description": "Group application Docker images",
       "matchDatasources": ["docker"],
+      "matchPackageNames": [
+        "ghcr.io/mt190502/docker-anki-sync-server",
+        "miniflux/miniflux",
+        "nightscout/cgm-remote-monitor",
+        "tomsquest/docker-radicale",
+        "redmine",
+        "ghcr.io/umami-software/umami"
+      ],
       "groupName": "app-images",
       "groupSlug": "app-docker"
     },
@@ -81,10 +121,10 @@
     {
       "description": "Use loose versioning for app images without semver",
       "matchDatasources": ["docker"],
-      "matchPackageNames": ["mt190502/docker-anki-sync-server", "nightscout/cgm-remote-monitor"],
+      "matchPackageNames": ["ghcr.io/mt190502/docker-anki-sync-server", "nightscout/cgm-remote-monitor"],
       "versioning": "loose"
     }
   ],
-  "ignoreDeps": [],
+  "ignoreDeps": ["busybox"],
   "pinDigests": false
 }

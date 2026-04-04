@@ -51,10 +51,10 @@ generate "versions" {
   contents  = <<-EOF
     terraform {
       required_providers {
-        kubernetes = { source = "hashicorp/kubernetes", version = "${include.common.locals.providers.kubernetes.version}" }
-        helm       = { source = "hashicorp/helm",       version = "${include.common.locals.providers.helm.version}" }
-        null       = { source = "hashicorp/null",       version = "${include.common.locals.providers.null.version}" }
-        external   = { source = "hashicorp/external",   version = "${include.common.locals.providers.external.version}" }
+        kubernetes = { source = "hashicorp/kubernetes", version = "~> 3.0.1" }
+        helm       = { source = "hashicorp/helm",       version = "~> 3.1.1" }
+        null       = { source = "hashicorp/null",       version = "~> 3.2.4" }
+        external   = { source = "hashicorp/external",   version = "~> 2.3.1" }
       }
     }
   EOF
