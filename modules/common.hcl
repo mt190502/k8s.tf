@@ -13,23 +13,37 @@
 #                                                                                                 #
 #  Environment variables:                                                                         #
 #    TF_BACKEND_TYPE   - "local" (default) or "s3"                                                #
-#    TF_STATE_DIR      - State directory for local backend (default: .terraform)                  #
 #    TF_S3_BUCKET      - S3 bucket name (required if TF_BACKEND_TYPE=s3)                          #
-#    TF_S3_KEY_PREFIX  - Key prefix for S3 state (optional)                                       #
 #    TF_S3_REGION      - S3 region (default: auto)                                                #
 #    TF_S3_ENDPOINT    - S3 endpoint for MinIO etc (optional)                                     #
+#    TF_ENCRYPTION_PASSPHRASE - Optional override for state encryption key                        #
 ## ============================================================================================= ##
 locals {
+  env              = get_env("STACK_ENV", "dev")
   backend_type     = get_env("TF_BACKEND_TYPE", "local")
-  state_dir        = get_env("TF_STATE_DIR", "${get_repo_root()}/.terraform")
-  s3_bucket        = get_env("TF_S3_BUCKET", "")
-  s3_key_prefix    = get_env("TF_S3_KEY_PREFIX", "")
-  s3_region        = get_env("TF_S3_REGION", "auto")
-  s3_endpoint      = get_env("TF_S3_ENDPOINT", "")
   repo_root        = get_repo_root()
   unit_path        = trimprefix(get_terragrunt_dir(), "${local.repo_root}/")
-  local_state_path = "${local.state_dir}/${local.unit_path}/terraform.tfstate"
-  s3_key           = "${local.s3_key_prefix}${local.unit_path}/terraform.tfstate"
+  modules_path     = "modules/${replace(local.unit_path, "/\\.terragrunt-stack\\/?/", "")}"
+  local_state_path = "${local.repo_root}/${local.env}/${local.modules_path}/terraform.tfstate"
+  s3_key           = "${local.env}/${local.modules_path}/terraform.tfstate"
+  
+  # S3 backend configuration (used when TF_BACKEND_TYPE=s3)
+  s3_bucket   = get_env("TF_S3_BUCKET", "")
+  s3_region   = get_env("TF_S3_REGION", "auto")
+  s3_endpoint = get_env("TF_S3_ENDPOINT", "")
+  
+  ## --------------------------------------------------------------------------------------------- ##
+  #  State encryption passphrase:                                                                   #
+  #    1) TF_ENCRYPTION_PASSPHRASE (optional override)                                              #
+  #    2) Derived from SOPS age private key (no extra password needed)                              #
+  ## --------------------------------------------------------------------------------------------- ##
+  sops_age_key_file = get_env("SOPS_AGE_KEY_FILE", "${get_env("HOME", "")}/.config/sops/age/keys.txt")
+  sops_derived_passphrase = try(trimspace(run_cmd(
+    "bash",
+    "-lc",
+    "if [ -f \"${local.sops_age_key_file}\" ]; then grep -m1 '^AGE-SECRET-KEY-' \"${local.sops_age_key_file}\" | sha256sum | cut -d' ' -f1; fi"
+  )), "")
+  encryption_passphrase = trimspace(get_env("TF_ENCRYPTION_PASSPHRASE", "")) != "" ? trimspace(get_env("TF_ENCRYPTION_PASSPHRASE", "")) : local.sops_derived_passphrase
   providers = {
     # renovate: datasource=terraform-provider depName=cloudflare/cloudflare
     cloudflare = { version = "~> 5.18.0" }
@@ -254,5 +268,37 @@ generate "backend" {
         }
       }
       EOT
+  )
+}
+
+generate "encryption" {
+  path      = "encryption.tf"
+  if_exists = "overwrite_terragrunt"
+  contents = (
+    local.encryption_passphrase != ""
+    ? <<-EOT
+      variable "encryption_passphrase" {
+        type        = string
+        description = "Passphrase for encrypting Terraform state"
+        sensitive   = true
+        default     = "${local.encryption_passphrase}"
+      }
+
+      terraform {
+        encryption {
+          key_provider "pbkdf2" "state_key" {
+            passphrase = var.encryption_passphrase
+          }
+          method "aes_gcm" "state_encryption" {
+            keys = key_provider.pbkdf2.state_key
+          }
+          state {
+            method   = method.aes_gcm.state_encryption
+            enforced = true
+          }
+        }
+      }
+      EOT
+    : ""
   )
 }
