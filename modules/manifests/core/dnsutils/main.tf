@@ -23,7 +23,7 @@ resource "kubernetes_daemon_set_v1" "dnsutils_daemonset" {
       spec {
         container {
           name    = "dnsutils"
-          image   = "registry.k8s.io/e2e-test-images/agnhost:2.39"
+          image   = "registry.k8s.io/e2e-test-images/agnhost:2.61"
           command = ["sleep", "infinity"]
         }
         toleration {
