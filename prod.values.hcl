@@ -249,7 +249,7 @@ locals {
       kube_prometheus_stack = {
         enabled = true
         # renovate: datasource=helm depName=kube-prometheus-stack registryUrl=https://prometheus-community.github.io/helm-charts
-        version = "82.16.2"
+        version = "82.17.0"
       }
       longhorn = {
         enabled = true
@@ -267,7 +267,7 @@ locals {
           wildcard_reflection_namespaces = ["radicale"]
         }
         # renovate: datasource=helm depName=reflector registryUrl=https://emberstack.github.io/helm-charts
-        version = "10.0.26"
+        version = "10.0.27"
       }
       tailscale_operator = {
         enabled = true
