@@ -47,7 +47,7 @@ resource "kubernetes_daemon_set_v1" "nginx_daemonset" {
 }
 
 resource "kubernetes_service_v1" "nginx_service" {
-  count = var.enabled ? 1 : 0  
+  count = var.enabled ? 1 : 0
   metadata {
     name      = "nginx-service"
     namespace = kubernetes_namespace_v1.testing_namespace[0].metadata[0].name

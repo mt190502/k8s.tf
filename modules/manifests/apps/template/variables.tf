@@ -10,7 +10,6 @@
 #      gateway_name      --- Gateway name (from cert-manager)                                     #
 #      gateway_namespace --- Gateway namespace (from cert-manager)                                #
 #      hostname          --- HTTPRoute hostname subdomain (e.g., "app" -> app.{domain})           #
-#      image             --- Container image (e.g., "nginx")                                      #
 #      mongo             --- MongoDB related options                                              #
 #        limits          --- Resource limits for mongo instances (cpu, memory)                    #
 #        requests        --- Resource requests for mongo instances (cpu, memory)                  #
@@ -25,14 +24,11 @@
 #        storage_size    --- Volume size for postgres instances                                   #
 #      preferred_gateway --- Preferred Gateway for basic auth (e.g., "traefik")                   #
 #      replicas          --- Desired replica count (for Deployment/StatefulSet)                   #
-#      repository        --- (helm.tf) Helm chart repo URL                                        #
 #      resources         --- Resource requests and limits for the application                     #
 #        limits          --- Resource limits for the application (cpu, memory)                    #
 #        requests        --- Resource requests for the application (cpu, memory)                  #
 #    secrets             --- Secrets object (map of sensitive values)                             #
 #    storage_size        --- Volume size for main application                                     #
-#    chart_version       --- (helm.tf) Helm chart version tag                                     #
-#    image_version       --- Image version tag                                                    #
 ## ============================================================================================= ##
 variable "enabled" {
   description = "Enable this module"
@@ -50,7 +46,6 @@ variable "config" {
     gateway_name      = optional(string)
     gateway_namespace = optional(string)
     hostname          = optional(string)
-    image             = optional(string, "changeme/changeme")
     mongo = optional(object({
       limits       = optional(map(string))
       requests     = optional(map(string))
@@ -67,7 +62,6 @@ variable "config" {
     }))
     preferred_gateway = optional(string, "cilium")
     replicas          = optional(number, 1)
-    repository        = optional(string, "https://changeme.local/helm-charts")
     resources = optional(object({
       limits   = optional(map(string))
       requests = optional(map(string))
@@ -82,16 +76,4 @@ variable "secrets" {
   type        = map(map(string))
   sensitive   = true
   default     = {}
-}
-
-variable "chart_version" {
-  description = "Helm chart version"
-  type        = string
-  default     = ""
-}
-
-variable "image_version" {
-  description = "Application image version"
-  type        = string
-  default     = ""
 }

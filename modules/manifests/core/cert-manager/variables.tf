@@ -8,7 +8,6 @@
 #      wildcard_reflection_namespaces --- Namespaces Reflector will sync the wildcard secret to   #
 #    secrets                          --- Sensitive configuration                                 #
 #      api_token                      --- Cloudflare API token for DNS01 ACME challenge           #
-#    chart_version                    --- cert-manager Helm chart version                         #
 ## ============================================================================================= ##
 variable "enabled" {
   description = "Enable this module"
@@ -32,10 +31,4 @@ variable "secrets" {
     api_token = string
   })
   sensitive = true
-}
-
-variable "chart_version" {
-  description = "cert-manager Helm chart version"
-  type        = string
-  default     = ""
 }

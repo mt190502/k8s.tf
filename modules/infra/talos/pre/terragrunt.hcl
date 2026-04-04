@@ -34,7 +34,7 @@ generate "versions" {
   contents  = <<-EOF
     terraform {
       required_providers {
-        talos = { source = "siderolabs/talos", version = "${include.common.locals.providers.talos.version}" }
+        talos = { source = "siderolabs/talos", version = "~> 0.10.1" }
       }
     }
   EOF
@@ -64,9 +64,11 @@ inputs = {
     preferred_gateway = try(values.config.preferred_gateway, "cilium")
   }
   versions = {
-    cilium     = try(values.versions.cilium, "")
-    kubernetes = try(values.versions.kubernetes, "")
-    talos      = try(values.versions.talos, "")
+    cilium         = try(values.versions.cilium, "")
+    gateway_api    = try(values.versions.gateway_api, "")
+    kubernetes     = try(values.versions.kubernetes, "")
+    metrics_server = try(values.versions.metrics_server, "")
+    talos          = try(values.versions.talos, "")
   }
   rootvars = try(values.rootvars, {})
 }

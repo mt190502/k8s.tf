@@ -79,7 +79,7 @@ resource "kubernetes_service_v1" "echoserver_service" {
 }
 
 resource "kubernetes_manifest" "echoserver_httproute" {
-  count = var.enabled ? 1 : 0  
+  count = var.enabled ? 1 : 0
   manifest = {
     apiVersion = "gateway.networking.k8s.io/v1beta1"
     kind       = "HTTPRoute"

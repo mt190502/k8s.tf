@@ -9,9 +9,3 @@ variable "enabled" {
   type        = bool
   default     = true
 }
-
-variable "chart_version" {
-  description = "PSMDB operator Helm chart version"
-  type        = string
-  default     = ""
-}

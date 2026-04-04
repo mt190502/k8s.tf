@@ -66,7 +66,10 @@ data "talos_machine_configuration" "nodes" {
         SERVICE_CIDRS = concat([var.config.ipcfg.service.ipv4], var.config.dualstack ? [var.config.ipcfg.service.ipv6] : [])
       }),
       templatefile("../templates/longhorn.tmpl", {}),
-      templatefile("../templates/extras.tmpl", {}),
+      templatefile("../templates/extras.tmpl", {
+        GATEWAY_API_VERSION    = var.versions.gateway_api
+        METRICS_SERVER_VERSION = var.versions.metrics_server
+      }),
       templatefile("../templates/kubeprism.tmpl", {
         ENABLED = var.config.kubeprism
       }),

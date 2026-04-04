@@ -8,7 +8,6 @@
 #      gateway_name      --- Gateway name (from cert-manager)                                     #
 #      gateway_namespace --- Gateway namespace (from cert-manager)                                #
 #      hostname          --- HTTPRoute hostname subdomain (e.g., "app" -> app.{domain})           #
-#      image             --- Container image (e.g., "nginx")                                      #
 #      mongo             --- MongoDB related options                                              #
 #        limits          --- Resource limits for mongo instances (cpu, memory)                    #
 #        requests        --- Resource requests for mongo instances (cpu, memory)                  #
@@ -21,7 +20,6 @@
 #        limits          --- Resource limits for the application (cpu, memory)                    #
 #        requests        --- Resource requests for the application (cpu, memory)                  #
 #    secrets             --- Secrets object (map of sensitive values)                             #
-#    image_version       --- Image version tag                                                    #
 ## ============================================================================================= ##
 variable "enabled" {
   description = "Enable this module"
@@ -37,7 +35,6 @@ variable "config" {
     gateway_name      = optional(string)
     gateway_namespace = optional(string)
     hostname          = optional(string)
-    image             = optional(string, "nightscout/cgm-remote-monitor")
     mongo = optional(object({
       limits       = optional(map(string))
       requests     = optional(map(string))
@@ -60,10 +57,4 @@ variable "secrets" {
   type        = map(map(string))
   sensitive   = true
   default     = {}
-}
-
-variable "image_version" {
-  description = "Application image version"
-  type        = string
-  default     = ""
 }

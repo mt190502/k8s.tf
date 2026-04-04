@@ -29,7 +29,7 @@ resource "kubernetes_deployment_v1" "this" {
       spec {
         container {
           name  = var.config.name
-          image = "${var.config.image}:${var.image_version}"
+          image = "ghcr.io/mt190502/docker-anki-sync-server:25.09.2"
           port {
             container_port = var.config.port
           }

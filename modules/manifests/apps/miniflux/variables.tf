@@ -9,7 +9,6 @@
 #      gateway_name      --- Gateway name (from cert-manager)                                     #
 #      gateway_namespace --- Gateway namespace (from cert-manager)                                #
 #      hostname          --- HTTPRoute hostname subdomain (e.g., "app" -> app.{domain})           #
-#      image             --- Container image (e.g., "nginx")                                      #
 #      name              --- Application name (used for resources)                                #
 #      port              --- Container port                                                       #
 #      pg                --- PostgreSQL related options                                           #
@@ -24,7 +23,6 @@
 #        requests        --- Resource requests for the application (cpu, memory)                  #
 #    secrets             --- Secrets object (map of sensitive values)                             #
 #    storage_size        --- Volume size for main application                                     #
-#    image_version       --- Image version tag                                                    #
 ## ============================================================================================= ##
 variable "enabled" {
   description = "Enable this module"
@@ -41,7 +39,6 @@ variable "config" {
     gateway_name      = optional(string)
     gateway_namespace = optional(string)
     hostname          = optional(string)
-    image             = optional(string, "miniflux/miniflux")
     name              = optional(string, "miniflux")
     port              = optional(number, 8080)
     pg = optional(object({
@@ -66,10 +63,4 @@ variable "secrets" {
   type        = map(map(string))
   sensitive   = true
   default     = {}
-}
-
-variable "image_version" {
-  description = "Application image version"
-  type        = string
-  default     = ""
 }

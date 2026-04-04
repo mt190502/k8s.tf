@@ -28,7 +28,7 @@ resource "kubernetes_daemon_set_v1" "this" {
       spec {
         container {
           name  = var.config.name
-          image = "${var.config.image}:${var.image_version}"
+          image = "<<<template>>>:latest"
           dynamic "port" {
             for_each = var.config.port != null ? [var.config.port] : []
             content {

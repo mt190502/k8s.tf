@@ -41,8 +41,8 @@ generate "versions" {
   contents  = <<-EOF
     terraform {
       required_providers {
-        kubernetes = { source = "hashicorp/kubernetes", version = "${include.common.locals.providers.kubernetes.version}" }
-        helm       = { source = "hashicorp/helm",       version = "${include.common.locals.providers.helm.version}" }
+        kubernetes = { source = "hashicorp/kubernetes", version = "~> 3.0.1" }
+        helm       = { source = "hashicorp/helm",       version = "~> 3.1.1" }
       }
     }
   EOF
@@ -57,6 +57,5 @@ dependency "longhorn" {
 }
 
 inputs = {
-  enabled       = try(values.enabled, true)
-  chart_version = try(values.chart_version, "")
+  enabled = try(values.enabled, true)
 }

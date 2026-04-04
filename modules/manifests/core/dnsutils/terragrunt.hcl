@@ -30,7 +30,7 @@ generate "versions" {
   contents  = <<-EOF
     terraform {
       required_providers {
-        kubernetes = { source = "hashicorp/kubernetes", version = "${include.common.locals.providers.kubernetes.version}" }
+        kubernetes = { source = "hashicorp/kubernetes", version = "~> 3.0.1" }
       }
     }
   EOF
@@ -40,7 +40,7 @@ generate "versions" {
 #  Dependencies -  enforce apply order and wire outputs from upstream modules as inputs.          #
 ## --------------------------------------------------------------------------------------------- ##
 dependency "cert_manager" {
-  config_path = "../cert-manager"
+  config_path  = "../cert-manager"
   skip_outputs = true
 }
 

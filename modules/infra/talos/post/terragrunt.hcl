@@ -159,7 +159,7 @@ generate "versions" {
   contents  = <<-EOF
     terraform {
       required_providers {
-        talos = { source = "siderolabs/talos", version = "${include.common.locals.providers.talos.version}" }
+        talos = { source = "siderolabs/talos", version = "~> 0.10.1" }
       }
     }
   EOF

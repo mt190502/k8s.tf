@@ -3,7 +3,7 @@
 ## ============================================================================================= ##
 resource "kubernetes_daemon_set_v1" "dnsutils_daemonset" {
   metadata {
-    name      = "dnsutils"
+    name = "dnsutils"
     labels = {
       app = "dnsutils"
     }
@@ -22,8 +22,8 @@ resource "kubernetes_daemon_set_v1" "dnsutils_daemonset" {
       }
       spec {
         container {
-          name  = "dnsutils"
-          image = "registry.k8s.io/e2e-test-images/agnhost:2.39"
+          name    = "dnsutils"
+          image   = "registry.k8s.io/e2e-test-images/agnhost:2.39"
           command = ["sleep", "infinity"]
         }
         toleration {
