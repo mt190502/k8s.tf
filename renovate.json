@@ -12,7 +12,7 @@
   "branchConcurrentLimit": 10,
   "rebaseWhen": "conflicted",
   "labels": ["dependencies"],
-  "enabledManagers": ["regex", "terraform"],
+  "enabledManagers": [ "custom.regex",  "terraform"],
   "ignorePaths": ["modules/manifests/apps/template/**"],
   "customManagers": [
     {
