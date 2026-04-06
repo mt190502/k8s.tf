@@ -18,6 +18,7 @@ resource "kubernetes_service_v1" "this" {
       port        = var.config.port
       target_port = var.config.port
     }
+    ip_family_policy = "PreferDualStack"
     type = "ClusterIP"
   }
   depends_on = [kubernetes_namespace_v1.this]

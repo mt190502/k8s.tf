@@ -23,6 +23,31 @@ include "common" {
 
 terraform {
   source = "./"
+
+  #~ Uncomment if using HTTPRoute
+  # after_hook "public_sites_apply" {
+  #   commands     = ["apply"]
+  #   run_on_error = false
+  #   execute = try(values.enabled, true) ? [
+  #     "bash",
+  #     "${get_repo_root()}/.ci/public-domain.sh",
+  #     "--name", "<<<template>>>",
+  #     "--domain", "https://${try(values.config.hostname, "<<<template>>>")}.${try(values.config.domain, "example.com")}",
+  #     "--statcodes", try(values.config.basic_auth, false) ? "200:401:403" : "200",
+  #   ] : ["sh", "-c", "true"]
+  # }
+  #
+  # after_hook "public_sites_destroy" {
+  #   commands     = ["destroy"]
+  #   run_on_error = false
+  #   execute = [
+  #     "bash",
+  #     "${get_repo_root()}/.ci/public-domain.sh",
+  #     "--enabled", "false",
+  #     "--name", "<<<template>>>",
+  #     "--domain", "https://${try(values.config.hostname, "<<<template>>>")}.${try(values.config.domain, "example.com")}",
+  #   ]
+  # }
 }
 
 generate "providers" {

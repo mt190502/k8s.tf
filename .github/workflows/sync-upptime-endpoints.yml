@@ -1,0 +1,138 @@
+name: Sync Public Domains to Upptime
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - .ci/public-domains.csv
+
+permissions:
+  contents: write
+
+jobs:
+  sync-upptime-endpoints:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout k8s.tf
+        uses: actions/checkout@v6
+
+      - name: Checkout uptime.mtaha.dev
+        uses: actions/checkout@v6
+        with:
+          repository: mt190502/uptime.mtaha.dev
+          token: ${{ secrets.UPPTIME_REPO_TOKEN }}
+          path: upptime
+
+      - name: Update upptime config from public-domains.csv
+        run: |
+          set -euo pipefail
+
+          sites_file=".ci/public-domains.csv"
+          target_config="upptime/.upptimerc.yml"
+
+          if [ ! -f "$sites_file" ]; then
+            echo "Source file not found: $sites_file (nothing to sync)"
+            exit 0
+          fi
+
+          sites_entries_file="$(mktemp)"
+          awk -F',' '
+            BEGIN { OFS = "" }
+            NR == 1 { next }
+            /^[[:space:]]*#/ { next }
+            NF < 2 { next }
+            {
+              name = $1
+              url = $2
+              statcodes = $3
+              gsub(/^[[:space:]]+|[[:space:]]+$/, "", name)
+              gsub(/^[[:space:]]+|[[:space:]]+$/, "", url)
+              gsub(/^[[:space:]]+|[[:space:]]+$/, "", statcodes)
+              if (name != "" && url != "") {
+                print "  - name: ", name
+                print "    url: ", url
+                if (statcodes != "") {
+                  gsub(/:/, ", ", statcodes)
+                  print "    expectedStatusCodes: [", statcodes, "]"
+                }
+              }
+            }
+          ' "$sites_file" > "$sites_entries_file"
+
+          temp_config="$(mktemp)"
+          awk -v entries_file="$sites_entries_file" '
+            BEGIN {
+              in_sites = 0
+              replaced = 0
+            }
+            function print_entries(line) {
+              while ((getline line < entries_file) > 0) {
+                print line
+              }
+              close(entries_file)
+            }
+            {
+              if ($0 ~ /^sites:[[:space:]]*$/) {
+                print "sites:"
+                print_entries()
+                in_sites = 1
+                replaced = 1
+                next
+              }
+
+              if (in_sites) {
+                if ($0 ~ /^[A-Za-z0-9_]+:[[:space:]]*$/) {
+                  in_sites = 0
+                  print $0
+                }
+                next
+              }
+
+              print $0
+            }
+            END {
+              if (!replaced) {
+                print ""
+                print "sites:"
+                print_entries()
+              }
+            }
+          ' "$target_config" > "$temp_config"
+
+          mv "$temp_config" "$target_config"
+          rm -f "$sites_entries_file"
+
+      - name: Commit and push uptime changes
+        working-directory: upptime
+        run: |
+          set -euo pipefail
+
+          if git diff --quiet -- .upptimerc.yml; then
+            echo "No changes detected in upptime config"
+            exit 0
+          fi
+
+          git add .upptimerc.yml
+          git -c user.name='github-actions[bot]' -c user.email='github-actions[bot]@users.noreply.github.com' commit -m "chore: sync public domains from k8s.tf"
+          git push
+
+      - name: Remove public-domains.csv in k8s.tf
+        run: |
+          set -euo pipefail
+          rm -f .ci/public-domains.csv
+
+      - name: Commit and push cleanup in k8s.tf
+        run: |
+          set -euo pipefail
+
+          if git diff --quiet -- .ci/public-domains.csv; then
+            echo "No cleanup changes detected"
+            exit 0
+          fi
+
+          git add .ci/public-domains.csv
+          git -c user.name='github-actions[bot]' -c user.email='github-actions[bot]@users.noreply.github.com' commit -m "chore: remove processed public domains file"
+          git push

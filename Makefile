@@ -207,6 +207,7 @@ manifests-plan: generate
 manifests-apply: _check_values generate
 	kubectl cluster-info > /dev/null || { echo "Error: kubeconfig is not valid or cluster is not reachable. Please check your kubeconfig and cluster status."; exit 1; }
 	echo "Applying manifest units..."
+	find . -type f -iname '*public-domains.csv' -delete || true
 	$(TG_RUN_MANIFESTS) apply
 	rm -rf $(STACK_NESTED_DIRS)
 

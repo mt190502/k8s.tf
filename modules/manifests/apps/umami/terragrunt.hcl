@@ -17,6 +17,30 @@ include "common" {
 
 terraform {
   source = "./"
+
+  after_hook "public_sites_apply" {
+    commands     = ["apply"]
+    run_on_error = false
+    execute = try(values.enabled, true) ? [
+      "bash",
+      "${get_repo_root()}/.ci/public-domain.sh",
+      "--name", "Umami",
+      "--domain", "https://${try(values.config.hostname, "umami")}.${try(values.config.domain, "example.com")}",
+      "--statcodes", try(values.config.basic_auth, false) ? "200:401:403" : "200",
+    ] : ["sh", "-c", "true"]
+  }
+
+  after_hook "public_sites_destroy" {
+    commands     = ["destroy"]
+    run_on_error = false
+    execute = [
+      "bash",
+      "${get_repo_root()}/.ci/public-domain.sh",
+      "--enabled", "false",
+      "--name", "Umami",
+      "--domain", "https://${try(values.config.hostname, "umami")}.${try(values.config.domain, "example.com")}",
+    ]
+  }
 }
 
 generate "providers" {
