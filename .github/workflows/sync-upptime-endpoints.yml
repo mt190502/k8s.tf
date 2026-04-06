@@ -93,7 +93,7 @@ jobs:
               }
 
               if (in_sites) {
-                if ($0 ~ /^[A-Za-z0-9_]+:[[:space:]]*$/) {
+                if ($0 ~ /^[^[:space:]][^:]*:[[:space:]]*$/) {
                   in_sites = 0
                   print $0
                 }
