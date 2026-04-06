@@ -9,7 +9,7 @@ sort_output() {
     tmp="$(mktemp)"
 
     {
-        echo "name,domain,statcodes"
+        echo "name,domain,path,statcodes"
         awk 'NR > 1 && NF > 0 { print $0 }' "$OUTPUT_FILE" | sort -t',' -k1,1f
     } > "$tmp"
 
@@ -20,11 +20,16 @@ process() {
     local enabled="$1"
     local name="$2"
     local domain="$3"
-    local statcodes="$4"
+    local path="$4"
+    local statcodes="$5"
+
+    if [[ -n "$path" && "$path" != /* ]]; then
+        path="/$path"
+    fi
 
     if [[ ! -f "$OUTPUT_FILE" ]]; then
         touch "$OUTPUT_FILE"
-        echo "name,domain,statcodes" > "$OUTPUT_FILE"
+        echo "name,domain,path,statcodes" > "$OUTPUT_FILE"
     fi
 
     if [[ "$enabled" != "true" ]]; then
@@ -43,17 +48,17 @@ process() {
     local current_line
     current_line="$(awk -F',' -v n="$name" 'tolower($1) == tolower(n) { print $0; exit }' "$OUTPUT_FILE")"
 
-    [[ "$current_line" == "$name,$domain,$statcodes" ]] && return 0
+    [[ "$current_line" == "$name,$domain,$path,$statcodes" ]] && return 0
 
     if [[ -n "$current_line" ]]; then
         local tmp
         tmp="$(mktemp)"
-        awk -F',' -v OFS=',' -v n="$name" -v d="$domain" -v s="$statcodes" '
+        awk -F',' -v OFS=',' -v n="$name" -v d="$domain" -v p="$path" -v s="$statcodes" '
             BEGIN { replaced = 0 }
             NR == 1 { print $0; next }
             tolower($1) == tolower(n) {
                 if (!replaced) {
-                    print n, d, s
+                    print n, d, p, s
                     replaced = 1
                 }
                 next
@@ -61,7 +66,7 @@ process() {
             { print $0 }
             END {
                 if (!replaced) {
-                    print n, d, s
+                    print n, d, p, s
                 }
             }
         ' "$OUTPUT_FILE" > "$tmp"
@@ -70,7 +75,7 @@ process() {
         return 0
     fi
 
-    echo "$name,$domain,$statcodes" >> "$OUTPUT_FILE"
+    echo "$name,$domain,$path,$statcodes" >> "$OUTPUT_FILE"
     sort_output
 }
 
@@ -80,6 +85,7 @@ usage() {
     echo "  -e, --enabled   Enable or disable the public domain (true/false)"
     echo "  -n, --name      The name of the public domain"
     echo "  -d, --domain    The domain name to be used for the public domain"
+    echo "  -p, --path      Custom path for uptime checks (optional)"
     echo "  -s, --statcodes Colon-separated list of HTTP status codes to be considered as valid responses (e.g., 200:301:404)"
     echo "  -h, --help      Display this help message"
 }
@@ -88,9 +94,10 @@ main() {
     enabled="true"
     name=""
     domain=""
+    path=""
     statcodes=""
 
-    parsed="$(getopt -l "enabled:,name:,domain:,statcodes:,help" -o "e:,n:,d:,s:,h,b" -n "$0" -- "$@")" || {
+    parsed="$(getopt -l "enabled:,name:,domain:,path:,statcodes:,help" -o "e:,n:,d:,p:,s:,h,b" -n "$0" -- "$@")" || {
         usage
         exit 1
     }
@@ -108,6 +115,10 @@ main() {
       ;;
       -d | --domain)
         domain="$2"
+        shift
+      ;;
+      -p | --path)
+        path="$2"
         shift
       ;;
       -s | --statcodes)
@@ -134,7 +145,7 @@ main() {
         exit 1
     fi
 
-  process "$enabled" "$name" "$domain" "$statcodes"
+  process "$enabled" "$name" "$domain" "$path" "$statcodes"
 }
 
 main "$@"

@@ -46,12 +46,21 @@ jobs:
             NF < 2 { next }
             {
               name = $1
-              url = $2
-              statcodes = $3
+              domain = $2
+              path = $3
+              statcodes = $4
               gsub(/^[[:space:]]+|[[:space:]]+$/, "", name)
-              gsub(/^[[:space:]]+|[[:space:]]+$/, "", url)
+              gsub(/^[[:space:]]+|[[:space:]]+$/, "", domain)
+              gsub(/^[[:space:]]+|[[:space:]]+$/, "", path)
               gsub(/^[[:space:]]+|[[:space:]]+$/, "", statcodes)
-              if (name != "" && url != "") {
+              if (path != "" && path !~ /^\//) {
+                path = "/" path
+              }
+              if (name != "" && domain != "") {
+                url = domain
+                if (path != "") {
+                  url = domain path
+                }
                 print "  - name: ", name
                 print "    url: ", url
                 if (statcodes != "") {

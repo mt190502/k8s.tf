@@ -22,7 +22,8 @@ terraform {
       "${get_repo_root()}/.ci/public-domain.sh",
       "--name", "Anki Sync Server",
       "--domain", "https://${try(values.config.hostname, "anki")}.${try(values.config.domain, "example.com")}",
-      "--statcodes", try(values.config.basic_auth, false) ? "200:401:403" : "200",
+      "--path", try(values.config.public_path, "/sync/beta"),
+      "--statcodes", try(values.config.basic_auth, false) ? "200:401:403" : "405",
     ] : ["sh", "-c", "true"]
   }
 
@@ -35,6 +36,7 @@ terraform {
       "--enabled", "false",
       "--name", "Anki Sync Server",
       "--domain", "https://${try(values.config.hostname, "anki")}.${try(values.config.domain, "example.com")}",
+      "--path", try(values.config.public_path, "/sync/beta"),
     ]
   }
 }
