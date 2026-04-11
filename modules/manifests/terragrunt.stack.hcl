@@ -1,5 +1,5 @@
 ## ============================================================================================= ##
-#  modules/manifests/terragrunt.stack.hcl --- Manifests sub-stack (core + apps)                   #
+#  modules/manifests/terragrunt.stack.hcl --- Manifests sub-stack (core + apps + settings)        #
 #                                                                                                 #
 #  Receives from root stack:                                                                      #
 #    values.manifests --- raw manifests config from prod.values.hcl                               #
@@ -10,6 +10,7 @@
 #    rootvars         --- derived values (cluster_url, preferred_gateway)                         #
 #    app secrets      --- injected from values.secrets into each app unit                         #
 #    core secrets     --- injected from values.secrets into core units (cert_manager, tailscale)  #
+#    settings         --- operational settings modules (for CI/service integrations)               #
 ## ============================================================================================= ##
 locals {
   # Raw inputs from root stack
@@ -24,8 +25,9 @@ locals {
   }
 
   # Core module configs (with secrets injected)
-  core = try(local.manifests.core, {})
-  apps = try(local.manifests.apps, {})
+  core     = try(local.manifests.core, {})
+  apps     = try(local.manifests.apps, {})
+  settings = try(local.manifests.settings, {})
 }
 
 ## --------------------------------------------------------------------------------------------- ##
@@ -271,5 +273,20 @@ unit "umami" {
       }
     }
     image_version = try(local.apps.umami.version, "")
+  }
+}
+
+## --------------------------------------------------------------------------------------------- ##
+#  Settings units (CI/service integrations)                                                       #
+## --------------------------------------------------------------------------------------------- ##
+unit "ci_settings" {
+  source = "./settings/ci"
+  path   = "settings/ci"
+  values = {
+    enabled = try(local.settings.ci.enabled, false)
+    config = {
+      cluster_name = try(local.settings.ci.config.cluster_name, try(local.infra.kubernetes.cluster_name, "k8s"))
+      apiserver    = try(local.settings.ci.config.apiserver, "") != "" ? local.settings.ci.config.apiserver : (try(local.infra.kubernetes.cluster_url.apiserver, "") != "" ? "https://${local.infra.kubernetes.cluster_url.apiserver}:6443" : "https://kubernetes.default.svc")
+    }
   }
 }

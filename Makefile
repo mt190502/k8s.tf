@@ -40,12 +40,14 @@ export TERRAGRUNT_SECRETS = $(SECRETS)
 
 ##~ ---------------------------------------------------------------------------- ~##
 #  Manifests target selector                                                       #
-#  TARGET can be: all (default), apps, or infra (core)                             #
+#  TARGET can be: all (default), apps, infra (core), or settings                   #
 ##~ ---------------------------------------------------------------------------- ~##
 ifeq ($(TARGET),apps)
   MANIFESTS_WORK_DIR = $(STACK_DIR)/manifests/.terragrunt-stack/apps
 else ifeq ($(TARGET),infra)
   MANIFESTS_WORK_DIR = $(STACK_DIR)/manifests/.terragrunt-stack/core
+else ifeq ($(TARGET),settings)
+  MANIFESTS_WORK_DIR = $(STACK_DIR)/manifests/.terragrunt-stack/settings
 else
   MANIFESTS_WORK_DIR = $(STACK_DIR)/manifests/.terragrunt-stack
 endif
@@ -135,9 +137,9 @@ default:
 	echo "   infra-apply        - Apply infra units only                       (ENV=prod|dev, SECRETS=path.hcl)"
 	echo "   infra-destroy      - DANGER: Destroy infra units only             (ENV=prod|dev, SECRETS=path.hcl)"
 	echo " manifests:"
-	echo "   manifests-plan     - Plan manifest units                          (ENV=prod|dev, SECRETS=path.hcl, TARGET=all|apps|infra)"
-	echo "   manifests-apply    - Apply manifest units                         (ENV=prod|dev, SECRETS=path.hcl, TARGET=all|apps|infra)"
-	echo "   manifests-destroy  - DANGER: Destroy manifest units               (ENV=prod|dev, SECRETS=path.hcl, TARGET=all|apps|infra)"
+	echo "   manifests-plan     - Plan manifest units                          (ENV=prod|dev, SECRETS=path.hcl, TARGET=all|apps|infra|settings)"
+	echo "   manifests-apply    - Apply manifest units                         (ENV=prod|dev, SECRETS=path.hcl, TARGET=all|apps|infra|settings)"
+	echo "   manifests-destroy  - DANGER: Destroy manifest units               (ENV=prod|dev, SECRETS=path.hcl, TARGET=all|apps|infra|settings)"
 	echo " all:"
 	echo "   plan               - Plan all units (infra + manifests)           (ENV=prod|dev, SECRETS=path.hcl)"
 	echo "   apply              - Apply all units (infra + manifests)          (ENV=prod|dev, SECRETS=path.hcl)"

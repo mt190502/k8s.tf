@@ -12,7 +12,7 @@
   "branchConcurrentLimit": 10,
   "rebaseWhen": "conflicted",
   "labels": ["dependencies"],
-  "enabledManagers": [ "custom.regex",  "terraform"],
+  "enabledManagers": ["custom.regex", "terraform", "github-actions"],
   "ignorePaths": ["modules/manifests/apps/template/**"],
   "customManagers": [
     {
@@ -49,6 +49,14 @@
         "repository\\s*=\\s*\"(?<registryUrl>[^\"]+)\"[\\s\\S]*?chart\\s*=\\s*\"(?<depName>[^\"]+)\"[\\s\\S]*?version\\s*=\\s*\"(?<currentValue>[^\"]+)\""
       ],
       "datasourceTemplate": "helm"
+    },
+    {
+      "customType": "regex",
+      "description": "Update workflow tool versions with renovate annotations",
+      "managerFilePatterns": [".github/workflows/*.yml", ".github/workflows/*.yaml"],
+      "matchStrings": [
+        "#\\s*renovate:\\s*datasource=(?<datasource>.*?)\\s+depName=(?<depName>.*?)\\s*\\n\\s*[A-Za-z0-9_]+:\\s*\"(?<currentValue>[^\"]+)\""
+      ]
     }
   ],
   "packageRules": [
@@ -98,6 +106,12 @@
       "matchDatasources": ["terraform-provider"],
       "groupName": "terraform-providers",
       "groupSlug": "tf-providers"
+    },
+    {
+      "description": "Group GitHub Action updates",
+      "matchManagers": ["github-actions"],
+      "groupName": "github-actions",
+      "groupSlug": "gh-actions"
     },
     {
       "description": "Automerge patch updates for Docker images",

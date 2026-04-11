@@ -233,7 +233,7 @@ locals {
         enabled = true
       }
       dnsutils = {
-        enabled = true
+        enabled = false
       }
       kube_prometheus_stack = {
         enabled = true
@@ -255,6 +255,11 @@ locals {
       }
       tests = {
         enabled = false
+      }
+    }
+    settings = {
+      ci = {
+        enabled = true
       }
     }
   }

@@ -5,6 +5,7 @@ pre-commit:
     glob: "*secret*"
     exclude: 
       - "*/secret.tf"
+      - "*/secrets.tf"
       - "*.example"
     run: |
       for f in {all_files}; do
