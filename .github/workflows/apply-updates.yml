@@ -53,7 +53,7 @@ jobs:
           printf '%s' "$KUBECONFIG_CONTENT" > ~/.kube/config
           chmod 600 ~/.kube/config
           
-      - name: Apply updates with Terragrunt
+      - name: Decrypt secrets
         env:
           SOPS_AGE_KEY_FILE: /tmp/age.key
           SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
@@ -61,4 +61,11 @@ jobs:
           set -euo pipefail
           printf '%s' "$SOPS_AGE_KEY" > "$SOPS_AGE_KEY_FILE"
           chmod 600 "$SOPS_AGE_KEY_FILE"
+          sops -i -d secrets.hcl
+
+      - name: Apply updates with Terragrunt
+        env:
+          SOPS_AGE_KEY_FILE: /tmp/age.key
+        run: |
+          set -euo pipefail
           make manifests-apply
