@@ -2,6 +2,7 @@
 #  modules/manifests/core/testing/dnsutils.tf                                                        #
 ## ============================================================================================= ##
 resource "kubernetes_daemon_set_v1" "dnsutils_daemonset" {
+  count = var.enabled ? 1 : 0
   metadata {
     name = "dnsutils"
     labels = {

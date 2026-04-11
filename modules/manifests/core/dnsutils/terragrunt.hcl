@@ -45,5 +45,5 @@ dependency "cert_manager" {
 }
 
 inputs = {
-  enabled = try(values.enabled, true)
+  enabled = try(values.enabled, false)
 }
