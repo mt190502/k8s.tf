@@ -48,18 +48,23 @@ resource "kubernetes_cluster_role_v1" "ci" {
   }
   rule {
     api_groups = [""]
-    resources  = ["namespaces"]
+    resources  = ["namespaces", "nodes", "persistentvolumes"]
     verbs      = ["get", "list", "watch"]
   }
   rule {
     api_groups = [""]
-    resources  = ["secrets", "configmaps", "events", "nodes", "persistentvolumes"]
+    resources  = ["secrets", "configmaps", "events", "persistentvolumeclaims", "services", "endpoints", "pods", "serviceaccounts"]
     verbs      = ["*"]
   }
   rule {
-    api_groups = ["apiextensions.k8s.io", "rbac.authorization.k8s.io", "gateway.networking.k8s.io"]
+    api_groups = ["apps", "batch", "networking.k8s.io", "gateway.networking.k8s.io", "traefik.io", "postgresql.cnpg.io", "psmdb.percona.com", "longhorn.io", "monitoring.coreos.com", "cert-manager.io"]
     resources  = ["*"]
-    verbs      = ["create", "get", "list", "patch", "update", "watch"]
+    verbs      = ["*"]
+  }
+  rule {
+    api_groups = ["apiextensions.k8s.io", "rbac.authorization.k8s.io"]
+    resources  = ["*"]
+    verbs      = ["get", "list", "watch", "create", "update", "patch"]
   }
 }
 
