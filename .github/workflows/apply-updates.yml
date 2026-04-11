@@ -40,7 +40,7 @@ jobs:
       - name: Connect Cluster with Tailscale
         uses: tailscale/github-action@v4
         with:
-          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-client-id: ${{ vars.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tags: tag:ci
 
@@ -66,6 +66,12 @@ jobs:
       - name: Apply updates with Terragrunt
         env:
           SOPS_AGE_KEY_FILE: /tmp/age.key
+          TF_BACKEND_TYPE: ${{ vars.TF_BACKEND_TYPE }}
+          TF_S3_BUCKET: ${{ vars.TF_S3_BUCKET }}
+          TF_S3_REGION: ${{ vars.TF_S3_REGION }}
+          TF_S3_ENDPOINT: ${{ secrets.TF_S3_ENDPOINT }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           set -euo pipefail
           yes | make manifests-plan
