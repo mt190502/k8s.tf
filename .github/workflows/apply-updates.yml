@@ -68,4 +68,4 @@ jobs:
           SOPS_AGE_KEY_FILE: /tmp/age.key
         run: |
           set -euo pipefail
-          make manifests-apply
+          yes | make manifests-plan
