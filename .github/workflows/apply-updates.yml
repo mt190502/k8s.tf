@@ -41,9 +41,9 @@ jobs:
           KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG }}
         run: |
           set -euo pipefail
-          mkdir -p /root/.kube
-          printf '%s' "$KUBECONFIG_CONTENT" > /root/.kube/config
-          chmod 600 /root/.kube/config
+          mkdir -p ~/.kube
+          printf '%s' "$KUBECONFIG_CONTENT" > ~/.kube/config
+          chmod 600 ~/.kube/config
 
           if [ -n "${SECRETS_CONTENT:-}" ]; then
             printf '%s' "$SECRETS_CONTENT" > secrets.hcl
