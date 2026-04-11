@@ -70,8 +70,10 @@ jobs:
           TF_S3_BUCKET: ${{ vars.TF_S3_BUCKET }}
           TF_S3_REGION: ${{ vars.TF_S3_REGION }}
           TF_S3_ENDPOINT: ${{ secrets.TF_S3_ENDPOINT }}
+          TF_ENCRYPTION_PASSPHRASE: ${{ secrets.TF_ENCRYPTION_PASSPHRASE }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           set -euo pipefail
+          mkdir -p ~/.cache/terragrunt/providers
           yes | make manifests-plan
