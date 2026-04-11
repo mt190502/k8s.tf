@@ -20,6 +20,14 @@ jobs:
       
       - name: Install kubectl
         uses: azure/setup-kubectl@v4
+      
+      - name: Install SOPS
+        env:
+          SOPS_VERSION: "3.12.2"
+        run: |
+          curl -LO "https://github.com/getsops/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux.amd64"
+          sudo mv sops-v${SOPS_VERSION}.linux.amd64 /usr/local/bin/sops
+          sudo chmod +x /usr/local/bin/sops
           
       - name: Install Terragrunt with OpenTofu
         uses: gruntwork-io/terragrunt-action@v3
