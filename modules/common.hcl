@@ -12,25 +12,27 @@
 #    }                                                                                            #
 #                                                                                                 #
 #  Environment variables:                                                                         #
-#    TF_BACKEND_TYPE   - "local" (default) or "s3"                                                #
-#    TF_S3_BUCKET      - S3 bucket name (required if TF_BACKEND_TYPE=s3)                          #
-#    TF_S3_REGION      - S3 region (default: auto)                                                #
-#    TF_S3_ENDPOINT    - S3 endpoint for MinIO etc (optional)                                     #
-#    TF_ENCRYPTION_PASSPHRASE - Optional override for state encryption key                        #
+#    TF_BACKEND_TYPE          --- "local" (default) or "s3"                                       #
+#    TF_S3_BUCKET             --- S3 bucket name (required if TF_BACKEND_TYPE=s3)                 #
+#    TF_S3_REGION             --- S3 region (default: auto)                                       #
+#    TF_S3_ENDPOINT           --- S3 endpoint for MinIO etc (optional)                            #
+#    TF_ENCRYPTION_PASSPHRASE --- Optional override for state encryption key                      #
+#    TF_FORCE_ENCRYPTION      --- "true" to force encryption (default: false)                     #
 ## ============================================================================================= ##
 locals {
   env              = get_env("STACK_ENV", "dev")
   backend_type     = get_env("TF_BACKEND_TYPE", "local")
+  force_encryption = get_env("TF_FORCE_ENCRYPTION", "false") == "true"
   repo_root        = get_repo_root()
   unit_path        = trimprefix(get_terragrunt_dir(), "${local.repo_root}/")
   modules_path     = "modules/${replace(local.unit_path, "/\\.terragrunt-stack\\/?/", "")}"
-  local_state_path = "${local.repo_root}/${local.env}/${local.modules_path}/terraform.tfstate"
-  s3_key           = "${local.env}/${local.modules_path}/terraform.tfstate"
+  local_state_path = "${local.repo_root}/.terraform/${local.env}/${local.modules_path}/terraform.tfstate"
 
   # S3 backend configuration (used when TF_BACKEND_TYPE=s3)
   s3_bucket   = get_env("TF_S3_BUCKET", "")
   s3_region   = get_env("TF_S3_REGION", "auto")
   s3_endpoint = get_env("TF_S3_ENDPOINT", "")
+  s3_key      = "${local.env}/${local.modules_path}/terraform.tfstate"
 
   ## --------------------------------------------------------------------------------------------- ##
   #  State encryption passphrase:                                                                   #
@@ -39,11 +41,12 @@ locals {
   ## --------------------------------------------------------------------------------------------- ##
   sops_age_key_file = get_env("SOPS_AGE_KEY_FILE", "${get_env("HOME", "")}/.config/sops/age/keys.txt")
   sops_derived_passphrase = try(trimspace(run_cmd(
+    "--terragrunt-quiet",
     "bash",
     "-lc",
-    "if [ -f \"${local.sops_age_key_file}\" ]; then grep -m1 '^AGE-SECRET-KEY-' \"${local.sops_age_key_file}\" | sha256sum | cut -d' ' -f1; fi"
+    "if [ -f \"${local.sops_age_key_file}\" ]; then grep -m1 '^AGE-SECRET-KEY-' \"${local.sops_age_key_file}\" 2>/dev/null | sha256sum 2>/dev/null | cut -d' ' -f1; fi"
   )), "")
-  encryption_passphrase = trimspace(get_env("TF_ENCRYPTION_PASSPHRASE", "")) != "" ? trimspace(get_env("TF_ENCRYPTION_PASSPHRASE", "")) : local.sops_derived_passphrase
+  encryption_passphrase = trimspace(get_env("TF_ENCRYPTION_PASSPHRASE", "")) != "" ? trimspace(get_env("TF_ENCRYPTION_PASSPHRASE", "")) : (local.force_encryption ? local.sops_derived_passphrase : "")
 
 
   ## --------------------------------------------------------------------------------------------- ##
@@ -258,8 +261,7 @@ generate "encryption" {
   path      = "encryption.tf"
   if_exists = "overwrite_terragrunt"
   contents = (
-    local.encryption_passphrase != ""
-    ? <<-EOT
+    local.encryption_passphrase != "" ? <<-EOT
       variable "encryption_passphrase" {
         type        = string
         description = "Passphrase for encrypting Terraform state"
