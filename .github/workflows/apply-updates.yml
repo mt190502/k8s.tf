@@ -33,7 +33,7 @@ jobs:
         uses: gruntwork-io/terragrunt-action@v3
         with:
           # renovate: datasource=github-releases depName=gruntwork-io/terragrunt
-          tg_version: "0.93.8"
+          tg_version: "0.99.5"
           # renovate: datasource=github-releases depName=opentofu/opentofu
           tofu_version: "1.10.9"
           
