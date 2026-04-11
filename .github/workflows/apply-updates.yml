@@ -20,7 +20,7 @@ jobs:
       - name: Install required tools
         run: |
           set -euo pipefail
-          apk add --no-cache curl jq make kubectl bash
+          apk add --no-cache curl jq make kubectl bash sudo
 
       - name: Checkout k8s.tf
         uses: actions/checkout@v6
