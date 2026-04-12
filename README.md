@@ -39,11 +39,14 @@ graph TD
       gwprovider["Traefik Gateway"]
     end
     subgraph CORE["Core Services"]
+      atlantis["Atlantis"]
       cert["Cert Manager"]
       monitoring["Kube Prometheus Stack"]
+      dnsutils["DNS Utils"]
       reflector["Reflector"]
       pg["CloudNative-PG"]
       psmdb["PSMDB Operator"]
+      testing["Testing"]
       tso["Tailscale Operator"]
       traefik["Traefik"]
     end
@@ -108,7 +111,7 @@ graph TD
 
   class domain,cloudflare infra;
   class route,gateway,gwprovider,tailscale network;
-  class cert,monitoring,reflector,pg,psmdb,tso,traefik core;
+  class atlantis,cert,monitoring,dnsutils,reflector,pg,psmdb,testing,tso,traefik core;
   class anki,miniflux,nightscout,radicale,redmine,umami app;
   class storage_s3,storage_longhorn storage;
   class m1a,w1a,m2a,w2a,m3a,w3a node;
@@ -192,7 +195,7 @@ All shared configuration lives under `locals` in `prod.values.hcl`. Sensitive va
 | Layer              | Content                                                                                                                                                                  |
 |:------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
 | **Infrastructure** | Talos machine secrets, patch templates, Hetzner servers + firewall, Tailscale devices, Talos bootstrap, kubeconfig, Cloudflare DNS records                              |
-| **Manifests**      | Longhorn, Reflector, CloudNativePG, PSMDB, kube-prometheus-stack, cert-manager, Traefik, Tailscale Operator, plus apps (anki, miniflux, nightscout, radicale, redmine, umami) |
+| **Manifests**      | Longhorn, Reflector, CloudNativePG, PSMDB, kube-prometheus-stack, cert-manager, Atlantis, Traefik, Tailscale Operator, DNS utils, testing, plus apps (anki, miniflux, nightscout, radicale, redmine, umami) |
 
 ---
 
@@ -225,11 +228,13 @@ graph TD
     subgraph MANIFESTS["Stack: manifests"]
       direction TB
       subgraph CORE["Core"]
+        ATL["atlantis"]
         LH["longhorn"]
         RF["reflector"]
         CNPG["cnpg"]
         PSMDB["psmdb-operator"]
         KPS["kube-prometheus-stack"]
+        DNS["dnsutils"]
         TSO["tailscale-operator"]
         CM["cert-manager"]
         TF["traefik"]
@@ -244,8 +249,9 @@ graph TD
         UMA["umami"]
       end
       CP -.->|DNS / API ready| LH
-      LH --> RF & CNPG & PSMDB & KPS & TSO
+      LH --> RF & CNPG & PSMDB & KPS & TSO & DNS
       RF & CNPG & KPS --> CM
+      CM & LH --> ATL
       CM --> TF & TS
       CM & CNPG --> ANKI & MINI & RAD & RED & UMA
       CM & PSMDB --> NS
@@ -271,7 +277,7 @@ graph TD
 
   class INPUTS inputTarget;
   class TP,HP,TSP,TAP,CP infraTarget;
-  class LH,RF,CNPG,PSMDB,KPS,TSO,CM,TF,TS coreTarget;
+  class ATL,LH,RF,CNPG,PSMDB,KPS,DNS,TSO,CM,TF,TS coreTarget;
   class ANKI,MINI,NS,RAD,RED,UMA appTarget;
   class HZ,TSn,CF,TPn,LE,V,S internalTarget;
   class INFRA,MANIFESTS,CORE,APPS inputTarget;
@@ -296,6 +302,8 @@ graph TD
 ├── secrets.hcl                        # Never committed in plain text; encrypted with SOPS
 ├── secrets.hcl.example                # Template
 ├── .sops.yaml                         # SOPS / age rules
+├── atlantis.yaml                      # Repo-level Atlantis project config
+├── CODEOWNERS                         # Required reviewers / code ownership
 ├── Makefile                           # generate, plan, apply, SOPS, packer, lint
 ├── modules/
 │   ├── common.hcl                     # Backend, provider versions, mock outputs, mock_infra, mock_apps
@@ -317,11 +325,13 @@ graph TD
 │   └── manifests/                     # Application modules
 │       ├── terragrunt.stack.hcl       # Defines manifests stack units and dependencies
 │       ├── core/
+│       │   ├── atlantis/              # Atlantis automation server
 │       │   ├── longhorn/              # Distributed block storage
 │       │   ├── reflector/             # Secret/configmap reflection
 │       │   ├── cnpg/                  # CloudNativePG operator
 │       │   ├── psmdb-operator/        # Percona MongoDB operator
 │       │   ├── kube-prometheus-stack/ # Monitoring stack
+│       │   ├── dnsutils/              # Debug DNS utilities
 │       │   ├── tailscale-operator/    # Tailscale Kubernetes operator
 │       │   ├── cert-manager/          # ACME certificates + Gateway
 │       │   ├── traefik/               # Traefik Gateway API provider
