@@ -57,12 +57,23 @@ export STACK_ENV = $(ENV)
 STACK_FILE = $(ENV).stack.hcl
 STACK_DIR  = .terragrunt-stack
 VALUES_FILE = $(ENV).values.hcl
-TG_RUN_ALL = terragrunt --working-dir "$(STACK_DIR)" run --all
-TG_RUN_INFRA = terragrunt --working-dir "$(STACK_DIR)/infra/.terragrunt-stack" run --all
-TG_RUN_MANIFESTS = terragrunt --working-dir "$(MANIFESTS_WORK_DIR)" run --all
+TG_RUN_ALL = env -u TG_FILTER terragrunt --working-dir "$(STACK_DIR)" run --all
+TG_RUN_INFRA = env -u TG_FILTER terragrunt --working-dir "$(STACK_DIR)/infra/.terragrunt-stack" run --all
+TG_FILTER_UNIT = $(patsubst ./%,%,$(strip $(TG_FILTER)))
+ifeq ($(strip $(TG_FILTER_UNIT)),)
+  TG_RUN_MANIFESTS = env -u TG_FILTER terragrunt --working-dir "$(MANIFESTS_WORK_DIR)" run --all
+else
+  TG_RUN_MANIFESTS = env -u TG_FILTER terragrunt --working-dir "$(MANIFESTS_WORK_DIR)/$(TG_FILTER_UNIT)"
+endif
 STACK_NESTED_DIRS = $(STACK_DIR)/.terragrunt-stack $(STACK_DIR)/*/.terragrunt-stack $(STACK_DIR)/*/*/.terragrunt-stack
 STACK_DEEP_NESTED_DIRS = $(STACK_DIR)/.terragrunt-stack $(STACK_DIR)/*/*/.terragrunt-stack
 KUBE_CONTEXT ?= admin@$(shell awk -F'"' '/^[[:space:]]*cluster_name[[:space:]]*=/{print $$2; exit}' $(ENV).values.hcl)
+
+ifneq ($(strip $(ATLANTIS_ATLANTIS_URL)$(ATLANTIS_REPO_CONFIG)),)
+  TG_PLAN_ARGS =
+else
+  TG_PLAN_ARGS = -- -show-sensitive
+endif
 
 ##~ ---------------------------------------------------------------------------- ~##
 #  Mock mode check --- prevents apply/destroy when using mock values               #
@@ -135,8 +146,8 @@ default:
 	echo "   infra-apply        - Apply infra units only                       (ENV=prod|dev, SECRETS=path.hcl)"
 	echo "   infra-destroy      - DANGER: Destroy infra units only             (ENV=prod|dev, SECRETS=path.hcl)"
 	echo " manifests:"
-	echo "   manifests-plan     - Plan manifest units                          (ENV=prod|dev, SECRETS=path.hcl, TARGET=all|apps|infra)"
-	echo "   manifests-apply    - Apply manifest units                         (ENV=prod|dev, SECRETS=path.hcl, TARGET=all|apps|infra)"
+	echo "   manifests-plan     - Plan manifest units                          (ENV=prod|dev, SECRETS=path.hcl, TARGET=all|apps|infra, TG_FILTER=glob)"
+	echo "   manifests-apply    - Apply manifest units                         (ENV=prod|dev, SECRETS=path.hcl, TARGET=all|apps|infra, TG_FILTER=glob)"
 	echo "   manifests-destroy  - DANGER: Destroy manifest units               (ENV=prod|dev, SECRETS=path.hcl, TARGET=all|apps|infra)"
 	echo " all:"
 	echo "   plan               - Plan all units (infra + manifests)           (ENV=prod|dev, SECRETS=path.hcl)"
@@ -156,6 +167,7 @@ default:
 ##~ ---------------------------------------------------------------------------- ~##
 generate:
 	command -v clear >/dev/null 2>&1 && clear || true
+	mkdir -p "$(TF_PLUGIN_CACHE_DIR)"
 	echo "Checking secret file for $(ENV) stack: $(SECRETS)"
 	if [ ! -f "$(SECRETS)" ]; then \
 		echo "Error: Secrets file not found at $(SECRETS). Please create it or specify the correct path using SECRETS=path/to/secrets.hcl"; \
@@ -165,7 +177,7 @@ generate:
 		exit 1; \
 	fi
 	echo "Generating stack: $(ENV) ($(STACK_FILE))"
-	terragrunt stack generate
+	env -u TG_FILTER terragrunt stack generate
 	rm -rf $(STACK_DEEP_NESTED_DIRS)
 
 
@@ -174,7 +186,7 @@ generate:
 ##~ ---------------------------------------------------------------------------- ~##
 infra-plan: generate
 	echo "Planning infra units..."
-	$(TG_RUN_INFRA) plan -- -show-sensitive
+	$(TG_RUN_INFRA) plan $(TG_PLAN_ARGS)
 	rm -rf $(STACK_NESTED_DIRS)
 
 infra-apply: _check_values generate
@@ -189,7 +201,7 @@ infra-destroy: _check_values
 		exit 1; \
 	fi
 	echo "Destroying infra units..."
-	terragrunt stack generate
+	env -u TG_FILTER terragrunt stack generate
 	$(TG_RUN_INFRA) destroy
 	rm -rf $(STACK_NESTED_DIRS)
 	rm -rf $(STACK_DIR) .terraform
@@ -201,7 +213,7 @@ infra-destroy: _check_values
 manifests-plan: generate
 	kubectl cluster-info > /dev/null || { echo "Error: kubeconfig is not valid or cluster is not reachable. Please check your kubeconfig and cluster status."; exit 1; }
 	echo "Planning manifest units..."
-	$(TG_RUN_MANIFESTS) plan -- -show-sensitive
+	$(TG_RUN_MANIFESTS) plan $(TG_PLAN_ARGS)
 	rm -rf $(STACK_NESTED_DIRS)
 
 manifests-apply: _check_values generate
@@ -215,7 +227,7 @@ manifests-destroy: _check_values
 	clear
 	kubectl cluster-info > /dev/null || { echo "Error: kubeconfig is not valid or cluster is not reachable. Please check your kubeconfig and cluster status."; exit 1; }
 	echo "Destroying manifest units..."
-	terragrunt stack generate
+	env -u TG_FILTER terragrunt stack generate
 	$(TG_RUN_MANIFESTS) destroy
 	rm -rf $(STACK_NESTED_DIRS)
 
@@ -224,9 +236,9 @@ manifests-destroy: _check_values
 # Legacy aliases                                                                   #
 ##~ ---------------------------------------------------------------------------- ~##
 plan: generate
-	$(TG_RUN_INFRA) plan -- -show-sensitive
+	$(TG_RUN_INFRA) plan $(TG_PLAN_ARGS)
 	if kubectl config get-contexts "$(KUBE_CONTEXT)" > /dev/null 2>&1 && kubectl --context "$(KUBE_CONTEXT)" cluster-info > /dev/null 2>&1; then \
-		if ! $(TG_RUN_MANIFESTS) plan; then \
+		if ! $(TG_RUN_MANIFESTS) plan $(TG_PLAN_ARGS); then \
 			echo "Warning: manifests plan failed (kubeconfig/provider context issue). Infra plan succeeded."; \
 		fi; \
 	else \
@@ -250,7 +262,7 @@ destroy: _check_values
 		exit 1; \
 	fi
 	echo "Destroying infra units only: $(ENV)"
-	terragrunt stack generate
+	env -u TG_FILTER terragrunt stack generate
 	$(TG_RUN_INFRA) destroy
 	rm -rf $(STACK_NESTED_DIRS)
 	rm -rf $(STACK_DIR) .terraform
