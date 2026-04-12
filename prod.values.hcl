@@ -223,6 +223,16 @@ locals {
       }
     }
     core = {
+      atlantis = {
+        enabled = true
+        config = {
+          aws_s3_region   = "us-east-1"
+          basic_auth      = true
+          github_app_slug = "m-taha-s-atlantis-bot"
+          hostname        = "atlantis"
+          repo_allowlist  = "github.com/mt190502/k8s.tf"
+        }
+      }
       cert_manager = {
         enabled = true
         config = {

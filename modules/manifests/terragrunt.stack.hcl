@@ -31,6 +31,39 @@ locals {
 ## --------------------------------------------------------------------------------------------- ##
 #  Core manifests units                                                                           #
 ## --------------------------------------------------------------------------------------------- ##
+unit "atlantis" {
+  source = "./core/atlantis"
+  path   = "core/atlantis"
+  values = {
+    enabled = try(local.core.atlantis.enabled, false)
+    config = merge(
+      try(local.core.atlantis.config, {}),
+      {
+        domain            = local.rootvars.cluster_url.dns
+        preferred_gateway = local.rootvars.preferred_gateway
+        gateway_name      = try(local.core.traefik.config.gateway_name, "traefik-gateway")
+        gateway_namespace = "traefik-system"
+        port              = 80
+      }
+    )
+    secrets = {
+      app = {
+        aws_access_key         = try(local.secrets.manifests.core.atlantis.aws_access_key, "")
+        aws_s3_bucket          = try(local.secrets.manifests.core.atlantis.aws_s3_bucket, "")
+        aws_s3_endpoint        = try(local.secrets.manifests.core.atlantis.aws_s3_endpoint, "")
+        aws_secret_key         = try(local.secrets.manifests.core.atlantis.aws_secret_key, "")
+        github_app_key         = try(local.secrets.manifests.core.atlantis.github_app_key, "")
+        github_app_id          = try(local.secrets.manifests.core.atlantis.github_app_id, "")
+        github_installation_id = try(local.secrets.manifests.core.atlantis.github_installation_id, "")
+        sops_age_key           = try(local.secrets.manifests.core.atlantis.sops_age_key, "")
+        tf_encryption_pass     = try(local.secrets.manifests.core.atlantis.tf_encryption_pass, "")
+        webhook_secret         = try(local.secrets.manifests.core.atlantis.webhook_secret, "")
+      }
+      basic_auth = try(local.secrets.manifests.core.atlantis.basic_auth, try(local.secrets.manifests.apps.misc.basic_auth, { username = "", password_hash = "" }))
+    }
+  }
+}
+
 unit "cert_manager" {
   source = "./core/cert-manager"
   path   = "core/cert-manager"
