@@ -9,5 +9,14 @@ resource "helm_release" "this" {
   namespace       = kubernetes_namespace_v1.this.metadata[0].name
   wait            = false
   upgrade_install = true
-  depends_on      = [kubernetes_namespace_v1.this]
+  values = [yamlencode({
+    grafana = {
+      persistence = {
+        enabled = true
+        type    = "pvc"
+        size    = "1Gi"
+      }
+    }
+  })]
+  depends_on = [kubernetes_namespace_v1.this]
 }
