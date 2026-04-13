@@ -37,30 +37,24 @@ resource "kubernetes_config_map_v1" "repo_config" {
           plan = {
             steps = concat(local.envs, [{ run = { command = <<-EOC
               set -euo pipefail
-              git fetch origin "$${BASE_BRANCH_NAME}" --depth=1 >/dev/null 2>&1 || true
-              CHANGED_UNIT=$$(git diff --name-only "origin/$${BASE_BRANCH_NAME}...HEAD" | awk -F/ '/^modules\/manifests\/(core|apps)\// {print "./" $$3 "/" $$4}' | sort -u | xargs)
-              if [ -n "$$CHANGED_UNIT" ] && [ "$$(echo "$$CHANGED_UNIT" | wc -w)" -eq 1 ]; then
-                echo "Using TG_FILTER=$$CHANGED_UNIT"
-                make _sops MODE=decrypt TARGET_FILE=secrets.hcl && yes yes | make manifests-plan TG_FILTER="$$CHANGED_UNIT"
-              else
-                echo "No single manifests unit detected; running full manifests plan"
-                make _sops MODE=decrypt TARGET_FILE=secrets.hcl && yes | make manifests-plan
-              fi
+              git fetch origin "$${BASE_BRANCH_NAME}:refs/remotes/origin/$${BASE_BRANCH_NAME}" --depth=1 >/dev/null 2>&1 || true
+              CHANGED_UNIT=$(git diff --name-only "origin/$${BASE_BRANCH_NAME}..HEAD" | awk -F/ '/^modules\/manifests\/(core|apps)\// {print "./" $3 "/" $4}' | sort -u | head -n1)
+              [ -n "$CHANGED_UNIT" ] || { echo "No changed manifests module detected"; exit 1; }
+              echo "Using TG_FILTER=$CHANGED_UNIT"
+              set +o pipefail
+              make _sops MODE=decrypt TARGET_FILE=secrets.hcl && yes | make manifests-plan TG_FILTER="$CHANGED_UNIT"
             EOC
             } }])
           }
           apply = {
             steps = concat(local.envs, [{ run = { command = <<-EOC
               set -euo pipefail
-              git fetch origin "$${BASE_BRANCH_NAME}" --depth=1 >/dev/null 2>&1 || true
-              CHANGED_UNIT=$$(git diff --name-only "origin/$${BASE_BRANCH_NAME}...HEAD" | awk -F/ '/^modules\/manifests\/(core|apps)\// {print "./" $$3 "/" $$4}' | sort -u | xargs)
-              if [ -n "$$CHANGED_UNIT" ] && [ "$$(echo "$$CHANGED_UNIT" | wc -w)" -eq 1 ]; then
-                echo "Using TG_FILTER=$$CHANGED_UNIT"
-                make _sops MODE=decrypt TARGET_FILE=secrets.hcl && yes yes | make manifests-apply TG_FILTER="$$CHANGED_UNIT"
-              else
-                echo "No single manifests unit detected; running full manifests apply"
-                make _sops MODE=decrypt TARGET_FILE=secrets.hcl && yes | make manifests-apply
-              fi
+              git fetch origin "$${BASE_BRANCH_NAME}:refs/remotes/origin/$${BASE_BRANCH_NAME}" --depth=1 >/dev/null 2>&1 || true
+              CHANGED_UNIT=$(git diff --name-only "origin/$${BASE_BRANCH_NAME}..HEAD" | awk -F/ '/^modules\/manifests\/(core|apps)\// {print "./" $3 "/" $4}' | sort -u | head -n1)
+              [ -n "$CHANGED_UNIT" ] || { echo "No changed manifests module detected"; exit 1; }
+              echo "Using TG_FILTER=$CHANGED_UNIT"
+              set +o pipefail
+              make _sops MODE=decrypt TARGET_FILE=secrets.hcl && yes yes | make manifests-apply TG_FILTER="$CHANGED_UNIT"
             EOC
             } }])
           }

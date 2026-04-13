@@ -20,6 +20,7 @@
 #~ Default environment is 'prod', but you can specify 'dev' or others as needed.
 ENV ?= prod
 TARGET ?= all
+TG_NON_INTERACTIVE ?= false
 
 ##~ ---------------------------------------------------------------------------- ~##
 #  Provider plugin cache — shared across all units so tofu init only downloads    #
@@ -213,14 +214,14 @@ infra-destroy: _check_values
 manifests-plan: generate
 	kubectl cluster-info > /dev/null || { echo "Error: kubeconfig is not valid or cluster is not reachable. Please check your kubeconfig and cluster status."; exit 1; }
 	echo "Planning manifest units..."
-	$(TG_RUN_MANIFESTS) plan $(TG_PLAN_ARGS)
+	if [ "${TG_NON_INTERACTIVE}" = "true" ]; then $(TG_RUN_MANIFESTS) plan --non-interactive $(TG_PLAN_ARGS); else $(TG_RUN_MANIFESTS) plan $(TG_PLAN_ARGS); fi
 	rm -rf $(STACK_NESTED_DIRS)
 
 manifests-apply: _check_values generate
 	kubectl cluster-info > /dev/null || { echo "Error: kubeconfig is not valid or cluster is not reachable. Please check your kubeconfig and cluster status."; exit 1; }
 	echo "Applying manifest units..."
 	find . -type f -iname '*public-domains.csv' -delete || true
-	$(TG_RUN_MANIFESTS) apply
+	if [ "${TG_NON_INTERACTIVE}" = "true" ]; then $(TG_RUN_MANIFESTS) apply --non-interactive; else $(TG_RUN_MANIFESTS) apply; fi
 	rm -rf $(STACK_NESTED_DIRS)
 
 manifests-destroy: _check_values
