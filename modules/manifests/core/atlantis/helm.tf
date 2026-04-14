@@ -134,6 +134,7 @@ resource "helm_release" "atlantis" {
       { name = "runtime-secrets", mountPath = "/etc/secrets", readOnly = true }
     ]
     environment = {
+      ATLANTIS_AUTOMERGE   = "true"
       ATLANTIS_REPO_CONFIG = "/etc/atlantis/atlantis.yaml"
       KUBECONFIG           = "/etc/kube/config"
       KUBE_CONFIG_PATH     = "/etc/kube/config"

@@ -38,11 +38,15 @@ resource "kubernetes_config_map_v1" "repo_config" {
             steps = concat(local.envs, [{ run = { command = <<-EOC
               set -euo pipefail
               git fetch origin "$${BASE_BRANCH_NAME}:refs/remotes/origin/$${BASE_BRANCH_NAME}" --depth=1 >/dev/null 2>&1 || true
-              CHANGED_UNIT=$(git diff --name-only "origin/$${BASE_BRANCH_NAME}..HEAD" | awk -F/ '/^modules\/manifests\/(core|apps)\// {print "./" $3 "/" $4}' | sort -u | head -n1)
-              [ -n "$CHANGED_UNIT" ] || { echo "No changed manifests module detected"; exit 1; }
-              echo "Using TG_FILTER=$CHANGED_UNIT"
+              CHANGED_UNITS=$(git diff --name-only "origin/$${BASE_BRANCH_NAME}..HEAD" | awk -F/ '/^modules\/manifests\/(core|apps)\// {print "./" $3 "/" $4}' | sort -u | xargs)
+              [ -n "$CHANGED_UNITS" ] || { echo "No changed manifests module detected"; exit 1; }
+              echo "Changed units: $CHANGED_UNITS"
+              make _sops MODE=decrypt TARGET_FILE=secrets.hcl
               set +o pipefail
-              make _sops MODE=decrypt TARGET_FILE=secrets.hcl && yes | make manifests-plan TG_FILTER="$CHANGED_UNIT"
+              for unit in $CHANGED_UNITS; do
+                echo "Planning $unit"
+                yes | make manifests-plan TG_FILTER="$unit" || true
+              done
             EOC
             } }])
           }
@@ -50,11 +54,15 @@ resource "kubernetes_config_map_v1" "repo_config" {
             steps = concat(local.envs, [{ run = { command = <<-EOC
               set -euo pipefail
               git fetch origin "$${BASE_BRANCH_NAME}:refs/remotes/origin/$${BASE_BRANCH_NAME}" --depth=1 >/dev/null 2>&1 || true
-              CHANGED_UNIT=$(git diff --name-only "origin/$${BASE_BRANCH_NAME}..HEAD" | awk -F/ '/^modules\/manifests\/(core|apps)\// {print "./" $3 "/" $4}' | sort -u | head -n1)
-              [ -n "$CHANGED_UNIT" ] || { echo "No changed manifests module detected"; exit 1; }
-              echo "Using TG_FILTER=$CHANGED_UNIT"
+              CHANGED_UNITS=$(git diff --name-only "origin/$${BASE_BRANCH_NAME}..HEAD" | awk -F/ '/^modules\/manifests\/(core|apps)\// {print "./" $3 "/" $4}' | sort -u | xargs)
+              [ -n "$CHANGED_UNITS" ] || { echo "No changed manifests module detected"; exit 1; }
+              echo "Changed units: $CHANGED_UNITS"
+              make _sops MODE=decrypt TARGET_FILE=secrets.hcl
               set +o pipefail
-              make _sops MODE=decrypt TARGET_FILE=secrets.hcl && yes yes | make manifests-apply TG_FILTER="$CHANGED_UNIT"
+              for unit in $CHANGED_UNITS; do
+                echo "Applying $unit"
+                yes yes | make manifests-apply TG_FILTER="$unit"
+              done
             EOC
             } }])
           }
