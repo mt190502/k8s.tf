@@ -11,7 +11,7 @@ resource "kubernetes_persistent_volume_claim_v1" "this" {
     namespace = kubernetes_namespace_v1.this[0].metadata[0].name
   }
   spec {
-    access_modes = ["ReadWriteOnce"]
+    access_modes = ["ReadWriteMany"]
     resources {
       requests = {
         storage = var.config.storage_size == null ? "1Gi" : var.config.storage_size
