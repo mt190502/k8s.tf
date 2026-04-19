@@ -247,6 +247,10 @@ locals {
       }
       kube_prometheus_stack = {
         enabled = true
+        config = {
+          hostname     = "dash"
+          storage_size = "1Gi"
+        }
       }
       longhorn = {
         enabled = true

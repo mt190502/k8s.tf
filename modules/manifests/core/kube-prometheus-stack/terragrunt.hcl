@@ -4,7 +4,7 @@
 #  Terragrunt wrapper for kube-prometheus-stack monitoring components.                            #
 #  Config is provided from stack values.                                                          #
 #                                                                                                 #
-#  Apply order: longhorn -> [kube-prometheus-stack] -> cert-manager                               #
+#  Apply order: longhorn -> (kps/pre) -> cert-manager -> [kube-prometheus-stack]                  #
 ## ============================================================================================= ##
 include "common" {
   path   = find_in_parent_folders("modules/common.hcl")
@@ -18,6 +18,30 @@ exclude {
 
 terraform {
   source = "./"
+
+  after_hook "public_sites_apply" {
+    commands     = ["apply"]
+    run_on_error = false
+    execute = try(values.enabled, true) ? [
+      "bash",
+      "${get_repo_root()}/.ci/public-domain.sh",
+      "--name", "Grafana",
+      "--domain", "https://${try(values.config.hostname, "dash")}.${try(values.config.domain, "example.com")}",
+      "--statcodes", try(values.config.basic_auth, false) ? "200:401:403" : "200",
+    ] : ["sh", "-c", "true"]
+  }
+
+  after_hook "public_sites_destroy" {
+    commands     = ["destroy"]
+    run_on_error = false
+    execute = [
+      "bash",
+      "${get_repo_root()}/.ci/public-domain.sh",
+      "--enabled", "false",
+      "--name", "Grafana",
+      "--domain", "https://${try(values.config.hostname, "dash")}.${try(values.config.domain, "example.com")}",
+    ]
+  }
 }
 
 generate "providers" {
@@ -51,11 +75,34 @@ generate "versions" {
 ## --------------------------------------------------------------------------------------------- ##
 #  Dependencies -  enforce apply order and wire outputs from upstream modules as inputs.          #
 ## --------------------------------------------------------------------------------------------- ##
+dependency "cert_manager" {
+  config_path = "../cert-manager"
+  mock_outputs = {
+    gateway_name      = "mock-gateway"
+    gateway_namespace = "mock-namespace"
+  }
+  mock_outputs_allowed_terraform_commands = include.common.locals.mock_outputs_allowed_terraform_commands
+  mock_outputs_merge_strategy_with_state  = include.common.locals.mock_outputs_merge_strategy_with_state
+}
+
 dependency "longhorn" {
   config_path  = "../longhorn"
   skip_outputs = true
 }
 
+dependency "pre" {
+  config_path  = "./pre"
+  skip_outputs = true
+}
+
 inputs = {
   enabled = try(values.enabled, true)
+  config = merge(
+    try(values.config, {}),
+    {
+      gateway_name      = dependency.cert_manager.outputs.gateway_name
+      gateway_namespace = dependency.cert_manager.outputs.gateway_namespace
+      preferred_gateway = try(values.config.preferred_gateway, "cilium")
+    }
+  )
 }

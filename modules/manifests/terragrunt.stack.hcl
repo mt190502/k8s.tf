@@ -107,7 +107,11 @@ unit "kube_prometheus_stack" {
   source = "./core/kube-prometheus-stack"
   path   = "core/kube-prometheus-stack"
   values = {
-    enabled       = try(local.core.kube_prometheus_stack.enabled, true)
+    enabled = try(local.core.kube_prometheus_stack.enabled, true)
+    config = merge(
+      try(local.core.kube_prometheus_stack.config, {}),
+      { domain = local.rootvars.cluster_url.dns, preferred_gateway = local.rootvars.preferred_gateway }
+    )
     chart_version = try(local.core.kube_prometheus_stack.version, "")
   }
 }

@@ -5,7 +5,7 @@
 #  Deploys issuer, wildcard cert, and gateway resources.                                          #
 #  Config is provided from stack values.                                                          #
 #                                                                                                 #
-#  Apply order: reflector/cnpg/kps -> [cert-manager]                                              #
+#  Apply order: reflector/cnpg -> (kps/pre) -> [cert-manager] -> kps                              #
 ## ============================================================================================= ##
 include "common" {
   path   = find_in_parent_folders("modules/common.hcl")
@@ -69,8 +69,8 @@ dependency "cnpg" {
   skip_outputs = true
 }
 
-dependency "kube_prometheus_stack" {
-  config_path  = "../kube-prometheus-stack"
+dependency "kube_prometheus_stack_pre" {
+  config_path  = "../kube-prometheus-stack/pre"
   skip_outputs = true
 }
 
