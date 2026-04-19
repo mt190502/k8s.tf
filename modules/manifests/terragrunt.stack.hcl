@@ -185,9 +185,9 @@ unit "tests" {
   values = {
     enabled = try(local.core.tests.enabled, false)
     config = {
-      domain       = local.rootvars.cluster_url.dns
-      gateway_name = try(local.core.tests.config.gateway_name, "")
-      namespace    = try(local.core.tests.config.namespace, "")
+      domain            = local.rootvars.cluster_url.dns
+      gateway_name      = try(local.core.tests.config.gateway_name, "")
+      gateway_namespace = try(local.core.tests.config.gateway_namespace, "")
     }
   }
 }

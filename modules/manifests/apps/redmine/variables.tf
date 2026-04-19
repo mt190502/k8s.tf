@@ -21,8 +21,8 @@
 #      resources         --- Resource requests and limits for the application                     #
 #        limits          --- Resource limits for the application (cpu, memory)                    #
 #        requests        --- Resource requests for the application (cpu, memory)                  #
+#      storage_size      --- Volume size for main application                                     #
 #    secrets             --- Secrets object (map of sensitive values)                             #
-#    storage_size        --- Volume size for main application                                     #
 ## ============================================================================================= ##
 variable "enabled" {
   description = "Enable this module"

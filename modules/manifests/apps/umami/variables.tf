@@ -22,7 +22,6 @@
 #        limits          --- Resource limits for the application (cpu, memory)                    #
 #        requests        --- Resource requests for the application (cpu, memory)                  #
 #    secrets             --- Secrets object (map of sensitive values)                             #
-#    storage_size        --- Volume size for main application                                     #
 ## ============================================================================================= ##
 variable "enabled" {
   description = "Enable this module"
@@ -53,7 +52,6 @@ variable "config" {
       limits   = optional(map(string))
       requests = optional(map(string))
     }))
-    storage_size = optional(string, "1Gi")
   })
   default = {}
 }

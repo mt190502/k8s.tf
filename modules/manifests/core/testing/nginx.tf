@@ -83,7 +83,7 @@ resource "kubernetes_manifest" "nginx_httproute" {
       parentRefs = [
         {
           name      = var.config.gateway_name
-          namespace = var.config.namespace
+          namespace = var.config.gateway_namespace
         }
       ]
       hostnames = [

@@ -91,7 +91,7 @@ resource "kubernetes_manifest" "echoserver_httproute" {
       parentRefs = [
         {
           name      = var.config.gateway_name
-          namespace = var.config.namespace
+          namespace = var.config.gateway_namespace
         }
       ]
       hostnames = [
