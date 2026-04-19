@@ -8,20 +8,19 @@ resource "helm_release" "this" {
   version         = "1.11.1"
   namespace       = kubernetes_namespace_v1.this.metadata[0].name
   upgrade_install = true
-  values = [
-    <<-EOF
-      image:
-        longhorn:
-          instanceManager:
-            tag: v1.11.0-hotfix-1
-          manager:
-            tag: v1.11.0-hotfix-1
-      longhornUI:
-        replicas: 3
-      preUpgradeChecker:
-        jobEnabled: false
-        upgradeVersionCheck: false
-    EOF
+  set = [
+    {
+      name  = "longhornUI.replicas"
+      value = 3
+    },
+    {
+      name  = "preUpgradeChecker.jobEnabled"
+      value = false
+    },
+    {
+      name  = "preUpgradeChecker.upgradeVersionCheck"
+      value = false
+    }
   ]
   depends_on = [kubernetes_namespace_v1.this]
 }
