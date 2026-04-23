@@ -24,7 +24,7 @@ resource "helm_release" "atlantis" {
   namespace  = kubernetes_namespace_v1.this[0].metadata[0].name
   repository = "https://runatlantis.github.io/helm-charts"
   chart      = "atlantis"
-  version    = "6.2.0"
+  version    = "6.3.0"
 
   values = [yamlencode({
     atlantisUrl           = "https://${var.config.hostname}.${var.config.domain}"
