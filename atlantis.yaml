@@ -1,7 +1,7 @@
 version: 3
 automerge: true
 projects:
-  - name: k8s.tf
+  - name: default
     dir: .
     workflow: terragrunt
     autoplan:
