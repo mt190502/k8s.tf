@@ -47,91 +47,91 @@ resource "helm_release" "this" {
   skip_crds       = true
   set = [
     {
-      name = "deployment.kind"
+      name  = "deployment.kind"
       value = "DaemonSet"
     },
     {
-      name = "updateStrategy.type"
+      name  = "updateStrategy.type"
       value = "RollingUpdate"
     },
     {
-      name = "updateStrategy.rollingUpdate.maxUnavailable"
+      name  = "updateStrategy.rollingUpdate.maxUnavailable"
       value = 1
     },
     {
-      name = "updateStrategy.rollingUpdate.maxSurge"
+      name  = "updateStrategy.rollingUpdate.maxSurge"
       value = null
     },
     {
-      name = "updateStrategy.rollingUpdate.priorityClassName"
+      name  = "updateStrategy.rollingUpdate.priorityClassName"
       value = "system-cluster-critical"
     },
     {
-      name = "ingressClass.enabled"
+      name  = "ingressClass.enabled"
       value = true
     },
     {
-      name = "ingressClass.isDefaultClass"
+      name  = "ingressClass.isDefaultClass"
       value = true
     },
     {
-      name = "ingressRoute.dashboard.enabled"
+      name  = "ingressRoute.dashboard.enabled"
       value = false
     },
     {
-      name = "providers.kubernetesGateway.enabled"
+      name  = "providers.kubernetesGateway.enabled"
       value = true
     },
     {
-      name = "providers.kubernetesGateway.experimentalChannel"
+      name  = "providers.kubernetesGateway.experimentalChannel"
       value = true
     },
     {
-      name = "providers.kubernetesCRD.enabled"
+      name  = "providers.kubernetesCRD.enabled"
       value = true
     },
     {
-      name = "providers.kubernetesCRD.allowCrossNamespace"
+      name  = "providers.kubernetesCRD.allowCrossNamespace"
       value = true
     },
     {
-      name = "providers.kubernetesCRD.allowExternalNameServices"
+      name  = "providers.kubernetesCRD.allowExternalNameServices"
       value = true
     },
     {
-      name = "gateway.enabled"
+      name  = "gateway.enabled"
       value = false
     },
     {
-      name = "service.enabled"
+      name  = "service.enabled"
       value = false
     },
     {
-      name = "ports.websecure.port"
+      name  = "ports.websecure.port"
       value = 443
     },
     {
-      name = "ports.websecure.hostPort"
+      name  = "ports.websecure.hostPort"
       value = 443
     },
     {
-      name = "ports.websecure.http.tls.enabled"
+      name  = "ports.websecure.http.tls.enabled"
       value = true
     },
     {
-      name = "resources.limits.cpu"
+      name  = "resources.limits.cpu"
       value = "500m"
     },
     {
-      name = "resources.limits.memory"
+      name  = "resources.limits.memory"
       value = "256Mi"
     },
     {
-      name = "resources.requests.cpu"
+      name  = "resources.requests.cpu"
       value = "100m"
     },
     {
-      name = "resources.requests.memory"
+      name  = "resources.requests.memory"
       value = "64Mi"
     }
   ]
