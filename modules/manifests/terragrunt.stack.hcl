@@ -112,6 +112,11 @@ unit "kube_prometheus_stack" {
       try(local.core.kube_prometheus_stack.config, {}),
       { domain = local.rootvars.cluster_url.dns, preferred_gateway = local.rootvars.preferred_gateway }
     )
+    secrets = {
+      alertmanager = {
+        discord_webhook_url = try(local.secrets.manifests.core.kube_prometheus_stack.alertmanager.discord_webhook_url, "")
+      }
+    }
     chart_version = try(local.core.kube_prometheus_stack.version, "")
   }
 }

@@ -105,4 +105,5 @@ inputs = {
       preferred_gateway = try(values.config.preferred_gateway, "cilium")
     }
   )
+  secrets = try(values.secrets, {})
 }
