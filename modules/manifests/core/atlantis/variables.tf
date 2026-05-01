@@ -17,7 +17,6 @@ variable "config" {
     gateway_namespace = optional(string)
     github_app_slug   = optional(string)
     hostname          = string
-    image_tag         = optional(string, "v0.41.0")
     name              = optional(string, "atlantis")
     port              = optional(number, 80)
     preferred_gateway = optional(string, "cilium")

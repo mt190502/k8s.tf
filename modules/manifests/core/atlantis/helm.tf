@@ -25,74 +25,231 @@ resource "helm_release" "atlantis" {
   repository = "https://runatlantis.github.io/helm-charts"
   chart      = "atlantis"
   version    = "6.3.0"
-
+  set = [
+    {
+      name  = "atlantisUrl"
+      value = "https://${var.config.hostname}.${var.config.domain}"
+    },
+    {
+      name  = "orgAllowlist"
+      value = var.config.repo_allowlist
+    },
+    {
+      name  = "logLevel"
+      value = "info"
+    },
+    {
+      name  = "defaultTFDistribution"
+      value = "opentofu"
+    },
+    {
+      name  = "githubApp.id"
+      value = try(var.secrets.app.github_app_id, "")
+    },
+    {
+      name  = "githubApp.installationId"
+      value = try(var.secrets.app.github_installation_id, "")
+    },
+    {
+      name  = "githubApp.slug"
+      value = var.config.github_app_slug
+    },
+    {
+      name  = "githubApp.key"
+      value = try(var.secrets.app.github_app_key, "")
+    },
+    {
+      name  = "githubApp.secret"
+      value = try(var.secrets.app.webhook_secret, "")
+    },
+    {
+      name  = "replicaCount"
+      value = 1
+    },
+    {
+      name  = "service.type"
+      value = "ClusterIP"
+    },
+    {
+      name  = "service.port"
+      value = 80
+    },
+    {
+      name  = "service.targetPort"
+      value = 4141
+    },
+    {
+      name  = "service.portName"
+      value = "atlantis"
+    },
+    {
+      name  = "ingress.enabled"
+      value = false
+    },
+    {
+      name  = "route.webhook.enabled"
+      value = true
+    },
+    {
+      name  = "route.webhook.apiVersion"
+      value = "gateway.networking.k8s.io/v1"
+    },
+    {
+      name  = "route.webhook.kind"
+      value = "HTTPRoute"
+    },
+    {
+      name  = "route.webhook.hostnames[0]"
+      value = "${var.config.hostname}.${var.config.domain}"
+    },
+    {
+      name  = "route.webhook.parentRefs[0].name"
+      value = var.config.gateway_name
+    },
+    {
+      name  = "route.webhook.parentRefs[0].namespace"
+      value = var.config.gateway_namespace
+    },
+    {
+      name  = "route.webhook.matches[0].path.type"
+      value = "PathPrefix"
+    },
+    {
+      name  = "route.webhook.matches[0].path.value"
+      value = "/events"
+    },
+    {
+      name  = "route.ui.enabled"
+      value = true
+    },
+    {
+      name  = "route.ui.apiVersion"
+      value = "gateway.networking.k8s.io/v1"
+    },
+    {
+      name  = "route.ui.kind"
+      value = "HTTPRoute"
+    },
+    {
+      name  = "route.ui.hostnames[0]"
+      value = "${var.config.hostname}.${var.config.domain}"
+    },
+    {
+      name  = "route.ui.parentRefs[0].name"
+      value = var.config.gateway_name
+    },
+    {
+      name  = "route.ui.parentRefs[0].namespace"
+      value = var.config.gateway_namespace
+    },
+    {
+      name  = "route.ui.matches[0].path.type"
+      value = "PathPrefix"
+    },
+    {
+      name  = "route.ui.matches[0].path.value"
+      value = "/"
+    },
+    {
+      name  = "resources.requests.memory"
+      value = "512Mi"
+    },
+    {
+      name  = "resources.requests.cpu"
+      value = "250m"
+    },
+    {
+      name  = "resources.limits.memory"
+      value = "2Gi"
+    },
+    {
+      name  = "resources.limits.cpu"
+      value = "1"
+    },
+    {
+      name  = "volumeClaim.enabled"
+      value = true
+    },
+    {
+      name  = "volumeClaim.dataStorage"
+      value = "1Gi"
+    },
+    {
+      name  = "volumeClaim.accessModes[0]"
+      value = "ReadWriteOnce"
+    },
+    {
+      name  = "atlantisDataDirectory"
+      value = "/atlantis-data"
+    },
+    {
+      name  = "loadEnvFromSecrets[0]"
+      value = "${var.config.name}-secrets"
+    },
+    {
+      name  = "extraPath"
+      value = "/plugins"
+    },
+    {
+      name  = "initConfig.enabled"
+      value = true
+    },
+    {
+      name  = "initConfig.image"
+      value = "debian:bookworm-slim"
+    },
+    {
+      name  = "initConfig.imagePullPolicy"
+      value = "IfNotPresent"
+    },
+    {
+      name  = "initConfig.sharedDir"
+      value = "/plugins"
+    },
+    {
+      name  = "initConfig.sharedDirReadOnly"
+      value = true
+    },
+    {
+      name  = "initConfig.workDir"
+      value = "/tmp"
+    },
+    {
+      name  = "initConfig.sizeLimit"
+      value = "1Gi"
+    },
+    {
+      name  = "initConfig.containerSecurityContext.runAsUser"
+      value = 0
+    },
+    {
+      name  = "statefulSet.securityContext.fsGroup"
+      value = 1000
+    },
+    {
+      name  = "statefulSet.securityContext.runAsUser"
+      value = 100
+    },
+    {
+      name  = "statefulSet.securityContext.fsGroupChangePolicy"
+      value = "OnRootMismatch"
+    },
+    {
+      name  = "serviceAccount.create"
+      value = true
+    },
+    {
+      name  = "serviceAccount.mount"
+      value = true
+    },
+    {
+      name  = "test.enabled"
+      value = false
+    }
+  ]
   values = [yamlencode({
-    atlantisUrl           = "https://${var.config.hostname}.${var.config.domain}"
-    orgAllowlist          = var.config.repo_allowlist
-    logLevel              = "info"
-    defaultTFDistribution = "opentofu"
-    githubApp = {
-      id             = try(var.secrets.app.github_app_id, "")
-      installationId = try(var.secrets.app.github_installation_id, "")
-      slug           = var.config.github_app_slug
-      key            = try(var.secrets.app.github_app_key, "")
-      secret         = try(var.secrets.app.webhook_secret, "")
-    }
-    image = {
-      repository = "ghcr.io/runatlantis/atlantis"
-      tag        = var.config.image_tag
-      pullPolicy = "Always"
-    }
-    replicaCount = 1
-    service = {
-      type       = "ClusterIP"
-      port       = 80
-      targetPort = 4141
-      portName   = "atlantis"
-    }
-    ingress = {
-      enabled = false
-    }
     route = {
-      webhook = {
-        enabled    = true
-        apiVersion = "gateway.networking.k8s.io/v1"
-        kind       = "HTTPRoute"
-        hostnames  = ["${var.config.hostname}.${var.config.domain}"]
-        parentRefs = [
-          {
-            name      = var.config.gateway_name
-            namespace = var.config.gateway_namespace
-          }
-        ]
-        matches = [
-          {
-            path = {
-              type  = "PathPrefix"
-              value = "/events"
-            }
-          }
-        ]
-      }
       ui = {
-        enabled    = true
-        apiVersion = "gateway.networking.k8s.io/v1"
-        kind       = "HTTPRoute"
-        hostnames  = ["${var.config.hostname}.${var.config.domain}"]
-        parentRefs = [
-          {
-            name      = var.config.gateway_name
-            namespace = var.config.gateway_namespace
-          }
-        ]
-        matches = [
-          {
-            path = {
-              type  = "PathPrefix"
-              value = "/"
-            }
-          }
-        ]
         filters = var.config.basic_auth && var.config.preferred_gateway == "traefik" ? [
           {
             type = "ExtensionRef"
@@ -105,23 +262,6 @@ resource "helm_release" "atlantis" {
         ] : []
       }
     }
-    resources = {
-      requests = {
-        memory = "512Mi"
-        cpu    = "250m"
-      }
-      limits = {
-        memory = "2Gi"
-        cpu    = "1"
-      }
-    }
-    volumeClaim = {
-      enabled     = true
-      dataStorage = "1Gi"
-      accessModes = ["ReadWriteOnce"]
-    }
-    atlantisDataDirectory = "/atlantis-data"
-    loadEnvFromSecrets    = ["${var.config.name}-secrets"]
     extraVolumes = [
       { name = "repo-config", configMap = { name = "${var.config.name}-repo-config" } },
       { name = "kubeconfig", configMap = { name = "${var.config.name}-kubeconfig" } },
@@ -142,18 +282,7 @@ resource "helm_release" "atlantis" {
       TF_BACKEND_TYPE      = "s3"
       SOPS_AGE_KEY_FILE    = "/etc/secrets/sops_age_key"
     }
-    extraPath = "/plugins"
     initConfig = {
-      enabled           = true
-      image             = "debian:bookworm-slim"
-      imagePullPolicy   = "IfNotPresent"
-      sharedDir         = "/plugins"
-      sharedDirReadOnly = true
-      workDir           = "/tmp"
-      sizeLimit         = "1Gi"
-      containerSecurityContext = {
-        runAsUser = 0
-      }
       script = <<-SCRIPT
         #!/bin/bash
         set -euxo pipefail
@@ -184,20 +313,6 @@ resource "helm_release" "atlantis" {
         wget "https://github.com/getsops/sops/releases/download/v$${SOPS_VERSION}/sops-v$${SOPS_VERSION}.linux.amd64" -O "$${INIT_SHARED_DIR}/sops"
         chmod 755 "$${INIT_SHARED_DIR}/sops"
       SCRIPT
-    }
-    statefulSet = {
-      securityContext = {
-        fsGroup             = 1000
-        runAsUser           = 100
-        fsGroupChangePolicy = "OnRootMismatch"
-      }
-    }
-    serviceAccount = {
-      create = true
-      mount  = true
-    }
-    test = {
-      enabled = false
     }
   })]
   depends_on = [

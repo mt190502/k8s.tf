@@ -68,9 +68,6 @@ resource "helm_release" "this" {
     {
       alertmanager = {
         config = {
-          global = {
-            resolve_timeout = "5m"
-          }
           route = {
             routes = [{
               receiver = "null"
@@ -99,9 +96,6 @@ resource "helm_release" "this" {
     (try(var.secrets.alertmanager.discord_webhook_url, "") != "") ? {
       alertmanager = {
         config = {
-          global = {
-            resolve_timeout = "5m"
-          }
           route = {
             routes = [
               {
