@@ -7,7 +7,7 @@ pre-commit:
       - "*/secret.tf"
       - "*.example"
     run: |
-      for f in {all_files}; do
+      for f in {staged_files}; do
         if ! sops filestatus "$f" | grep -q "true"; then
           echo "File $f is not encrypted with SOPS"
           exit 1
