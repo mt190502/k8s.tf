@@ -31,6 +31,14 @@ locals {
 ## --------------------------------------------------------------------------------------------- ##
 #  Core manifests units                                                                           #
 ## --------------------------------------------------------------------------------------------- ##
+unit "alloy" {
+  source = "./core/alloy"
+  path   = "core/alloy"
+  values = {
+    enabled = try(local.core.kube_prometheus_stack.enabled, true)
+  }
+}
+
 unit "atlantis" {
   source = "./core/atlantis"
   path   = "core/atlantis"
@@ -118,6 +126,16 @@ unit "kube_prometheus_stack" {
       }
     }
     chart_version = try(local.core.kube_prometheus_stack.version, "")
+  }
+}
+
+unit "loki" {
+  source = "./core/loki"
+  path   = "core/loki"
+  values = {
+    enabled = try(local.core.kube_prometheus_stack.enabled, true)
+    config  = try(local.core.loki.config, {})
+    secrets = try(local.secrets.manifests.core.loki, {})
   }
 }
 

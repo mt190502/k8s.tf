@@ -252,6 +252,14 @@ locals {
           storage_size = "1Gi"
         }
       }
+      loki = {
+        config = {
+          s3               = "loki"
+          endpoint         = "http://100.102.30.2:3900"
+          region           = "us-east-1"
+          force_path_style = true
+        }
+      }
       longhorn = {
         enabled = true
       }
