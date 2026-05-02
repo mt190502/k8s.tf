@@ -59,6 +59,7 @@ data "talos_machine_configuration" "nodes" {
         CERT_SANS            = values(var.config.cluster_url)
         KUBELET_NODEIP_CIDRS = local.cluster_cidrs
         TAILSCALE            = try(var.rootvars.tailscale.enabled, false) ? "true" : "false"
+        HOSTNAME             = each.value.name
       }),
       templatefile("../templates/cni.tmpl", {
         DNS_DOMAIN    = local.cluster_domain

@@ -1,4 +1,9 @@
 ---
+apiVersion: v1alpha1
+kind: HostnameConfig
+hostname: ${HOSTNAME}
+auto: off
+---
 machine:
   certSANs:
   %{~ for san in CERT_SANS ~}
