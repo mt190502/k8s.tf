@@ -2,19 +2,19 @@
 #  modules/manifests/core/atlantis/main.tf                                                        #
 ## ============================================================================================= ##
 locals {
-  # renovate datasource=github-releases depName=kubernetes/kubernetes
+  # renovate: datasource=github-releases depName=kubernetes/kubernetes
   kubectl_version = "v1.34.1"
 
-  # renovate datasource=github-releases depName=jqlang/jq
+  # renovate: datasource=github-releases depName=jqlang/jq
   jq_version = "1.8.1"
 
-  # renovate datasource=github-releases depName=gruntwork-io/terragrunt
+  # renovate: datasource=github-releases depName=gruntwork-io/terragrunt
   terragrunt_version = "v0.93.8"
 
-  # renovate datasource=github-releases depName=opentofu/opentofu
+  # renovate: datasource=github-releases depName=opentofu/opentofu
   opentofu_version = "1.10.9"
 
-  # renovate datasource=github-releases depName=getsops/sops
+  # renovate: datasource=github-releases depName=getsops/sops
   sops_version = "3.12.1"
 }
 

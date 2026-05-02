@@ -12,13 +12,13 @@
   "branchConcurrentLimit": 10,
   "rebaseWhen": "conflicted",
   "labels": ["dependencies"],
-  "enabledManagers": [ "custom.regex",  "terraform"],
+  "enabledManagers": ["custom.regex", "terraform"],
   "ignorePaths": ["modules/manifests/apps/template/**"],
   "customManagers": [
     {
       "customType": "regex",
-      "description": "Update versions in prod.values.hcl with renovate annotations",
-      "managerFilePatterns": ["prod.values.hcl"],
+      "description": "Update versions in prod.values.hcl and atlantis/helm.tf with renovate annotations",
+      "managerFilePatterns": ["prod.values.hcl", "modules/manifests/core/atlantis/helm.tf"],
       "matchStrings": [
         "#\\s*renovate:\\s*datasource=(?<datasource>.*?)\\s+depName=(?<depName>.*?)(\\s+registryUrl=(?<registryUrl>.*?))?\\s+(?:version|talos|kubernetes|cilium|metrics_server|gateway_api)\\s*=\\s*\"(?<currentValue>[^\"]+)\""
       ]
@@ -31,24 +31,6 @@
         "(?<depName>\\w+/\\w+)\\s*=\\s*\\{[^}]*version\\s*=\\s*\"(?<currentValue>[^\"]+)\""
       ],
       "datasourceTemplate": "terraform-provider"
-    },
-    {
-      "customType": "regex",
-      "description": "Update Docker images in Terraform files",
-      "managerFilePatterns": ["modules/**/*.tf"],
-      "matchStrings": [
-        "image\\s*=\\s*\"(?<depName>[^:]+):(?<currentValue>[^\"]+)\""
-      ],
-      "datasourceTemplate": "docker"
-    },
-    {
-      "customType": "regex",
-      "description": "Update Helm chart versions in helm.tf files",
-      "managerFilePatterns": ["modules/**/helm.tf"],
-      "matchStrings": [
-        "repository\\s*=\\s*\"(?<registryUrl>[^\"]+)\"[\\s\\S]*?chart\\s*=\\s*\"(?<depName>[^\"]+)\"[\\s\\S]*?version\\s*=\\s*\"(?<currentValue>[^\"]+)\""
-      ],
-      "datasourceTemplate": "helm"
     }
   ],
   "packageRules": [
