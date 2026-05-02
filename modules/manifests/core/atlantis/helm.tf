@@ -55,14 +55,6 @@ resource "helm_release" "atlantis" {
       value = var.config.github_app_slug
     },
     {
-      name  = "githubApp.key"
-      value = try(var.secrets.app.github_app_key, "")
-    },
-    {
-      name  = "githubApp.secret"
-      value = try(var.secrets.app.webhook_secret, "")
-    },
-    {
       name  = "replicaCount"
       value = 1
     },
@@ -245,6 +237,16 @@ resource "helm_release" "atlantis" {
     {
       name  = "test.enabled"
       value = false
+    }
+  ]
+  set_sensitive = [
+    {
+      name  = "githubApp.key"
+      value = try(var.secrets.app.github_app_key, "")
+    },
+    {
+      name  = "githubApp.secret"
+      value = try(var.secrets.app.webhook_secret, "")
     }
   ]
   values = [yamlencode({
