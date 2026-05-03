@@ -20,6 +20,10 @@ resource "helm_release" "this" {
       value = "false"
     },
     {
+      name  = "defaultRules.rules.kubeProxy"
+      value = "false"
+    },
+    {
       name  = "grafana.persistence.enabled"
       value = "true"
     },
@@ -62,6 +66,10 @@ resource "helm_release" "this" {
     {
       name  = "grafana.route.main.matches[0].path.value"
       value = "/"
+    },
+    {
+      name = "kubeProxy.enabled"
+      value = "false"
     }
   ]
   values = [yamlencode(merge(
