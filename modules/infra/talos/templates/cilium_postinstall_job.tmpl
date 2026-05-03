@@ -99,8 +99,8 @@ cluster:
                       --set bpf.hostLegacyRouting=true \
                       --set cgroup.autoMount.enabled=false \
                       --set cgroup.hostRoot=/sys/fs/cgroup \
-                      --set encryption.enabled=true \
-                      --set encryption.type=wireguard \
+                      --set encryption.enabled=false \
+                      --set encryption.type=disabled \
                       --set-string extraConfig.node-encryption-opt-out-labels="do-not-encrypt=true" \
                       %{~ if PREFERRED_GATEWAY == "cilium" ~}
                       --set envoy.enabled=true \
@@ -125,6 +125,7 @@ cluster:
                       --set k8sServiceHost=$KUBERNETES_SERVICE_HOST \
                       --set k8sServicePort=$KUBERNETES_SERVICE_PORT \
                       --set kubeProxyReplacement=true \
+                      --set MTU=1450 \
                       --set socketLB.enabled=true \
                       --set socketLB.hostNamespaceOnly=true \
                       --set operator.replicas=${OPERATOR_REPLICAS} \
