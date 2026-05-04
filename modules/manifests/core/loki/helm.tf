@@ -166,6 +166,10 @@ resource "helm_release" "this" {
       value = "true"
     },
     {
+      name = "singleBinary.persistence.size"
+      value = "2Gi"
+    },
+    {
       name  = "singleBinary.replicas",
       value = "1"
     },
