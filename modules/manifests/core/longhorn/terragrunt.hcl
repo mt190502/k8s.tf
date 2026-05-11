@@ -50,4 +50,5 @@ generate "versions" {
 
 inputs = {
   enabled = try(values.enabled, true)
+  secrets = try(values.secrets, {})
 }

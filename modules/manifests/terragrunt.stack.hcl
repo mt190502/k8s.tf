@@ -86,8 +86,7 @@ unit "cert_manager" {
     secrets = {
       api_token = try(local.secrets.infra.cloudflare.api_token, "")
     }
-    chart_version = try(local.core.cert_manager.version, "")
-    rootvars      = local.rootvars
+    rootvars = local.rootvars
   }
 }
 
@@ -99,7 +98,6 @@ unit "cnpg" {
     config = {
       controlplane_count = try(length([for node in local.infra.kubernetes.nodes : node if node.role == "controlplane"]), 1)
     }
-    chart_version = try(local.core.cnpg.version, "")
   }
 }
 
@@ -125,7 +123,6 @@ unit "kube_prometheus_stack" {
         discord_webhook_url = try(local.secrets.manifests.core.kube_prometheus_stack.alertmanager.discord_webhook_url, "")
       }
     }
-    chart_version = try(local.core.kube_prometheus_stack.version, "")
   }
 }
 
@@ -143,8 +140,8 @@ unit "longhorn" {
   source = "./core/longhorn"
   path   = "core/longhorn"
   values = {
-    enabled       = try(local.core.longhorn.enabled, true)
-    chart_version = try(local.core.longhorn.version, "")
+    enabled = try(local.core.longhorn.enabled, true)
+    secrets = try(local.secrets.manifests.core.longhorn, {})
   }
 }
 
@@ -152,8 +149,7 @@ unit "psmdb_operator" {
   source = "./core/psmdb-operator"
   path   = "core/psmdb-operator"
   values = {
-    enabled       = try(local.core.psmdb_operator.enabled, true)
-    chart_version = try(local.core.psmdb_operator.version, "")
+    enabled = try(local.core.psmdb_operator.enabled, true)
   }
 }
 
@@ -165,7 +161,6 @@ unit "reflector" {
     config = {
       wildcard_reflection_namespaces = try(local.core.reflector.config.wildcard_reflection_namespaces, [])
     }
-    chart_version = try(local.core.reflector.version, "")
   }
 }
 
@@ -185,7 +180,6 @@ unit "tailscale_operator" {
       client_id     = try(local.secrets.infra.tailscale.client_id, "")
       client_secret = try(local.secrets.infra.tailscale.client_secret, "")
     }
-    chart_version = try(local.core.tailscale_operator.version, "")
   }
 }
 

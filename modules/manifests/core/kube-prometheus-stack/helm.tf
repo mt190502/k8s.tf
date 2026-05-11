@@ -68,7 +68,7 @@ resource "helm_release" "this" {
       value = "/"
     },
     {
-      name = "kubeProxy.enabled"
+      name  = "kubeProxy.enabled"
       value = "false"
     }
   ]
