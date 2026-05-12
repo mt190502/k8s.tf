@@ -58,6 +58,14 @@ resource "helm_release" "atlantis" {
       name  = "replicaCount"
       value = 1
     },
+    # Atlantis may apply changes to its own Helm release. With a single replica,
+    # a StatefulSet rolling update will terminate the running pod and interrupt
+    # the in-flight `atlantis apply`. OnDelete keeps the pod running; restart it
+    # manually after the apply to pick up new image/config.
+    {
+      name  = "statefulSet.updateStrategy.type"
+      value = "OnDelete"
+    },
     {
       name  = "service.type"
       value = "ClusterIP"
