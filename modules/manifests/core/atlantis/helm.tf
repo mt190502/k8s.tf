@@ -3,19 +3,19 @@
 ## ============================================================================================= ##
 locals {
   # renovate: datasource=github-releases depName=kubernetes/kubernetes
-  kubectl_version = "v1.36.0"
+  kubectl_version = "v1.36.1"
 
   # renovate: datasource=github-releases depName=jqlang/jq
   jq_version = "1.8.1"
 
   # renovate: datasource=github-releases depName=gruntwork-io/terragrunt
-  terragrunt_version = "v1.0.3"
+  terragrunt_version = "v1.0.4"
 
   # renovate: datasource=github-releases depName=opentofu/opentofu
-  opentofu_version = "1.11.6"
+  opentofu_version = "1.11.7"
 
   # renovate: datasource=github-releases depName=getsops/sops
-  sops_version = "3.12.2"
+  sops_version = "3.13.0"
 }
 
 resource "helm_release" "atlantis" {
