@@ -132,8 +132,8 @@ locals {
     versions = {
       # renovate: datasource=github-releases depName=siderolabs/talos
       talos = "v1.13.2"
-      # renovate: datasource=github-releases depName=kubernetes/kubernetes
-      kubernetes = "v1.36.1"
+      # renovate: datasource=github-releases depName=siderolabs/kubelet
+      kubernetes = "v1.36.0"
       # renovate: datasource=github-releases depName=cilium/cilium
       cilium = "1.19.3"
       # renovate: datasource=github-releases depName=kubernetes-sigs/metrics-server
