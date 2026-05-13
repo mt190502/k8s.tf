@@ -6,7 +6,12 @@
     ":ignoreModulesAndTests"
   ],
   "timezone": "Europe/Istanbul",
-  "schedule": ["* 0,12 * * *"],
+  "schedule": [
+    "after 12:00am and before 12:05am",
+    "after 6:00am and before 6:05am",
+    "after 12:00pm and before 12:05pm",
+    "after 6:00pm and before 6:05pm"
+  ],
   "prHourlyLimit": 0,
   "prConcurrentLimit": 5,
   "branchConcurrentLimit": 10,
@@ -35,56 +40,37 @@
   ],
   "packageRules": [
     {
-      "description": "Group infrastructure versions (Talos, Kubernetes, Cilium, Metrics Server, Gateway API)",
-      "matchPackageNames": [
-        "siderolabs/talos",
-        "kubernetes/kubernetes",
-        "cilium/cilium",
-        "kubernetes-sigs/metrics-server",
-        "kubernetes-sigs/gateway-api",
-        "jqlang/jq",
-        "gruntwork-io/terragrunt",
-        "opentofu/opentofu",
-        "getsops/sops"
+      "description": "Core Infrastructure (modules/infra)",
+      "matchManagers": ["custom.regex", "terraform"],
+      "matchFileNames": [
+        "modules/infra/**",
+        "prod.values.hcl"
       ],
-      "groupName": "infrastructure",
-      "groupSlug": "infra-versions"
+      "groupName": "core-infrastructure",
+      "groupSlug": "core-infrastructure",
+      "separateMajorMinor": false,
+      "separateMinorPatch": false,
+      "separateMultipleMajor": false
     },
     {
-      "description": "Group core Helm charts",
-      "matchDatasources": ["helm"],
-      "matchPackageNames": [
-        "atlantis",
-        "cert-manager",
-        "cloudnative-pg",
-        "kube-prometheus-stack",
-        "longhorn",
-        "psmdb-operator",
-        "reflector",
-        "tailscale-operator"
-      ],
-      "groupName": "core-helm-charts",
-      "groupSlug": "core-charts"
+      "description": "Infra Manifests (modules/manifests/core)",
+      "matchManagers": ["custom.regex", "terraform"],
+      "matchFileNames": ["modules/manifests/core/**"],
+      "groupName": "infra-manifests",
+      "groupSlug": "infra-manifests",
+      "separateMajorMinor": false,
+      "separateMinorPatch": false,
+      "separateMultipleMajor": false
     },
     {
-      "description": "Group application Docker images",
-      "matchDatasources": ["docker"],
-      "matchPackageNames": [
-        "ghcr.io/mt190502/docker-anki-sync-server",
-        "miniflux/miniflux",
-        "nightscout/cgm-remote-monitor",
-        "tomsquest/docker-radicale",
-        "redmine",
-        "ghcr.io/umami-software/umami"
-      ],
-      "groupName": "app-images",
-      "groupSlug": "app-docker"
-    },
-    {
-      "description": "Group Terraform providers",
-      "matchDatasources": ["terraform-provider"],
-      "groupName": "terraform-providers",
-      "groupSlug": "tf-providers"
+      "description": "Apps (modules/manifests/apps)",
+      "matchManagers": ["custom.regex", "terraform"],
+      "matchFileNames": ["modules/manifests/apps/**"],
+      "groupName": "apps",
+      "groupSlug": "apps",
+      "separateMajorMinor": false,
+      "separateMinorPatch": false,
+      "separateMultipleMajor": false
     },
     {
       "description": "Automerge patch updates for Docker images",
