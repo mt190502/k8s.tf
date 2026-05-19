@@ -27,7 +27,7 @@ terraform {
       "--name", "Mozilla Syncstorage",
       "--domain", "https://${try(values.config.hostname, "ffsync")}.${try(values.config.domain, "example.com")}",
       "--path", "/__heartbeat__",
-      "--statcodes", try(values.config.basic_auth, false) ? "200:401:403" : "405",
+      "--statcodes", try(values.config.basic_auth, false) ? "200:401:403" : "200",
     ] : ["sh", "-c", "true"]
   }
 
