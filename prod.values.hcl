@@ -154,6 +154,16 @@ locals {
           hostname = "anki"
         }
       }
+      syncstorage_rs = {
+        enabled = true
+        config = {
+          hostname = "ffsync"
+          pg = {
+            replicas     = 1
+            storage_size = "1Gi"
+          }
+        }
+      }
       miniflux = {
         enabled = true
         config = {

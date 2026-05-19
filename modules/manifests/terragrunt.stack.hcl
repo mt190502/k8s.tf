@@ -306,6 +306,26 @@ unit "redmine" {
   }
 }
 
+unit "syncstorage_rs" {
+  source = "./apps/syncstorage-rs"
+  path   = "apps/syncstorage-rs"
+  values = {
+    enabled = try(local.apps.syncstorage_rs.enabled, false)
+    config = merge(
+      try(local.apps.syncstorage_rs.config, {}),
+      { domain = local.rootvars.cluster_url.dns, preferred_gateway = local.rootvars.preferred_gateway }
+    )
+    secrets = {
+      app = {
+        master_secret = try(local.secrets.manifests.apps.syncstorage_rs.app.master_secret, "")
+      }
+      pg = {
+        password = try(local.secrets.manifests.apps.syncstorage_rs.pg.password, "")
+      }
+    }
+  }
+}
+
 unit "umami" {
   source = "./apps/umami"
   path   = "apps/umami"
