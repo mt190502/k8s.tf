@@ -5,7 +5,7 @@ resource "helm_release" "this" {
   name            = "tailscale-operator"
   repository      = "https://pkgs.tailscale.com/helmcharts"
   chart           = "tailscale-operator"
-  version         = "1.96.5"
+  version         = "1.98.3"
   namespace       = kubernetes_namespace_v1.this.metadata[0].name
   upgrade_install = true
   set = [
