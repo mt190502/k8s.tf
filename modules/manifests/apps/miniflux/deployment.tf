@@ -43,7 +43,7 @@ resource "kubernetes_deployment_v1" "this" {
         }
         container {
           name  = var.config.name
-          image = "miniflux/miniflux:2.2.19"
+          image = "miniflux/miniflux:2.3.0"
           port {
             container_port = var.config.port
           }
