@@ -9,13 +9,13 @@ locals {
   jq_version = "1.8.1"
 
   # renovate: datasource=github-releases depName=gruntwork-io/terragrunt
-  terragrunt_version = "v1.0.4"
+  terragrunt_version = "v1.0.5"
 
   # renovate: datasource=github-releases depName=opentofu/opentofu
-  opentofu_version = "1.11.7"
+  opentofu_version = "1.12.0"
 
   # renovate: datasource=github-releases depName=getsops/sops
-  sops_version = "3.13.0"
+  sops_version = "3.13.1"
 }
 
 resource "helm_release" "atlantis" {
