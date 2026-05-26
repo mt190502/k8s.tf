@@ -248,7 +248,6 @@ unit "miniflux" {
         password = try(local.secrets.manifests.apps.miniflux.pg.password, "")
       }
     }
-    image_version = try(local.apps.miniflux.version, "")
   }
 }
 
@@ -266,7 +265,6 @@ unit "nightscout" {
         api_secret = try(local.secrets.manifests.apps.nightscout.app.api_secret, "")
       }
     }
-    image_version = try(local.apps.nightscout.version, "")
   }
 }
 
@@ -283,7 +281,6 @@ unit "radicale" {
       username = try(local.secrets.manifests.apps.radicale.username, "")
       password = try(local.secrets.manifests.apps.radicale.password, "")
     }
-    image_version = try(local.apps.radicale.version, "")
   }
 }
 
@@ -302,7 +299,6 @@ unit "redmine" {
         password = try(local.secrets.manifests.apps.redmine.pg.password, "")
       }
     }
-    image_version = try(local.apps.redmine.version, "")
   }
 }
 
@@ -344,6 +340,5 @@ unit "umami" {
         password = try(local.secrets.manifests.apps.umami.pg.password, "")
       }
     }
-    image_version = try(local.apps.umami.version, "")
   }
 }

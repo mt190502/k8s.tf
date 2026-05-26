@@ -36,7 +36,7 @@ export TF_PLUGIN_CACHE_DIR = $(PROVIDER_CACHE_DIR)
 #  Override:                                                                       #
 #    make infra-plan SECRETS=/path/to/other.hcl                                    #
 ##~ ---------------------------------------------------------------------------- ~##
-SECRETS ?= $(PWD)/secrets.hcl
+SECRETS ?= $(PWD)/$(ENV).secrets.hcl
 export TERRAGRUNT_SECRETS = $(SECRETS)
 
 ##~ ---------------------------------------------------------------------------- ~##
@@ -125,12 +125,12 @@ _sops:
 	fi
 
 decrypt:
-	for file in $$(find . -type f \( -name "secrets.hcl" -o -name "secret.hcl" \) ! -name "*.example"); do \
+	for file in $$(find . -type f \( -name "*secrets.hcl" -o -name "*secret.hcl" \) ! -name "*.example"); do \
 		$(MAKE) _sops MODE=decrypt TARGET_FILE="$$file"; \
 	done
 
 encrypt:
-	for file in $$(find . -type f \( -name "secrets.hcl" -o -name "secret.hcl" \) ! -name "*.example"); do \
+	for file in $$(find . -type f \( -name "*secrets.hcl" -o -name "*secret.hcl" \) ! -name "*.example"); do \
 		$(MAKE) _sops MODE=encrypt TARGET_FILE="$$file"; \
 	done
 
@@ -287,11 +287,12 @@ clean:
 ##~ ---------------------------------------------------------------------------- ~##
 build:
 	command -v clear >/dev/null 2>&1 && clear || true
-	$(MAKE) _sops MODE=decrypt TARGET_FILE=packer/secret.hcl
+	$(MAKE) _sops MODE=decrypt TARGET_FILE=packer/$(ENV).secret.hcl
 	echo "Building Packer images..."
-	cd packer && packer build -var-file=secret.hcl -var-file=prod.pkrvars.hcl . || true
+	cd packer && packer init . || true
+	cd packer && packer build -var-file=$(ENV).secret.hcl -var-file=$(ENV).pkrvars.hcl . || true
 	echo "Packer build completed successfully!"
-	$(MAKE) _sops MODE=encrypt TARGET_FILE=packer/secret.hcl
+	$(MAKE) _sops MODE=encrypt TARGET_FILE=packer/$(ENV).secret.hcl
 
 
 ##~ ---------------------------------------------------------------------------- ~##
