@@ -154,6 +154,12 @@ locals {
           hostname = "anki"
         }
       }
+      gotify = {
+        enabled = true
+        config = {
+          hostname = "ntfy"
+        }
+      }
       syncstorage_rs = {
         enabled = true
         config = {
@@ -258,8 +264,9 @@ locals {
       kube_prometheus_stack = {
         enabled = true
         config = {
-          hostname     = "dash"
-          storage_size = "1Gi"
+          gotify_enabled = true
+          hostname       = "dash"
+          storage_size   = "1Gi"
         }
       }
       loki = {

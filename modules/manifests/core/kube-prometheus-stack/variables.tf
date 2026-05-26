@@ -7,6 +7,7 @@
 #      domain            --- Base domain for HTTPRoute hostname                                   #
 #      gateway_name      --- Gateway name (from cert-manager)                                     #
 #      gateway_namespace --- Gateway namespace (from cert-manager)                                #
+#      gotify_enabled    --- Enable Alertmanager -> Gotify webhook receiver                        #
 #      hostname          --- HTTPRoute hostname subdomain (e.g., "app" -> app.{domain})           #
 #      preferred_gateway --- Preferred Gateway for basic auth (e.g., "traefik")                   #
 #      storage_size      --- Volume size for main application (e.g., "1Gi")                       #
@@ -24,6 +25,7 @@ variable "config" {
     domain            = optional(string)
     gateway_name      = optional(string)
     gateway_namespace = optional(string)
+    gotify_enabled    = optional(bool, false)
     hostname          = optional(string)
     preferred_gateway = optional(string, "cilium")
     storage_size      = optional(string, "1Gi")

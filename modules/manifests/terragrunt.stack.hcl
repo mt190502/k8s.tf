@@ -226,7 +226,26 @@ unit "anki" {
         accounts = try(local.secrets.manifests.apps.anki.app.accounts, [])
       }
     }
-    image_version = try(local.apps.anki.version, "")
+  }
+}
+
+unit "gotify" {
+  source = "./apps/gotify"
+  path   = "apps/gotify"
+  values = {
+    enabled = try(local.apps.gotify.enabled, false)
+    config = merge(
+      try(local.apps.gotify.config, {}),
+      { domain = local.rootvars.cluster_url.dns, preferred_gateway = local.rootvars.preferred_gateway }
+    )
+    secrets = {
+      app = {
+        password = try(local.secrets.manifests.apps.gotify.app.password, "")
+      }
+      bridge = {
+        gotify_token = try(local.secrets.manifests.apps.gotify.bridge.gotify_token, "")
+      }
+    }
   }
 }
 
