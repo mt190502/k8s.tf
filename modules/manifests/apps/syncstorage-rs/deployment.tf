@@ -113,7 +113,7 @@ resource "kubernetes_deployment_v1" "this" {
           }
           env {
             name  = "SYNC_HUMAN_LOGS"
-            value = "true"
+            value = "false"
           }
           env {
             name  = "RUST_LOG"

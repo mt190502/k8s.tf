@@ -16,6 +16,10 @@ resource "helm_release" "this" {
       value = "5m"
     },
     {
+      name  = "alertmanager.alertmanagerSpec.logFormat"
+      value = "json"
+    },
+    {
       name  = "crds.enabled"
       value = "false"
     },
@@ -70,6 +74,10 @@ resource "helm_release" "this" {
     {
       name  = "kubeProxy.enabled"
       value = "false"
+    },
+    {
+      name  = "prometheus.prometheusSpec.logFormat"
+      value = "json"
     }
   ]
   values = [yamlencode({

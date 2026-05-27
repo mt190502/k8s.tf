@@ -13,7 +13,8 @@ resource "helm_release" "this" {
       configMap = {
         content = <<-EOT
           logging {
-            level = "info"
+            level  = "info"
+            format = "json"
           }
 
           loki.write "default" {

@@ -112,6 +112,10 @@ resource "kubernetes_deployment_v1" "this" {
             name  = "BASE_URL"
             value = "https://${var.config.hostname}.${var.config.domain}"
           }
+          env {
+            name  = "LOG_FORMAT"
+            value = "json"
+          }
           dynamic "env" {
             for_each = var.config.env != null ? var.config.env : {}
             content {
