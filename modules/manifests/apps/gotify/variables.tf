@@ -19,7 +19,11 @@
 #      storage_size      --- Volume size for main application                                     #
 #    secrets             --- Secrets object (map of sensitive values)                             #
 #      app               --- Application secrets (password, etc.)                                 #
-#      bridge            --- Bridge secrets (gotify_token for alertmanager-gotify-bridge)         #
+#      basic_auth        --- Basic auth credentials (only for Traefik Gateway)                    #
+#        username        --- Basic auth username                                                  #
+#        password_hash   --- Basic auth password hash (bcrypt)                                    #
+#      bridges           --- Alertmanager bridges to create (key = bridge name, value = config)   #
+#        token           --- Gotify application token for this bridge                             #
 ## ============================================================================================= ##
 variable "enabled" {
   description = "Enable this module"
@@ -52,7 +56,14 @@ variable "config" {
 
 variable "secrets" {
   description = "Application secrets"
-  type        = map(map(string))
-  sensitive   = true
-  default     = {}
+  type = object({
+    app = optional(map(string))
+    basic_auth = optional(object({
+      username      = string
+      password_hash = string
+    }))
+    bridges = optional(map(object({ token = string })))
+  })
+  sensitive = true
+  default   = {}
 }

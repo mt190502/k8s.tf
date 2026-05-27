@@ -83,7 +83,23 @@ resource "helm_release" "this" {
   values = [yamlencode({
     alertmanager = {
       config = {
+        global = {}
+        inhibit_rules = [
+          {
+            source_match = {
+              severity = "warning"
+            }
+            target_match = {
+              severity = "info"
+            }
+            equal = ["namespace"]
+          },
+        ]
         route = {
+          group_by        = ["alertname", "namespace", "pod", "container"]
+          group_wait      = "1s"
+          group_interval  = "1s"
+          repeat_interval = "5m"
           routes = concat(
             [{
               match = {
@@ -91,14 +107,28 @@ resource "helm_release" "this" {
               }
               receiver = "null"
             }],
+            [{
+              match = {
+                alertname = "InfoInhibitor"
+              }
+              receiver = "null"
+            }],
             (try(var.secrets.alertmanager.discord_webhook_url, "") != "") ? [{
               receiver = "discord"
               continue = true
             }] : [],
-            var.config.gotify_enabled ? [{
-              receiver = "gotify"
-              continue = true
-            }] : []
+            var.config.gotify_enabled ? [
+              for name, endpoint in var.config.gotify_bridge_endpoints : {
+                receiver = "gotify-${name}"
+                match    = { alertname = "LokiErrorLog" }
+              } if name == "loki"
+            ] : [],
+            var.config.gotify_enabled ? [
+              for name, endpoint in var.config.gotify_bridge_endpoints : {
+                receiver = "gotify-${name}"
+                continue = true
+              } if name != "loki"
+            ] : []
           )
         }
         receivers = concat(
@@ -108,33 +138,31 @@ resource "helm_release" "this" {
             discord_configs = [{
               webhook_url   = var.secrets.alertmanager.discord_webhook_url
               send_resolved = true
-              title         = "{{ if eq .Status \"firing\" }}Firing{{ else }}Resolved{{ end }}: {{ .Alerts | len }} alert(s)"
+              title         = "{{ if eq .Status \"firing\" }}:fire: Firing{{ else }}:white_check_mark: Resolved{{ end }}: {{ .Alerts | len }} alert(s)"
               message       = <<-EOT
-                {{ range $i, $alert := .Alerts }}{{- if $i }}---{{ end }}
-                **Alert:** {{ $alert.Labels.alertname }}
-                **Severity:** {{ $alert.Labels.severity | toUpper }}
-                {{- if $alert.Labels.instance }}
-                **Instance:** `{{ $alert.Labels.instance }}`
-                {{- end }}
-                **Description:** {{ $alert.Annotations.description }}
-                {{- if $alert.Labels }}
+                {{ range .Alerts }}
+                **Alert:** {{ .Labels.alertname }}
+                **Severity:** {{ .Labels.severity | toUpper }}
+                **Description:** {{ .Annotations.description }}
                 **Labels:**
                 ```{{ printf "%-15s | %s" "label" "value" }}
                 ----------------+-----------------------------------
-                {{ range $alert.Labels.SortedPairs }}{{ printf "%-15s | %s" .Name .Value }}
-                {{ end }}```
-                {{- end }}
+                {{- range .Labels.SortedPairs }}
+                {{ printf "%-15s | %s" .Name .Value }}
+                {{- end }}```
                 {{ end }}
               EOT
             }]
           }] : [],
-          var.config.gotify_enabled ? [{
-            name = "gotify"
-            webhook_configs = [{
-              url           = "http://alertmanager-gotify-bridge.gotify.svc.cluster.local:8080/gotify_webhook"
-              send_resolved = true
-            }]
-          }] : []
+          var.config.gotify_enabled ? [
+            for name, endpoint in var.config.gotify_bridge_endpoints : {
+              name = "gotify-${name}"
+              webhook_configs = [{
+                url           = endpoint
+                send_resolved = true
+              }]
+            }
+          ] : []
         )
       }
     }

@@ -242,9 +242,7 @@ unit "gotify" {
       app = {
         password = try(local.secrets.manifests.apps.gotify.app.password, "")
       }
-      bridge = {
-        gotify_token = try(local.secrets.manifests.apps.gotify.bridge.gotify_token, "")
-      }
+      bridges = try(local.secrets.manifests.apps.gotify.bridges, {})
     }
   }
 }

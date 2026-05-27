@@ -95,14 +95,25 @@ dependency "pre" {
   skip_outputs = true
 }
 
+dependency "gotify" {
+  config_path = "../../apps/gotify"
+  mock_outputs = {
+    namespace        = "gotify"
+    bridge_endpoints = { alertmanager = "http://alertmanager-gotify-bridge.gotify.svc.cluster.local:8080/gotify_webhook", loki = "http://loki-gotify-bridge.gotify.svc.cluster.local:8080/gotify_webhook" }
+  }
+  mock_outputs_allowed_terraform_commands = include.common.locals.mock_outputs_allowed_terraform_commands
+  mock_outputs_merge_strategy_with_state  = include.common.locals.mock_outputs_merge_strategy_with_state
+}
+
 inputs = {
   enabled = try(values.enabled, true)
   config = merge(
     try(values.config, {}),
     {
-      gateway_name      = dependency.cert_manager.outputs.gateway_name
-      gateway_namespace = dependency.cert_manager.outputs.gateway_namespace
-      preferred_gateway = try(values.config.preferred_gateway, "cilium")
+      gateway_name            = dependency.cert_manager.outputs.gateway_name
+      gateway_namespace       = dependency.cert_manager.outputs.gateway_namespace
+      preferred_gateway       = try(values.config.preferred_gateway, "cilium")
+      gotify_bridge_endpoints = try(dependency.gotify.outputs.bridge_endpoints, {})
     }
   )
   secrets = try(values.secrets, {})

@@ -85,31 +85,33 @@ resource "kubernetes_deployment_v1" "this" {
   ]
 }
 
-resource "kubernetes_deployment_v1" "gotify_bridge" {
-  count = var.enabled && try(var.secrets.bridge.gotify_token, "") != "" ? 1 : 0
+#~ bridge deployment generator
+resource "kubernetes_deployment_v1" "bridge" {
+  for_each = toset(nonsensitive(keys(var.secrets.bridges)))
   metadata {
-    name      = "alertmanager-${var.config.name}-bridge"
+    name      = "${each.key}-${var.config.name}-bridge"
     namespace = kubernetes_namespace_v1.this[0].metadata[0].name
     labels = {
-      "app.kubernetes.io/name" = "alertmanager-${var.config.name}-bridge"
+      "app.kubernetes.io/name" = "${each.key}-${var.config.name}-bridge"
     }
   }
+
   spec {
     replicas = 1
     selector {
       match_labels = {
-        "app.kubernetes.io/name" = "alertmanager-${var.config.name}-bridge"
+        "app.kubernetes.io/name" = "${each.key}-${var.config.name}-bridge"
       }
     }
     template {
       metadata {
         labels = {
-          "app.kubernetes.io/name" = "alertmanager-${var.config.name}-bridge"
+          "app.kubernetes.io/name" = "${each.key}-${var.config.name}-bridge"
         }
       }
       spec {
         container {
-          name  = "alertmanager-${var.config.name}-bridge"
+          name  = "${each.key}-${var.config.name}-bridge"
           image = "ghcr.io/druggeri/alertmanager_gotify_bridge:2.3.2"
           port {
             container_port = 8080
@@ -122,7 +124,7 @@ resource "kubernetes_deployment_v1" "gotify_bridge" {
             name = "GOTIFY_TOKEN"
             value_from {
               secret_key_ref {
-                name = kubernetes_secret_v1.gotify_bridge[0].metadata[0].name
+                name = kubernetes_secret_v1.bridge[each.key].metadata[0].name
                 key  = "gotify_token"
               }
             }
@@ -149,5 +151,5 @@ resource "kubernetes_deployment_v1" "gotify_bridge" {
       }
     }
   }
-  depends_on = [kubernetes_namespace_v1.this, kubernetes_secret_v1.gotify_bridge]
+  depends_on = [kubernetes_namespace_v1.this, kubernetes_secret_v1.bridge]
 }

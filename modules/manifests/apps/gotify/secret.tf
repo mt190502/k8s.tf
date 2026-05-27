@@ -15,14 +15,15 @@ resource "kubernetes_secret_v1" "this" {
   depends_on = [kubernetes_namespace_v1.this]
 }
 
-resource "kubernetes_secret_v1" "gotify_bridge" {
-  count = var.enabled && try(var.secrets.bridge.gotify_token, "") != "" ? 1 : 0
+#~ bridge secret generator
+resource "kubernetes_secret_v1" "bridge" {
+  for_each = toset(nonsensitive(keys(var.secrets.bridges)))
   metadata {
-    name      = "alertmanager-${var.config.name}-bridge-secret"
+    name      = "${each.key}-${var.config.name}-bridge-secret"
     namespace = kubernetes_namespace_v1.this[0].metadata[0].name
   }
   data = {
-    gotify_token = var.secrets.bridge.gotify_token
+    gotify_token = var.secrets.bridges[each.key].token
   }
   type       = "Opaque"
   depends_on = [kubernetes_namespace_v1.this]

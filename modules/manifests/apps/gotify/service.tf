@@ -24,15 +24,16 @@ resource "kubernetes_service_v1" "this" {
   depends_on = [kubernetes_namespace_v1.this]
 }
 
-resource "kubernetes_service_v1" "gotify_bridge" {
-  count = var.enabled && try(var.secrets.bridge.gotify_token, "") != "" ? 1 : 0
+#~ bridge service generator
+resource "kubernetes_service_v1" "bridge" {
+  for_each = toset(nonsensitive(keys(var.secrets.bridges)))
   metadata {
-    name      = "alertmanager-${var.config.name}-bridge"
+    name      = "${each.key}-${var.config.name}-bridge"
     namespace = kubernetes_namespace_v1.this[0].metadata[0].name
   }
   spec {
     selector = {
-      "app.kubernetes.io/name" = "alertmanager-${var.config.name}-bridge"
+      "app.kubernetes.io/name" = "${each.key}-${var.config.name}-bridge"
     }
     port {
       port        = 8080
@@ -41,5 +42,5 @@ resource "kubernetes_service_v1" "gotify_bridge" {
     ip_family_policy = "PreferDualStack"
     type             = "ClusterIP"
   }
-  depends_on = [kubernetes_deployment_v1.gotify_bridge]
+  depends_on = [kubernetes_deployment_v1.bridge]
 }

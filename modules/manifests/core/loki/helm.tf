@@ -74,6 +74,22 @@ resource "helm_release" "this" {
       value = "true"
     },
     {
+      name  = "loki.rulerConfig.alertmanager_url"
+      value = "http://kube-prometheus-stack-alertmanager.${var.config.kps_namespace}.svc:9093"
+    },
+    {
+      name  = "loki.rulerConfig.rule_path"
+      value = "/etc/loki/rules"
+    },
+    {
+      name  = "loki.rulerConfig.storage.type"
+      value = "local"
+    },
+    {
+      name  = "loki.rulerConfig.storage.local.directory"
+      value = "/etc/loki/rules"
+    },
+    {
       name  = "loki.schemaConfig.configs[0].from",
       value = "2024-01-01"
     },
@@ -192,4 +208,52 @@ resource "helm_release" "this" {
       value = var.secrets.secret_access_key
     }
   ]
+  values = [yamlencode({
+    singleBinary = {
+      extraVolumes = [
+        {
+          name = "loki-rules-source"
+          configMap = {
+            name = kubernetes_config_map_v1.loki_rules.metadata[0].name
+          }
+        },
+        {
+          name     = "loki-rules-writable"
+          emptyDir = {}
+        }
+      ]
+      extraVolumeMounts = [
+        {
+          name      = "loki-rules-source"
+          mountPath = "/etc/loki/rules-source"
+        },
+        {
+          name      = "loki-rules-writable"
+          mountPath = "/etc/loki/rules/fake"
+        }
+      ]
+      initContainers = [
+        {
+          name    = "rules-copy"
+          image   = "busybox:1.36"
+          command = ["/bin/sh", "-c"]
+          args = [
+            "cp /etc/loki/rules-source/* /etc/loki/rules/fake/"
+          ]
+          volumeMounts = [
+            {
+              name      = "loki-rules-source"
+              mountPath = "/etc/loki/rules-source"
+              readOnly  = true
+            },
+            {
+              name      = "loki-rules-writable"
+              mountPath = "/etc/loki/rules/fake"
+            }
+          ]
+        }
+      ]
+    }
+  })]
+  depends_on = [kubernetes_config_map_v1.loki_rules]
 }
