@@ -205,7 +205,7 @@ locals {
           }
           hostname = "t1d"
           mongo = {
-            replicas     = 3
+            replicas     = 2
             storage_size = "2Gi"
           }
         }
@@ -280,8 +280,11 @@ locals {
       longhorn = {
         enabled = true
       }
-      psmdb_operator = {
+      mongodb_community_operator = {
         enabled = true
+      }
+      psmdb_operator = {
+        enabled = false
       }
       reflector = {
         enabled = true

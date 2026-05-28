@@ -4,7 +4,7 @@
 #  Terragrunt wrapper for Nightscout (CGM data visualization app) manifests.                      #
 #  Config is provided from stack values.                                                          #
 #                                                                                                 #
-#  Apply order: psmdb-operator -> [nightscout]                                                    #
+#  Apply order: mongodb-community-operator -> [nightscout]                                        #
 ## ============================================================================================= ##
 include "common" {
   path   = find_in_parent_folders("modules/common.hcl")
@@ -80,8 +80,8 @@ dependency "cert_manager" {
   mock_outputs_merge_strategy_with_state  = include.common.locals.mock_outputs_merge_strategy_with_state
 }
 
-dependency "psmdb_operator" {
-  config_path  = "../../core/psmdb-operator"
+dependency "mongodb_community_operator" {
+  config_path  = "../../core/mongodb-community-operator"
   skip_outputs = true
 }
 

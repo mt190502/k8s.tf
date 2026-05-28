@@ -34,7 +34,7 @@ resource "kubernetes_deployment_v1" "this" {
             "sh",
             "-c",
             <<-EOT
-            until nc -zv ${var.config.name}-mongo-rs0 27017; do
+            until nc -zv ${var.config.name}-mongo-svc 27017; do
               echo "Waiting for MongoDB to be ready..."
               sleep 5
             done
@@ -60,8 +60,8 @@ resource "kubernetes_deployment_v1" "this" {
             name = "MONGO_PASSWORD"
             value_from {
               secret_key_ref {
-                name = "${var.config.name}-mongo-users"
-                key  = "MONGODB_DATABASE_ADMIN_PASSWORD"
+                name = "${var.config.name}-mongo-conn"
+                key  = "password"
               }
             }
           }
@@ -69,14 +69,19 @@ resource "kubernetes_deployment_v1" "this" {
             name = "MONGO_USER"
             value_from {
               secret_key_ref {
-                name = "${var.config.name}-mongo-users"
-                key  = "MONGODB_DATABASE_ADMIN_USER"
+                name = "${var.config.name}-mongo-conn"
+                key  = "username"
               }
             }
           }
           env {
-            name  = "MONGO_CONNECTION"
-            value = "mongodb://$(MONGO_USER):$(MONGO_PASSWORD)@${var.config.name}-mongo-rs0:27017/${var.config.name}?replicaSet=rs0&authSource=admin"
+            name = "MONGO_CONNECTION"
+            value_from {
+              secret_key_ref {
+                name = "${var.config.name}-mongo-conn"
+                key  = "connectionString.standard"
+              }
+            }
           }
           dynamic "env" {
             for_each = var.config.env != null ? var.config.env : {}
@@ -105,6 +110,7 @@ resource "kubernetes_deployment_v1" "this" {
   depends_on = [
     kubernetes_namespace_v1.this,
     kubernetes_secret_v1.this,
-    kubernetes_manifest.mongo
+    kubernetes_secret_v1.mongo_password,
+    null_resource.mongodb
   ]
 }

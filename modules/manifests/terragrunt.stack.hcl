@@ -145,6 +145,14 @@ unit "longhorn" {
   }
 }
 
+unit "mongodb_community_operator" {
+  source = "./core/mongodb-community-operator"
+  path   = "core/mongodb-community-operator"
+  values = {
+    enabled = try(local.core.mongodb_community_operator.enabled, true)
+  }
+}
+
 unit "psmdb_operator" {
   source = "./core/psmdb-operator"
   path   = "core/psmdb-operator"
@@ -280,6 +288,9 @@ unit "nightscout" {
     secrets = {
       app = {
         api_secret = try(local.secrets.manifests.apps.nightscout.app.api_secret, "")
+      }
+      mongo = {
+        password = try(local.secrets.manifests.apps.nightscout.mongo.password, "")
       }
     }
   }
