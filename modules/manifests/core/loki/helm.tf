@@ -154,7 +154,15 @@ resource "helm_release" "this" {
       value = "false"
     },
     {
+      name  = "chunksCache.enabled",
+      value = "false"
+    },
+    {
       name  = "memcached.enabled",
+      value = "false"
+    },
+    {
+      name  = "resultsCache.enabled",
       value = "false"
     },
     {
