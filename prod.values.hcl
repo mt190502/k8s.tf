@@ -173,6 +173,10 @@ locals {
       miniflux = {
         enabled = true
         config = {
+          env = {
+            CLEANUP_ARCHIVE_READ_DAYS   = "30"
+            CLEANUP_ARCHIVE_UNREAD_DAYS = "30"
+          }
           hostname = "rss"
           pg = {
             replicas     = 1
