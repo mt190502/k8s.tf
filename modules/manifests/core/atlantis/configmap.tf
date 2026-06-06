@@ -41,7 +41,7 @@ resource "kubernetes_config_map_v1" "repo_config" {
               CHANGED_UNITS=$(git diff --name-only "origin/$${BASE_BRANCH_NAME}..HEAD" | awk -F/ '/^modules\/manifests\/(core|apps)\// {print "./" $3 "/" $4}' | sort -u | xargs)
               [ -n "$CHANGED_UNITS" ] || { echo "No changed manifests module detected"; exit 1; }
               echo "Changed units: $CHANGED_UNITS"
-              make _sops MODE=decrypt TARGET_FILE=secrets.hcl
+              make _sops MODE=decrypt TARGET_FILE=prod.secrets.hcl
               set +o pipefail
               for unit in $CHANGED_UNITS; do
                 echo "Planning $unit"
@@ -57,7 +57,7 @@ resource "kubernetes_config_map_v1" "repo_config" {
               CHANGED_UNITS=$(git diff --name-only "origin/$${BASE_BRANCH_NAME}..HEAD" | awk -F/ '/^modules\/manifests\/(core|apps)\// {print "./" $3 "/" $4}' | sort -u | xargs)
               [ -n "$CHANGED_UNITS" ] || { echo "No changed manifests module detected"; exit 1; }
               echo "Changed units: $CHANGED_UNITS"
-              make _sops MODE=decrypt TARGET_FILE=secrets.hcl
+              make _sops MODE=decrypt TARGET_FILE=prod.secrets.hcl
               set +o pipefail
               for unit in $CHANGED_UNITS; do
                 echo "Applying $unit"
