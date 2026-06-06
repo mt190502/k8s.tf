@@ -7,7 +7,7 @@
 resource "kubernetes_secret_v1" "basic_auth" {
   count = (var.enabled && var.config.basic_auth && var.config.preferred_gateway == "traefik") ? 1 : 0
   metadata {
-    name      = "${helm_release.this}-basic-auth"
+    name      = "${helm_release.this.name}-basic-auth"
     namespace = kubernetes_namespace_v1.this.metadata[0].name
   }
   type = "Opaque"
@@ -22,7 +22,7 @@ resource "kubernetes_manifest" "basic_auth_middleware" {
     apiVersion = "traefik.io/v1alpha1"
     kind       = "Middleware"
     metadata = {
-      name      = "${helm_release.this}-basic-auth"
+      name      = "${helm_release.this.name}-basic-auth"
       namespace = kubernetes_namespace_v1.this.metadata[0].name
     }
     spec = {
