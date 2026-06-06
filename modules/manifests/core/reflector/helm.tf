@@ -5,7 +5,7 @@ resource "helm_release" "this" {
   name            = "reflector"
   repository      = "https://emberstack.github.io/helm-charts"
   chart           = "reflector"
-  version         = "10.0.44"
+  version         = "10.0.48"
   namespace       = kubernetes_namespace_v1.this.metadata[0].name
   upgrade_install = true
   set = [
