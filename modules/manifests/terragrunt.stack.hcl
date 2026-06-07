@@ -340,6 +340,19 @@ unit "redmine" {
   }
 }
 
+unit "slimserve" {
+  source = "./apps/slimserve"
+  path   = "apps/slimserve"
+  values = {
+    enabled = try(local.apps.slimserve.enabled, false)
+    config = merge(
+      try(local.apps.slimserve.config, {}),
+      { domain = local.rootvars.cluster_url.dns, preferred_gateway = local.rootvars.preferred_gateway }
+    )
+    secrets = merge(try(local.secrets.manifests.apps.slimserve, {}), {})
+  }
+}
+
 unit "syncstorage_rs" {
   source = "./apps/syncstorage-rs"
   path   = "apps/syncstorage-rs"

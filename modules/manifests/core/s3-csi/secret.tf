@@ -10,8 +10,8 @@ resource "kubernetes_secret_v1" "garage_credentials" {
     namespace = kubernetes_namespace_v1.this.metadata[0].name
   }
   data = {
-    key_id      = var.secrets.access_key_id
-    access_key  = var.secrets.secret_access_key
+    key_id     = var.secrets.access_key_id
+    access_key = var.secrets.secret_access_key
   }
   type       = "Opaque"
   depends_on = [kubernetes_namespace_v1.this]

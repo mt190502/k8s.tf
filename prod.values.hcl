@@ -160,6 +160,20 @@ locals {
           hostname = "ntfy"
         }
       }
+      slimserve = {
+        enabled = true
+        config = {
+          dirs     = "/data"
+          hostname = "files"
+          persistence = {
+            enabled      = true
+            bucket_name  = "files"
+            s3_endpoint  = "http://100.102.30.2:3900"
+            s3_region    = "us-east-1"
+            storage_size = "1T"
+          }
+        }
+      }
       syncstorage_rs = {
         enabled = true
         config = {
