@@ -29,7 +29,7 @@ graph TD
 
   subgraph TALOS["Talos Kubernetes Cluster"]
     subgraph STORAGE_STACK["StorageClass Stack"]
-      storage_s3["S3"]
+      storage_s3["S3 CSI"]
       storage_longhorn["Longhorn"]
     end
     tailscale["Tailscale<br>(node-to-node)<br>(UDP/41641)"]
@@ -39,23 +39,30 @@ graph TD
       gwprovider["Traefik Gateway"]
     end
     subgraph CORE["Core Services"]
+      alloy["Grafana Alloy"]
       atlantis["Atlantis"]
       cert["Cert Manager"]
-      monitoring["Kube Prometheus Stack"]
+      descheduler["Descheduler"]
       dnsutils["DNS Utils"]
-      reflector["Reflector"]
+      loki["Loki"]
+      monitoring["Kube Prometheus Stack"]
+      mongo["MongoDB Operator"]
       pg["CloudNative-PG"]
       psmdb["PSMDB Operator"]
+      reflector["Reflector"]
       testing["Testing"]
       tso["Tailscale Operator"]
       traefik["Traefik"]
     end
     subgraph APPS["Applications"]
       anki["Anki"]
+      gotify["Gotify"]
       miniflux["Miniflux"]
       nightscout["Nightscout"]
       radicale["Radicale"]
       redmine["Redmine"]
+      slimserve["Slimserve"]
+      sync["Syncstorage-rs"]
       umami["Umami"]
     end
 
@@ -111,8 +118,8 @@ graph TD
 
   class domain,cloudflare infra;
   class route,gateway,gwprovider,tailscale network;
-  class atlantis,cert,monitoring,dnsutils,reflector,pg,psmdb,testing,tso,traefik core;
-  class anki,miniflux,nightscout,radicale,redmine,umami app;
+  class atlantis,cert,monitoring,dnsutils,reflector,pg,psmdb,testing,tso,traefik,alloy,descheduler,loki,mongo core;
+  class anki,miniflux,nightscout,radicale,redmine,umami,gotify,slimserve,sync app;
   class storage_s3,storage_longhorn storage;
   class m1a,w1a,m2a,w2a,m3a,w3a node;
 
@@ -127,7 +134,6 @@ graph TD
   style FSN1 fill:#020617,stroke:#3b82f6,color:#fff
 
   linkStyle default stroke:#fff,stroke-width:2px;
-  style storage_s3 stroke-width:1px,stroke-dasharray:5 5,stroke:#FFFFFF,fill:#737373
 ```
 
 <br>
@@ -192,10 +198,10 @@ make manifests-apply
 
 All shared configuration lives under `locals` in `prod.values.hcl`. Sensitive values such as API tokens are stored in `secrets.hcl` and encrypted with **SOPS**.
 
-| Layer              | Content                                                                                                                                                                  |
-|:------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
-| **Infrastructure** | Talos machine secrets, patch templates, Hetzner servers + firewall, Tailscale devices, Talos bootstrap, kubeconfig, Cloudflare DNS records                              |
-| **Manifests**      | Longhorn, Reflector, CloudNativePG, PSMDB, kube-prometheus-stack, cert-manager, Atlantis, Traefik, Tailscale Operator, DNS utils, testing, plus apps (anki, miniflux, nightscout, radicale, redmine, umami) |
+| Layer              | Content                                                                                                                                                                                                                                                                                                                       |
+|:------------------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+| **Infrastructure** | Talos machine secrets, patch templates, Hetzner servers + firewall, Tailscale devices, Talos bootstrap, kubeconfig, Cloudflare DNS records                                                                                                                                                                                    |
+| **Manifests**      | Longhorn, S3 CSI, Reflector, CloudNativePG, PSMDB Operator, MongoDB Community Operator, kube-prometheus-stack, Loki, Grafana Alloy, cert-manager, Descheduler, Atlantis, Traefik, Tailscale Operator, DNS utils, testing, plus apps (anki, gotify, miniflux, nightscout, radicale, redmine, slimserve, syncstorage-rs, umami) |
 
 ---
 
@@ -230,31 +236,43 @@ graph TD
       subgraph CORE["Core"]
         ATL["atlantis"]
         LH["longhorn"]
+        S3["s3-csi"]
         RF["reflector"]
         CNPG["cnpg"]
         PSMDB["psmdb-operator"]
+        MONGO["mongodb-community-operator"]
         KPS["kube-prometheus-stack"]
+        LOKI["loki"]
+        ALLOY["alloy"]
         DNS["dnsutils"]
         TSO["tailscale-operator"]
         CM["cert-manager"]
+        DESCHED["descheduler"]
         TF["traefik"]
         TS["testing"]
       end
       subgraph APPS["Apps"]
         ANKI["anki"]
+        GOTIFY["gotify"]
         MINI["miniflux"]
         NS["nightscout"]
         RAD["radicale"]
         RED["redmine"]
+        SLIM["slimserve"]
+        SYNC["syncstorage-rs"]
         UMA["umami"]
       end
       CP -.->|DNS / API ready| LH
-      LH --> RF & CNPG & PSMDB & KPS & TSO & DNS
+      LH --> RF & CNPG & PSMDB & MONGO & KPS & TSO
+      LH & KPS --> LOKI
+      KPS --> ALLOY
+      GOTIFY --> KPS
       RF & CNPG & KPS --> CM
       CM & LH --> ATL
-      CM --> TF & TS
-      CM & CNPG --> ANKI & MINI & RAD & RED & UMA
-      CM & PSMDB --> NS
+      CM --> TF & TS & DNS & RAD & GOTIFY
+      CM & CNPG --> ANKI & MINI & RED & UMA & SYNC
+      CM & MONGO --> NS
+      S3 & CM --> SLIM
     end
   end
 
@@ -277,8 +295,8 @@ graph TD
 
   class INPUTS inputTarget;
   class TP,HP,TSP,TAP,CP infraTarget;
-  class ATL,LH,RF,CNPG,PSMDB,KPS,DNS,TSO,CM,TF,TS coreTarget;
-  class ANKI,MINI,NS,RAD,RED,UMA appTarget;
+  class ATL,LH,S3,RF,CNPG,PSMDB,MONGO,KPS,LOKI,ALLOY,DNS,TSO,CM,DESCHED,TF,TS coreTarget;
+  class ANKI,GOTIFY,MINI,NS,RAD,RED,SLIM,SYNC,UMA appTarget;
   class HZ,TSn,CF,TPn,LE,V,S internalTarget;
   class INFRA,MANIFESTS,CORE,APPS inputTarget;
   class MODULES externalTarget;
@@ -325,24 +343,32 @@ graph TD
 │   └── manifests/                     # Application modules
 │       ├── terragrunt.stack.hcl       # Defines manifests stack units and dependencies
 │       ├── core/
+│       │   ├── alloy/                 # Grafana Alloy metrics/logs agent
 │       │   ├── atlantis/              # Atlantis automation server
-│       │   ├── longhorn/              # Distributed block storage
-│       │   ├── reflector/             # Secret/configmap reflection
-│       │   ├── cnpg/                  # CloudNativePG operator
-│       │   ├── psmdb-operator/        # Percona MongoDB operator
-│       │   ├── kube-prometheus-stack/ # Monitoring stack
-│       │   ├── dnsutils/              # Debug DNS utilities
-│       │   ├── tailscale-operator/    # Tailscale Kubernetes operator
 │       │   ├── cert-manager/          # ACME certificates + Gateway
-│       │   ├── traefik/               # Traefik Gateway API provider
-│       │   └── testing/               # Smoke tests (nginx, echoserver)
+│       │   ├── cnpg/                  # CloudNativePG operator
+│       │   ├── descheduler/           # Pod rebalancing (RemoveDuplicates, LowNodeUtilization)
+│       │   ├── dnsutils/              # Debug DNS utilities
+│       │   ├── kube-prometheus-stack/ # Monitoring stack (pre + post)
+│       │   ├── loki/                  # Distributed log aggregation (S3-backed)
+│       │   ├── longhorn/              # Distributed block storage
+│       │   ├── mongodb-community-operator/ # MongoDB Community Operator
+│       │   ├── psmdb-operator/        # Percona MongoDB operator
+│       │   ├── reflector/             # Secret/configmap reflection
+│       │   ├── s3-csi/                # S3-compatible storage CSI driver
+│       │   ├── tailscale-operator/    # Tailscale Kubernetes operator
+│       │   ├── testing/               # Smoke tests (nginx, echoserver)
+│       │   └── traefik/               # Traefik Gateway API provider
 │       └── apps/
 │           ├── template/              # App template for new applications
 │           ├── anki/                  # Anki sync server
+│           ├── gotify/                # Push notification relay
 │           ├── miniflux/              # RSS reader
 │           ├── nightscout/            # CGM data visualization
 │           ├── radicale/              # CalDAV/CardDAV server
 │           ├── redmine/               # Project management
+│           ├── slimserve/             # Lightweight file server
+│           ├── syncstorage-rs/        # Firefox Sync storage
 │           └── umami/                 # Web analytics
 │
 └── packer/                            # Optional Talos image build for Hetzner

@@ -4,7 +4,7 @@
 #  Terragrunt wrapper for Granfana's alloy helm chart.                                            #
 #  Config is provided from stack values.                                                          #
 #                                                                                                 #
-#  Apply order: (longhorn/kps) -> [alloy] -> cert-manager                                         #
+#  Apply order: kps -> [alloy]                                                                    #
 ## ============================================================================================= ##
 include "common" {
   path   = find_in_parent_folders("modules/common.hcl")
@@ -51,11 +51,6 @@ generate "versions" {
 ## --------------------------------------------------------------------------------------------- ##
 #  Dependencies -  enforce apply order and wire outputs from upstream modules as inputs.          #
 ## --------------------------------------------------------------------------------------------- ##
-dependency "longhorn" {
-  config_path  = "../longhorn"
-  skip_outputs = true
-}
-
 dependency "kube_prometheus_stack" {
   config_path = "../kube-prometheus-stack"
   mock_outputs = {
