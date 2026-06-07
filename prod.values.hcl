@@ -284,6 +284,13 @@ locals {
       longhorn = {
         enabled = true
       }
+      s3_csi = {
+        enabled = true
+        config = {
+          endpoint = "http://100.102.30.2:3900"
+          region   = "us-east-1"
+        }
+      }
       mongodb_community_operator = {
         enabled = true
       }

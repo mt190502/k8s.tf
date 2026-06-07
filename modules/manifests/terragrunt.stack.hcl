@@ -145,6 +145,16 @@ unit "longhorn" {
   }
 }
 
+unit "s3_csi" {
+  source = "./core/s3-csi"
+  path   = "core/s3-csi"
+  values = {
+    enabled = try(local.core.s3_csi.enabled, true)
+    config  = try(local.core.s3_csi.config, {})
+    secrets = try(local.secrets.manifests.core.s3_csi, {})
+  }
+}
+
 unit "mongodb_community_operator" {
   source = "./core/mongodb-community-operator"
   path   = "core/mongodb-community-operator"
