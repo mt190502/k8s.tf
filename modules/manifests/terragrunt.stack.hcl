@@ -101,6 +101,15 @@ unit "cnpg" {
   }
 }
 
+unit "descheduler" {
+  source = "./core/descheduler"
+  path   = "core/descheduler"
+  values = {
+    enabled = try(local.core.descheduler.enabled, true)
+    config  = try(local.core.descheduler.config, {})
+  }
+}
+
 unit "dnsutils" {
   source = "./core/dnsutils"
   path   = "core/dnsutils"

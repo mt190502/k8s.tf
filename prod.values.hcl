@@ -276,6 +276,13 @@ locals {
       cnpg = {
         enabled = true
       }
+      descheduler = {
+        enabled = true
+        config = {
+          descheduling_interval = "5m"
+          replicas              = 2
+        }
+      }
       dnsutils = {
         enabled = true
       }
