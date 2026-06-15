@@ -41,7 +41,7 @@ resource "helm_release" "this" {
   name            = "traefik"
   repository      = "https://traefik.github.io/charts"
   chart           = "traefik"
-  version         = "40.2.0"
+  version         = "40.3.0"
   namespace       = kubernetes_namespace_v1.this[0].metadata[0].name
   upgrade_install = true
   skip_crds       = true

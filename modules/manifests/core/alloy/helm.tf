@@ -94,7 +94,7 @@ resource "helm_release" "this" {
   name            = "alloy"
   repository      = "https://grafana.github.io/helm-charts"
   chart           = "alloy"
-  version         = "1.8.2"
+  version         = "1.10.0"
   namespace       = var.config.kps_namespace
   upgrade_install = true
   values = [yamlencode({
