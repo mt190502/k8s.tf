@@ -12,7 +12,7 @@ resource "helm_release" "this" {
   name            = "aws-mountpoint-s3-csi-driver"
   repository      = "https://awslabs.github.io/mountpoint-s3-csi-driver"
   chart           = "aws-mountpoint-s3-csi-driver"
-  version         = "2.6.0"
+  version         = "2.7.0"
   namespace       = kubernetes_namespace_v1.this.metadata[0].name
   upgrade_install = true
   set = [
