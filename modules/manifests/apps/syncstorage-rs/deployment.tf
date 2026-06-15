@@ -44,7 +44,7 @@ resource "kubernetes_deployment_v1" "this" {
         }
         container {
           name  = var.config.name
-          image = "ghcr.io/mozilla-services/syncstorage-rs/syncserver-postgres:0.23.0"
+          image = "ghcr.io/mozilla-services/syncstorage-rs/syncserver-postgres:0.23.1"
           port {
             container_port = var.config.port
           }
