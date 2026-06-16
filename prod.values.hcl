@@ -135,7 +135,7 @@ locals {
       # renovate: datasource=github-releases depName=siderolabs/kubelet
       kubernetes = "v1.36.2"
       # renovate: datasource=github-releases depName=cilium/cilium
-      cilium = "1.19.4"
+      cilium = "1.19.5"
       # renovate: datasource=github-releases depName=kubernetes-sigs/metrics-server
       metrics_server = "v0.8.1"
       # renovate: datasource=github-releases depName=kubernetes-sigs/gateway-api
