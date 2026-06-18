@@ -12,7 +12,7 @@ locals {
   terragrunt_version = "v1.0.8"
 
   # renovate: datasource=github-releases depName=opentofu/opentofu
-  opentofu_version = "1.12.2"
+  opentofu_version = "1.12.3"
 
   # renovate: datasource=github-releases depName=getsops/sops
   sops_version = "3.13.1"
