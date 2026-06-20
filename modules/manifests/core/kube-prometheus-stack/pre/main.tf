@@ -9,6 +9,6 @@ resource "helm_release" "prometheus_operator_crds" {
   name            = "prometheus-operator-crds"
   repository      = "oci://ghcr.io/prometheus-community/charts"
   chart           = "prometheus-operator-crds"
-  version         = "29.0.0"
+  version         = "30.0.0"
   upgrade_install = true
 }
