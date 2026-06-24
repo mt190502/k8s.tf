@@ -43,7 +43,7 @@ resource "kubernetes_deployment_v1" "this" {
         }
         container {
           name  = var.config.name
-          image = "redmine:6.1.2"
+          image = "redmine:6.1.3"
           port {
             container_port = var.config.port
           }
