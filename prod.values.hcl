@@ -158,6 +158,10 @@ locals {
         enabled = true
         config = {
           hostname = "ntfy"
+          pg = {
+            replicas     = 1
+            storage_size = "1Gi"
+          }
         }
       }
       slimserve = {

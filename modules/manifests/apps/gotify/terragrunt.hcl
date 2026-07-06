@@ -6,6 +6,7 @@
 #                                                                                                 #
 #  Dependencies:                                                                                  #
 #    - cert-manager: Optional, Provides gateway_name and gateway_namespace for HTTPRoute          #
+#    - cnpg: Optional, for PostgreSQL database                                                    #
 #                                                                                                 #
 #  Apply order: (cert-manager/cnpg/psmdb-operator) -> [gotify]                                    #
 ## ============================================================================================= ##
@@ -81,6 +82,11 @@ dependency "cert_manager" {
   }
   mock_outputs_allowed_terraform_commands = include.common.locals.mock_outputs_allowed_terraform_commands
   mock_outputs_merge_strategy_with_state  = include.common.locals.mock_outputs_merge_strategy_with_state
+}
+
+dependency "cnpg" {
+  config_path  = "../../core/cnpg"
+  skip_outputs = true
 }
 
 inputs = {

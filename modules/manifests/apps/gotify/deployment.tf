@@ -27,6 +27,20 @@ resource "kubernetes_deployment_v1" "this" {
         }
       }
       spec {
+        init_container {
+          name  = "${var.config.name}-init"
+          image = "busybox:latest"
+          command = [
+            "sh",
+            "-c",
+            <<-EOT
+            until nc -zv ${var.config.name}-postgres-rw.${kubernetes_namespace_v1.this[0].metadata[0].name}.svc.cluster.local 5432; do
+              echo "Waiting for PostgreSQL to be ready..."
+              sleep 5
+            done
+            EOT
+          ]
+        }
         container {
           name  = var.config.name
           image = "gotify/server:2.9.1"
@@ -34,6 +48,19 @@ resource "kubernetes_deployment_v1" "this" {
             for_each = var.config.port != null ? [var.config.port] : []
             content {
               container_port = port.value
+            }
+          }
+          env {
+            name  = "GOTIFY_DATABASE_DIALECT"
+            value = "postgres"
+          }
+          env {
+            name = "GOTIFY_DATABASE_CONNECTION"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret_v1.postgres[0].metadata[0].name
+                key  = "connection"
+              }
             }
           }
           env {
@@ -81,7 +108,8 @@ resource "kubernetes_deployment_v1" "this" {
   }
   depends_on = [
     kubernetes_namespace_v1.this,
-    kubernetes_secret_v1.this
+    kubernetes_secret_v1.this,
+    kubernetes_manifest.postgres
   ]
 }
 
