@@ -10,13 +10,45 @@ locals {
           {
             alert = "LokiErrorLog"
             expr  = <<-EOT
-              sum by (namespace, pod, container) (
-                count_over_time(
-                  {namespace=~".+"}
-                  |~ "(?i)(error|fatal|panic)"
-                  | json
-                  | level =~ "(?i)error|fatal|panic" or __error__ != ""
-                  [5m]
+              (
+                sum by (namespace, pod, container) (
+                  count_over_time(
+                    {namespace=~".+"}
+                    |~ "(?i)(error|fatal|panic)"
+                    | json
+                    | level =~ "(?i)error|fatal|panic"
+                    [5m]
+                  )
+                )
+                or
+                sum by (namespace, pod, container) (
+                  count_over_time(
+                    {namespace=~".+"}
+                    |~ "(?i)(error|fatal|panic)"
+                    | logfmt
+                    | level =~ "(?i)error|fatal|panic"
+                    [5m]
+                  )
+                )
+                or
+                sum by (namespace, pod, container) (
+                  count_over_time(
+                    {namespace=~".+"}
+                    |~ "^[EF][0-9]{4}\\s+[0-9]{2}:[0-9]{2}:[0-9]{2}"
+                    !~ "(?i)(Handler timeout|context canceled|Post-timeout activity|Unhandled Error|write a (JSON|fallback JSON) response|apiserver received an error)"
+                    [5m]
+                  )
+                )
+                or
+                sum by (namespace, pod, container) (
+                  count_over_time(
+                    {namespace=~".+"}
+                    |~ "(?i)(\\berror\\b|\\bfatal\\b|\\bpanic\\b)"
+                    !~ "^[EFIW][0-9]{4}\\s+[0-9]{2}:[0-9]{2}:[0-9]{2}"
+                    | json
+                    | __error__ = "JSONParserErr"
+                    [5m]
+                  )
                 )
               ) > 20
             EOT
