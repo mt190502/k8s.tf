@@ -80,7 +80,7 @@ resource "helm_release" "this" {
       value = "json"
     }
   ]
-  values = [yamlencode({
+  values = [sensitive(yamlencode({
     alertmanager = {
       config = {
         global = {}
@@ -182,6 +182,6 @@ resource "helm_release" "this" {
         }
       }
     }
-  })]
+  }))]
   depends_on = [kubernetes_namespace_v1.this]
 }
