@@ -29,7 +29,7 @@ resource "kubernetes_deployment_v1" "this" {
       spec {
         init_container {
           name  = "${var.config.name}-init"
-          image = "tomsquest/docker-radicale:3.7.5.0"
+          image = "tomsquest/docker-radicale:3.7.6.0"
           command = [
             "sh",
             "-c",
@@ -57,7 +57,7 @@ resource "kubernetes_deployment_v1" "this" {
         }
         container {
           name  = var.config.name
-          image = "tomsquest/docker-radicale:3.7.5.0"
+          image = "tomsquest/docker-radicale:3.7.6.0"
           command = [
             "sh",
             "-c",
