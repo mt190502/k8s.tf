@@ -73,12 +73,10 @@ resource "kubernetes_config_map_v1" "repo_config" {
                     echo "    autoplan:"
                     echo "      enabled: true"
                     echo "      when_modified:"
-                    echo "        - \"$${up}modules/manifests/$category/$name/**/*.tf\""
-                    echo "        - \"$${up}modules/manifests/$category/$name/**/*.hcl\""
                     echo "        - \"$${up}modules/common.hcl\""
+                    echo "        - \"$${up}modules/manifests/$category/$name/**/*.hcl\""
+                    echo "        - \"$${up}modules/manifests/$category/$name/**/*.tf\""
                     echo "        - \"$${up}modules/manifests/terragrunt.stack.hcl\""
-                    echo "        - \"$${up}prod.values.hcl\""
-                    echo "        - \"$${up}prod.secrets.hcl\""
                   done
                 } > atlantis.yaml
                 echo "Generated atlantis.yaml with $(grep -c '  - name:' atlantis.yaml) projects"
