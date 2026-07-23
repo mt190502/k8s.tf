@@ -298,6 +298,9 @@ locals {
           storage_size   = "1Gi"
         }
       }
+      kyverno = {
+        enabled = true
+      }
       loki = {
         config = {
           s3               = "loki"

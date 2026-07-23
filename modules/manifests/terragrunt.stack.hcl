@@ -135,6 +135,22 @@ unit "kube_prometheus_stack" {
   }
 }
 
+unit "kyverno" {
+  source = "./core/kyverno"
+  path   = "core/kyverno"
+  values = {
+    enabled = try(local.core.kyverno.enabled, true)
+  }
+}
+
+unit "kyverno_policies" {
+  source = "./core/kyverno/policies"
+  path   = "core/kyverno/policies"
+  values = {
+    enabled = try(local.core.kyverno.enabled, true)
+  }
+}
+
 unit "loki" {
   source = "./core/loki"
   path   = "core/loki"
