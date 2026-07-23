@@ -33,7 +33,7 @@ resource "helm_release" "this" {
     },
     {
       name  = "grafana.persistence.accessModes[0]"
-      value = "ReadWriteMany"
+      value = "ReadWriteOnce"
     },
     {
       name  = "grafana.persistence.size"
