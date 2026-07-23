@@ -15,16 +15,6 @@ resource "helm_release" "this" {
     }
   ]
   values = [yamlencode({
-    tolerations = [
-      {
-        key      = "node-role.kubernetes.io/control-plane",
-        operator = "Exists",
-        effect   = "NoSchedule"
-      }
-    ]
-    nodeSelector = {
-      "node-role.kubernetes.io/control-plane" = ""
-    }
     affinity = {
       podAntiAffinity = {
         preferredDuringSchedulingIgnoredDuringExecution = [
