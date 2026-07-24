@@ -21,10 +21,24 @@ resource "kubernetes_manifest" "persistent_volume_rollout" {
               }
             ]
           }
+          exclude = {
+            any = [
+              {
+                resources = {
+                  namespaces = ["slimserve"]
+                }
+              }
+            ]
+          }
           preconditions = {
             all = [
               {
-                key      = "{{ request.object.spec.template.spec.volumes[?persistentVolumeClaim] | length(@) }}"
+                key      = "{{ request.object.spec.template.metadata.labels.\"app.kubernetes.io/name\" || '' }}"
+                operator = "NotEquals"
+                value    = ""
+              },
+              {
+                key      = "{{ (request.object.spec.template.spec.volumes || `[]`) | [?persistentVolumeClaim] | length(@) }}"
                 operator = "GreaterThan"
                 value    = 0
               }
@@ -44,23 +58,17 @@ resource "kubernetes_manifest" "persistent_volume_rollout" {
                 }
                 template = {
                   spec = {
-                    affinity = {
-                      podAffinity = {
-                        preferredDuringSchedulingIgnoredDuringExecution = [
+                      affinity = {
+                        podAffinity = {
+                          preferredDuringSchedulingIgnoredDuringExecution = []
+                          requiredDuringSchedulingIgnoredDuringExecution = [
                           {
-                            weight = 100
-                            podAffinityTerm = {
-                              labelSelector = {
-                                matchExpressions = [
-                                  {
-                                    key      = "app.kubernetes.io/name"
-                                    operator = "Exists"
-                                  }
-                                ]
+                            labelSelector = {
+                              matchLabels = {
+                                "app.kubernetes.io/name" = "{{ request.object.spec.template.metadata.labels.\"app.kubernetes.io/name\" }}"
                               }
-                              matchLabelKeys = ["app.kubernetes.io/name"]
-                              topologyKey    = "kubernetes.io/hostname"
                             }
+                            topologyKey = "kubernetes.io/hostname"
                           }
                         ]
                       }
