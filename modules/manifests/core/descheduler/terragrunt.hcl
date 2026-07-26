@@ -46,6 +46,11 @@ generate "versions" {
   EOF
 }
 
+dependency "kube_prometheus_stack_pre" {
+  config_path  = "../kube-prometheus-stack/pre"
+  skip_outputs = true
+}
+
 inputs = {
   enabled = try(values.enabled, true)
   config = {
