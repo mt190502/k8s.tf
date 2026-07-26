@@ -101,7 +101,10 @@ resource "null_resource" "delete_old_cilium_job" {
   }
   provisioner "local-exec" {
     command = <<-CMD
-      kubectl delete job -n kube-system -l app=helm-install-cilium --ignore-not-found=true
+      context="admin@${var.config.cluster_name}"
+      if kubectl --context="$context" cluster-info > /dev/null 2>&1; then
+        kubectl --context="$context" delete job -n kube-system -l app=helm-install-cilium --ignore-not-found=true
+      fi
     CMD
   }
 }

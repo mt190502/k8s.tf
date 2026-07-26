@@ -52,7 +52,7 @@ locals {
       assignments = [
         {
           selector     = { role = "controlplane" }
-          architecture = "arm64"
+          architecture = "amd64"
           locations    = ["hel1", "nbg1", "fsn1"]
           strategy     = "roundrobin"
         },
@@ -109,8 +109,7 @@ locals {
         ]
       }
       images = {
-        amd64 = { id = "368740932", code = "cx33" }
-        arm64 = { id = "368740925", code = "cax11" }
+        amd64 = { id = "412483162", code = "cx33" }
       }
       private_network = {
         enabled = true

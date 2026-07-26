@@ -11,7 +11,7 @@ observability, and certificate management.
 - Cilium CNI for pod networking (WireGuard optional, currently disabled)
 - Traefik Gateway API for ingress with HTTPS/QUIC support
 - Tailscale mesh for secure node-to-node communication (Kubespan disabled)
-- Mixed architecture: ARM64 control planes, AMD64 workers
+- AMD64 control planes and workers across Helsinki, Nuremberg, and Falkenstein
 - SOPS + age encryption for sensitive configuration
 - Terragrunt stack-based deployment with dependency management
 - Centralized mock outputs for plan/destroy without applied state
@@ -49,14 +49,15 @@ graph TD
       mongo["MongoDB Operator"]
       pg["CloudNative-PG"]
       psmdb["PSMDB Operator"]
+      kyverno["Kyverno"]
       reflector["Reflector"]
       testing["Testing"]
       tso["Tailscale Operator"]
       traefik["Traefik"]
+      gotify["Gotify"]
     end
     subgraph APPS["Applications"]
       anki["Anki"]
-      gotify["Gotify"]
       miniflux["Miniflux"]
       nightscout["Nightscout"]
       radicale["Radicale"]
@@ -68,17 +69,17 @@ graph TD
 
     subgraph CLUSTER1["Hetzner Cloud"]
       subgraph HEL1["🇫🇮 Helsinki"]
-        m1a["m1 (CP/arm64)"]
+        m1a["m1 (CP/amd64)"]
         w1a["w1 (amd64)"]
       end
 
       subgraph NBG1["🇩🇪 Nuremberg"]
-        m2a["m2 (CP/arm64)"]
+        m2a["m2 (CP/amd64)"]
         w2a["w2 (amd64)"]
       end
 
       subgraph FSN1["🇩🇪 Falkenstein"]
-        m3a["m3 (CP/arm64)"]
+        m3a["m3 (CP/amd64)"]
         w3a["w3 (amd64)"]
       end
     end
@@ -118,8 +119,8 @@ graph TD
 
   class domain,cloudflare infra;
   class route,gateway,gwprovider,tailscale network;
-  class atlantis,cert,monitoring,dnsutils,reflector,pg,psmdb,testing,tso,traefik,alloy,descheduler,loki,mongo core;
-  class anki,miniflux,nightscout,radicale,redmine,umami,gotify,slimserve,sync app;
+  class atlantis,cert,monitoring,dnsutils,reflector,pg,psmdb,kyverno,testing,tso,traefik,alloy,descheduler,loki,mongo,gotify core;
+  class anki,miniflux,nightscout,radicale,redmine,umami,slimserve,sync app;
   class storage_s3,storage_longhorn storage;
   class m1a,w1a,m2a,w2a,m3a,w3a node;
 
@@ -141,14 +142,15 @@ graph TD
 ## Prerequisites
 
 
-| Tool                  | Role                                               |
-| --------------------- | -------------------------------------------------- |
-| OpenTofu or Terraform | Provider and resource engine                       |
-| Terragrunt            | Stack generation, `run --all`, DAG                 |
-| `sops` + `age`        | Encryption for `secrets.hcl` / `packer/secret.hcl` |
-| `kubectl`             | Cluster access before manifest plan/apply          |
-| `jq`                  | SOPS status check during `make generate`           |
-| Packer (optional)     | Talos image build for Hetzner                      |
+| Tool                  | Role                                                           |
+| --------------------- | -------------------------------------------------------------- |
+| OpenTofu or Terraform | Provider and resource engine                                   |
+| Terragrunt            | Stack generation, `run --all`, DAG                             |
+| GNU Make              | Repository automation targets                                  |
+| `sops` + `age`        | Encryption for `<env>.secrets.hcl` / `packer/<env>.secret.hcl` |
+| `kubectl`             | Cluster access before manifest plan/apply                      |
+| `jq`                  | SOPS status check during `make generate`                       |
+| Packer (optional)     | Talos image build for Hetzner                                  |
 
 <br>
 
@@ -157,7 +159,7 @@ graph TD
 ### 1. Secrets
 
 ```sh
-cp secrets.hcl.example secrets.hcl
+cp secrets.hcl.example prod.secrets.hcl
 # Fill in your credentials (must be plain text before encryption) (https://github.com/FiloSottile/age)
 export SOPS_AGE_KEY_FILE=~/.config/sops/age/keys.txt
 make encrypt
@@ -177,7 +179,7 @@ blocks in `prod.values.hcl` for your environment.
 
 ### 3. Generate Stack and Apply
 
-Default environment is **prod** (`ENV=prod`). `make generate` requires `secrets.hcl`
+Default environment is **prod** (`ENV=prod`). `make generate` requires `prod.secrets.hcl`
 to be **decrypted**.
 
 ```sh
@@ -196,12 +198,12 @@ make manifests-apply
 
 ### Repository Architecture
 
-All shared configuration lives under `locals` in `prod.values.hcl`. Sensitive values such as API tokens are stored in `secrets.hcl` and encrypted with **SOPS**.
+All shared configuration lives under `locals` in `prod.values.hcl`. Sensitive values such as API tokens are stored in `prod.secrets.hcl` and encrypted with **SOPS**.
 
-| Layer              | Content                                                                                                                                                                                                                                                                                                                       |
-|:------------------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
-| **Infrastructure** | Talos machine secrets, patch templates, Hetzner servers + firewall, Tailscale devices, Talos bootstrap, kubeconfig, Cloudflare DNS records                                                                                                                                                                                    |
-| **Manifests**      | Longhorn, S3 CSI, Reflector, CloudNativePG, PSMDB Operator, MongoDB Community Operator, kube-prometheus-stack, Loki, Grafana Alloy, cert-manager, Descheduler, Atlantis, Traefik, Tailscale Operator, DNS utils, testing, plus apps (anki, gotify, miniflux, nightscout, radicale, redmine, slimserve, syncstorage-rs, umami) |
+| Layer              | Content                                                                                                                                                                                                                                                                                                                                                                   |
+|:------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+| **Infrastructure** | Talos machine secrets, patch templates, Hetzner servers + firewall, Tailscale devices, Talos bootstrap, kubeconfig, Cloudflare DNS records                                                                                                                                                                                                                                |
+| **Manifests**      | Longhorn, S3 CSI, Reflector, CloudNativePG, MongoDB Community Operator, PSMDB Operator (disabled), kube-prometheus-stack, Loki, Grafana Alloy, cert-manager, Descheduler, Atlantis, Gotify, Kyverno and policies, Traefik, Tailscale Operator, DNS utils, testing (disabled), plus apps (anki, miniflux, nightscout, radicale, redmine, slimserve, syncstorage-rs, umami) |
 
 ---
 
@@ -210,7 +212,6 @@ All shared configuration lives under `locals` in `prod.values.hcl`. Sensitive va
 ```mermaid
 graph TD
   subgraph MODULES["Modules"]
-    LE["Let's Encrypt"]
     CF["Cloudflare"]
     TPn["Talos"]
     TSn["Tailscale"]
@@ -218,7 +219,7 @@ graph TD
 
     subgraph INPUTS["Inputs"]
       V["prod.values.hcl<br>(reproducible configuration)"]
-      S["secrets.hcl<br>(SOPS)"]
+      S["prod.secrets.hcl<br>(SOPS)"]
     end
 
     subgraph INFRA["Stack: infra"]
@@ -241,9 +242,13 @@ graph TD
         CNPG["cnpg"]
         PSMDB["psmdb-operator"]
         MONGO["mongodb-community-operator"]
+        KPSPRE["kube-prometheus-stack/pre"]
         KPS["kube-prometheus-stack"]
         LOKI["loki"]
         ALLOY["alloy"]
+        KYV["kyverno"]
+        KYVP["kyverno/policies"]
+        GOTIFY["gotify"]
         DNS["dnsutils"]
         TSO["tailscale-operator"]
         CM["cert-manager"]
@@ -253,7 +258,6 @@ graph TD
       end
       subgraph APPS["Apps"]
         ANKI["anki"]
-        GOTIFY["gotify"]
         MINI["miniflux"]
         NS["nightscout"]
         RAD["radicale"]
@@ -262,14 +266,15 @@ graph TD
         SYNC["syncstorage-rs"]
         UMA["umami"]
       end
-      CP -.->|DNS / API ready| LH
       LH --> RF & CNPG & PSMDB & MONGO & KPS & TSO
+      KPSPRE --> KPS & DESCHED
       LH & KPS --> LOKI
       KPS --> ALLOY
       GOTIFY --> KPS
-      RF & CNPG & KPS --> CM
+      RF & CNPG & KPSPRE --> CM
       CM & LH --> ATL
       CM --> TF & TS & DNS & RAD & GOTIFY
+      KYV --> KYVP
       CM & CNPG --> ANKI & MINI & RED & UMA & SYNC
       CM & MONGO --> NS
       S3 & CM --> SLIM
@@ -284,7 +289,6 @@ graph TD
   TAP -.-> TPn
   TP -.-> TPn
   CP -.-> CF
-  CM -.-> LE
 
   classDef infraTarget fill:#0ea5e9,stroke:#0369a1,color:#fff;     
   classDef coreTarget fill:#10b981,stroke:#065f46,color:#fff;       
@@ -295,9 +299,9 @@ graph TD
 
   class INPUTS inputTarget;
   class TP,HP,TSP,TAP,CP infraTarget;
-  class ATL,LH,S3,RF,CNPG,PSMDB,MONGO,KPS,LOKI,ALLOY,DNS,TSO,CM,DESCHED,TF,TS coreTarget;
-  class ANKI,GOTIFY,MINI,NS,RAD,RED,SLIM,SYNC,UMA appTarget;
-  class HZ,TSn,CF,TPn,LE,V,S internalTarget;
+  class ATL,LH,S3,RF,CNPG,PSMDB,MONGO,KPSPRE,KPS,LOKI,ALLOY,KYV,KYVP,GOTIFY,DNS,TSO,CM,DESCHED,TF,TS coreTarget;
+  class ANKI,MINI,NS,RAD,RED,SLIM,SYNC,UMA appTarget;
+  class HZ,TSn,CF,TPn,V,S internalTarget;
   class INFRA,MANIFESTS,CORE,APPS inputTarget;
   class MODULES externalTarget;
 
@@ -317,7 +321,7 @@ graph TD
 /
 ├── terragrunt.stack.hcl               # Root stack: infra + manifests value injection
 ├── prod.values.hcl                    # Single source of truth (cluster, nodes, app versions)
-├── secrets.hcl                        # Never committed in plain text; encrypted with SOPS
+├── prod.secrets.hcl                   # Production secrets; encrypted with SOPS
 ├── secrets.hcl.example                # Template
 ├── .sops.yaml                         # SOPS / age rules
 ├── atlantis.yaml                      # Repo-level Atlantis project config
@@ -349,7 +353,9 @@ graph TD
 │       │   ├── cnpg/                  # CloudNativePG operator
 │       │   ├── descheduler/           # Pod rebalancing (RemoveDuplicates, LowNodeUtilization)
 │       │   ├── dnsutils/              # Debug DNS utilities
+│       │   ├── gotify/                # Push notification relay
 │       │   ├── kube-prometheus-stack/ # Monitoring stack (pre + post)
+│       │   ├── kyverno/               # Admission policies and policy resources
 │       │   ├── loki/                  # Distributed log aggregation (S3-backed)
 │       │   ├── longhorn/              # Distributed block storage
 │       │   ├── mongodb-community-operator/ # MongoDB Community Operator
@@ -362,7 +368,6 @@ graph TD
 │       └── apps/
 │           ├── template/              # App template for new applications
 │           ├── anki/                  # Anki sync server
-│           ├── gotify/                # Push notification relay
 │           ├── miniflux/              # RSS reader
 │           ├── nightscout/            # CGM data visualization
 │           ├── radicale/              # CalDAV/CardDAV server
