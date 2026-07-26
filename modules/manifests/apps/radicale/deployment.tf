@@ -14,7 +14,16 @@ resource "kubernetes_deployment_v1" "this" {
     }
   }
   spec {
-    replicas = var.config.replicas
+    replicas                  = var.config.replicas
+    min_ready_seconds         = 300
+    progress_deadline_seconds = 1200
+    strategy {
+      type = "RollingUpdate"
+      rolling_update {
+        max_surge       = "1%"
+        max_unavailable = "0%"
+      }
+    }
     selector {
       match_labels = {
         "app.kubernetes.io/name" = var.config.name
@@ -27,6 +36,19 @@ resource "kubernetes_deployment_v1" "this" {
         }
       }
       spec {
+        affinity {
+          pod_affinity {
+            required_during_scheduling_ignored_during_execution {
+              label_selector {
+                match_labels = {
+                  "app.kubernetes.io/name" = var.config.name
+                }
+              }
+              topology_key = "kubernetes.io/hostname"
+            }
+          }
+        }
+
         init_container {
           name  = "${var.config.name}-init"
           image = "tomsquest/docker-radicale:3.7.6.0"
