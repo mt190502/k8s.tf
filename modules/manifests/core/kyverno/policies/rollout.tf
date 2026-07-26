@@ -47,7 +47,7 @@ resource "kubernetes_manifest" "persistent_volume_rollout" {
           mutate = {
             patchStrategicMerge = {
               spec = {
-                minReadySeconds         = 600
+                minReadySeconds         = 300
                 progressDeadlineSeconds = 1200
                 strategy = {
                   type = "RollingUpdate"
@@ -58,10 +58,10 @@ resource "kubernetes_manifest" "persistent_volume_rollout" {
                 }
                 template = {
                   spec = {
-                      affinity = {
-                        podAffinity = {
-                          preferredDuringSchedulingIgnoredDuringExecution = []
-                          requiredDuringSchedulingIgnoredDuringExecution = [
+                    affinity = {
+                      podAffinity = {
+                        preferredDuringSchedulingIgnoredDuringExecution = []
+                        requiredDuringSchedulingIgnoredDuringExecution = [
                           {
                             labelSelector = {
                               matchLabels = {
