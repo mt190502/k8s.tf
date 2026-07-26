@@ -1,5 +1,5 @@
 ## ============================================================================================= ##
-#  modules/manifests/apps/gotify/namespace.tf                                                     #
+#  modules/manifests/core/gotify/namespace.tf                                                     #
 #                                                                                                 #
 #  Namespace for the application - isolates resources within the cluster.                         #
 ## ============================================================================================= ##

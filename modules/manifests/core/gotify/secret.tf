@@ -1,5 +1,5 @@
 ## ============================================================================================= ##
-#  modules/manifests/apps/gotify/secret.tf                                                        #
+#  modules/manifests/core/gotify/secret.tf                                                        #
 #                                                                                                 #
 #  Kubernetes Secret for application-sensitive data.                                              #
 #  Add secret keys as needed for your application (passwords, tokens, keys).                      #

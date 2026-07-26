@@ -154,16 +154,6 @@ locals {
           hostname = "anki"
         }
       }
-      gotify = {
-        enabled = true
-        config = {
-          hostname = "ntfy"
-          pg = {
-            replicas     = 1
-            storage_size = "1Gi"
-          }
-        }
-      }
       slimserve = {
         enabled = true
         config = {
@@ -289,6 +279,16 @@ locals {
       }
       dnsutils = {
         enabled = true
+      }
+      gotify = {
+        enabled = true
+        config = {
+          hostname = "ntfy"
+          pg = {
+            replicas     = 1
+            storage_size = "1Gi"
+          }
+        }
       }
       kube_prometheus_stack = {
         enabled = true

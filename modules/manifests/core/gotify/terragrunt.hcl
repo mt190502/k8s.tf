@@ -1,5 +1,5 @@
 ## ============================================================================================= ##
-#  modules/manifests/apps/gotify/terragrunt.hcl                                                   #
+#  modules/manifests/core/gotify/terragrunt.hcl                                                   #
 #                                                                                                 #
 #  Terragrunt wrapper for gotify manifests.                                                       #
 #  Config is provided from stack values.                                                          #
@@ -75,7 +75,7 @@ generate "versions" {
 #  Dependencies - enforce apply order and wire outputs from upstream modules.                     #
 ## --------------------------------------------------------------------------------------------- ##
 dependency "cert_manager" {
-  config_path = "../../core/cert-manager"
+  config_path = "../cert-manager"
   mock_outputs = {
     gateway_name      = "mock-gateway"
     gateway_namespace = "mock-namespace"
@@ -85,7 +85,7 @@ dependency "cert_manager" {
 }
 
 dependency "cnpg" {
-  config_path  = "../../core/cnpg"
+  config_path  = "../cnpg"
   skip_outputs = true
 }
 

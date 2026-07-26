@@ -1,5 +1,5 @@
 ## ============================================================================================= ##
-#  modules/manifests/apps/gotify/variables.tf                                                     #
+#  modules/manifests/core/gotify/variables.tf                                                     #
 #                                                                                                 #
 #    enabled             --- Enable this module                                                   #
 #    config              --- Configuration object                                                 #

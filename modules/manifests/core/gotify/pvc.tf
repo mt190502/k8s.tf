@@ -1,5 +1,5 @@
 ## ============================================================================================= ##
-#  modules/manifests/apps/gotify/pvc.tf                                                           #
+#  modules/manifests/core/gotify/pvc.tf                                                           #
 #                                                                                                 #
 #  PersistentVolumeClaim for applications requiring persistent storage.                           #
 #  Mount this PVC in Deployment/StatefulSet containers.                                           #

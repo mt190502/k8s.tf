@@ -118,6 +118,27 @@ unit "dnsutils" {
   }
 }
 
+unit "gotify" {
+  source = "./core/gotify"
+  path   = "core/gotify"
+  values = {
+    enabled = try(local.core.gotify.enabled, false)
+    config = merge(
+      try(local.core.gotify.config, {}),
+      { domain = local.rootvars.cluster_url.dns, preferred_gateway = local.rootvars.preferred_gateway }
+    )
+    secrets = {
+      app = {
+        password = try(local.secrets.manifests.core.gotify.app.password, "")
+      }
+      bridges = try(local.secrets.manifests.core.gotify.bridges, {})
+      pg = {
+        password = try(local.secrets.manifests.core.gotify.pg.password, "")
+      }
+    }
+  }
+}
+
 unit "kube_prometheus_stack" {
   source = "./core/kube-prometheus-stack"
   path   = "core/kube-prometheus-stack"
@@ -267,27 +288,6 @@ unit "anki" {
     secrets = {
       app = {
         accounts = try(local.secrets.manifests.apps.anki.app.accounts, [])
-      }
-    }
-  }
-}
-
-unit "gotify" {
-  source = "./apps/gotify"
-  path   = "apps/gotify"
-  values = {
-    enabled = try(local.apps.gotify.enabled, false)
-    config = merge(
-      try(local.apps.gotify.config, {}),
-      { domain = local.rootvars.cluster_url.dns, preferred_gateway = local.rootvars.preferred_gateway }
-    )
-    secrets = {
-      app = {
-        password = try(local.secrets.manifests.apps.gotify.app.password, "")
-      }
-      bridges = try(local.secrets.manifests.apps.gotify.bridges, {})
-      pg = {
-        password = try(local.secrets.manifests.apps.gotify.pg.password, "")
       }
     }
   }

@@ -1,5 +1,5 @@
 ## ============================================================================================= ##
-#  modules/manifests/apps/gotify/db.tf                                                            #
+#  modules/manifests/core/gotify/db.tf                                                            #
 #                                                                                                 #
 #  CloudNativePG (CNPG) PostgreSQL cluster - managed by cnpg operator.                            #
 #  Requires cnpg-operator to be installed. Creates database with owner credentials                #

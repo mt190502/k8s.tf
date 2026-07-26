@@ -1,5 +1,5 @@
 ## ============================================================================================= ##
-#  modules/manifests/apps/gotify/httproute.tf                                                     #
+#  modules/manifests/core/gotify/httproute.tf                                                     #
 #                                                                                                 #
 #  HTTPRoute for Gateway API ingress - routes traffic from Gateway to Service.                    #
 #  Requires cert-manager Gateway to be configured.                                                #
