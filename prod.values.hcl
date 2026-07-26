@@ -161,7 +161,7 @@ locals {
           persistence = {
             enabled      = true
             bucket_name  = "files"
-            s3_endpoint  = "http://100.102.30.2:3900"
+            s3_endpoint  = "http://100.100.30.2:3900"
             s3_region    = "us-east-1"
             storage_size = "1T"
           }
@@ -303,7 +303,7 @@ locals {
       loki = {
         config = {
           s3               = "loki"
-          endpoint         = "http://100.102.30.2:3900"
+          endpoint         = "http://100.100.30.2:3900"
           region           = "us-east-1"
           force_path_style = true
         }
@@ -314,7 +314,7 @@ locals {
       s3_csi = {
         enabled = true
         config = {
-          endpoint = "http://100.102.30.2:3900"
+          endpoint = "http://100.100.30.2:3900"
           region   = "us-east-1"
         }
       }
