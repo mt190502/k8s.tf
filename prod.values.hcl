@@ -151,6 +151,7 @@ locals {
         enabled = true
         config = {
           hostname = "anki"
+          storage_size = "2Gi"
         }
       }
       slimserve = {
