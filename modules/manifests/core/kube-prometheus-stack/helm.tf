@@ -5,7 +5,7 @@ resource "helm_release" "this" {
   name            = "kube-prometheus-stack"
   repository      = "https://prometheus-community.github.io/helm-charts"
   chart           = "kube-prometheus-stack"
-  version         = "87.21.0"
+  version         = "88.0.1"
   namespace       = kubernetes_namespace_v1.this.metadata[0].name
   wait            = false
   skip_crds       = true

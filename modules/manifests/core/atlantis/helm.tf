@@ -9,7 +9,7 @@ locals {
   jq_version = "1.8.1"
 
   # renovate: datasource=github-releases depName=gruntwork-io/terragrunt
-  terragrunt_version = "v1.1.1"
+  terragrunt_version = "v1.1.2"
 
   # renovate: datasource=github-releases depName=opentofu/opentofu
   opentofu_version = "1.12.5"

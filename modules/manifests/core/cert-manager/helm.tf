@@ -5,7 +5,7 @@ resource "helm_release" "this" {
   name            = "cert-manager"
   repository      = "https://charts.jetstack.io"
   chart           = "cert-manager"
-  version         = "v1.21.0"
+  version         = "v1.21.1"
   namespace       = kubernetes_namespace_v1.this.metadata[0].name
   upgrade_install = true
   set = [
