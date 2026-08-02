@@ -15,6 +15,8 @@ locals {
                   count_over_time(
                     {namespace=~".+"}
                     |~ "(?i)(error|fatal|panic)"
+                    !~ "query_hash="
+                    !~ "(?i)timestamp too old"
                     | json
                     | level =~ "(?i)error|fatal|panic"
                     [5m]
@@ -25,6 +27,8 @@ locals {
                   count_over_time(
                     {namespace=~".+"}
                     |~ "(?i)(error|fatal|panic)"
+                    !~ "query_hash="
+                    !~ "(?i)timestamp too old"
                     | logfmt
                     | level =~ "(?i)error|fatal|panic"
                     [5m]
@@ -45,6 +49,8 @@ locals {
                     {namespace=~".+"}
                     |~ "(?i)(\\berror\\b|\\bfatal\\b|\\bpanic\\b)"
                     !~ "^[EFIW][0-9]{4}\\s+[0-9]{2}:[0-9]{2}:[0-9]{2}"
+                    !~ "query_hash="
+                    !~ "(?i)timestamp too old"
                     | json
                     | __error__ = "JSONParserErr"
                     [5m]
