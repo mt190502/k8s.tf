@@ -24,7 +24,7 @@ resource "helm_release" "atlantis" {
   namespace  = kubernetes_namespace_v1.this[0].metadata[0].name
   repository = "https://runatlantis.github.io/helm-charts"
   chart      = "atlantis"
-  version    = "6.10.0"
+  version    = "6.11.0"
   set = [
     {
       name  = "atlantisUrl"
