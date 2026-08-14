@@ -43,7 +43,7 @@ resource "kubernetes_deployment_v1" "this" {
         }
         container {
           name  = var.config.name
-          image = "ghcr.io/umami-software/umami:3.2.0"
+          image = "ghcr.io/umami-software/umami:3.3.0"
           port {
             container_port = var.config.port
           }
