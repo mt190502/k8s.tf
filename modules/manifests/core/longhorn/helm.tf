@@ -5,7 +5,7 @@ resource "helm_release" "this" {
   name            = "longhorn"
   repository      = "https://charts.longhorn.io"
   chart           = "longhorn"
-  version         = "1.12.0"
+  version         = "1.12.1"
   namespace       = kubernetes_namespace_v1.this.metadata[0].name
   upgrade_install = true
   set = [
