@@ -191,9 +191,10 @@ locals {
       kubeprism = true
     }
     versions = {
-      talos      = "v1.12.0"
-      kubernetes = "v1.35.0"
-      cilium     = "1.19.0"
+      talos                = "v1.12.0"
+      kubernetes           = "v1.35.0"
+      cilium               = "1.19.0"
+      external_snapshotter = "v8.6.0"
     }
   }
 

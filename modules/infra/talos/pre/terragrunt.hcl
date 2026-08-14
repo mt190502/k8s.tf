@@ -64,11 +64,12 @@ inputs = {
     preferred_gateway = try(values.config.preferred_gateway, "cilium")
   }
   versions = {
-    cilium         = try(values.versions.cilium, "")
-    gateway_api    = try(values.versions.gateway_api, "")
-    kubernetes     = try(values.versions.kubernetes, "")
-    metrics_server = try(values.versions.metrics_server, "")
-    talos          = try(values.versions.talos, "")
+    cilium               = try(values.versions.cilium, "")
+    external_snapshotter = try(values.versions.external_snapshotter, "")
+    gateway_api          = try(values.versions.gateway_api, "")
+    kubernetes           = try(values.versions.kubernetes, "")
+    metrics_server       = try(values.versions.metrics_server, "")
+    talos                = try(values.versions.talos, "")
   }
   rootvars = try(values.rootvars, {})
 }

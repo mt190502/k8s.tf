@@ -68,8 +68,9 @@ data "talos_machine_configuration" "nodes" {
       }),
       templatefile("../templates/longhorn.tmpl", {}),
       templatefile("../templates/extras.tmpl", {
-        GATEWAY_API_VERSION    = var.versions.gateway_api
-        METRICS_SERVER_VERSION = var.versions.metrics_server
+        EXTERNAL_SNAPSHOTTER_VERSION = var.versions.external_snapshotter
+        GATEWAY_API_VERSION          = var.versions.gateway_api
+        METRICS_SERVER_VERSION       = var.versions.metrics_server
       }),
       templatefile("../templates/kubeprism.tmpl", {
         ENABLED = var.config.kubeprism

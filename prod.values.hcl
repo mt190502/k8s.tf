@@ -139,6 +139,8 @@ locals {
       metrics_server = "v0.9.0"
       # renovate: datasource=github-releases depName=kubernetes-sigs/gateway-api
       gateway_api = "v1.6.1"
+      # renovate: datasource=github-releases depName=kubernetes-csi/external-snapshotter
+      external_snapshotter = "v8.6.0"
     }
   }
 
@@ -150,7 +152,7 @@ locals {
       anki = {
         enabled = true
         config = {
-          hostname = "anki"
+          hostname     = "anki"
           storage_size = "2Gi"
         }
       }
