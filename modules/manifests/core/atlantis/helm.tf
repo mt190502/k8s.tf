@@ -12,7 +12,7 @@ locals {
   terragrunt_version = "v1.1.3"
 
   # renovate: datasource=github-releases depName=opentofu/opentofu
-  opentofu_version = "1.12.5"
+  opentofu_version = "1.12.6"
 
   # renovate: datasource=github-releases depName=getsops/sops
   sops_version = "3.13.3"
@@ -24,7 +24,7 @@ resource "helm_release" "atlantis" {
   namespace  = kubernetes_namespace_v1.this[0].metadata[0].name
   repository = "https://runatlantis.github.io/helm-charts"
   chart      = "atlantis"
-  version    = "6.11.0"
+  version    = "6.14.0"
   set = [
     {
       name  = "atlantisUrl"
