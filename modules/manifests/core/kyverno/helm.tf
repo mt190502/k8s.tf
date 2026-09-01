@@ -2,7 +2,7 @@ resource "helm_release" "this" {
   name             = "kyverno"
   repository       = "https://kyverno.github.io/kyverno/"
   chart            = "kyverno"
-  version          = "3.8.2"
+  version          = "3.9.0"
   namespace        = kubernetes_namespace_v1.this.metadata[0].name
   upgrade_install  = true
   create_namespace = false
