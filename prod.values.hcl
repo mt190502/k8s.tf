@@ -130,7 +130,7 @@ locals {
     ## --------------------------------------------------------------------------------------------- ##
     versions = {
       # renovate: datasource=github-releases depName=siderolabs/talos
-      talos = "v1.13.9"
+      talos = "v1.14.0"
       # renovate: datasource=github-releases depName=siderolabs/kubelet
       kubernetes = "v1.37.0"
       # renovate: datasource=github-releases depName=cilium/cilium
@@ -138,7 +138,7 @@ locals {
       # renovate: datasource=github-releases depName=kubernetes-sigs/metrics-server
       metrics_server = "v0.9.0"
       # renovate: datasource=github-releases depName=kubernetes-sigs/gateway-api
-      gateway_api = "v1.6.1"
+      gateway_api = "v1.6.2"
       # renovate: datasource=github-releases depName=kubernetes-csi/external-snapshotter
       external_snapshotter = "v8.6.0"
     }
