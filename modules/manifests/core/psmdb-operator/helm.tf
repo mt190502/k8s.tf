@@ -5,7 +5,7 @@ resource "helm_release" "this" {
   name            = "psmdb-operator"
   repository      = "https://percona.github.io/percona-helm-charts"
   chart           = "psmdb-operator"
-  version         = "1.23.0"
+  version         = "1.23.1"
   namespace       = kubernetes_namespace_v1.this.metadata[0].name
   upgrade_install = true
   set = [
