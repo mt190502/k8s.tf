@@ -43,7 +43,7 @@ resource "kubernetes_deployment_v1" "this" {
         }
         container {
           name  = var.config.name
-          image = "nightscout/cgm-remote-monitor:15.0.7"
+          image = "nightscout/cgm-remote-monitor:15.0.8"
           port {
             container_port = var.config.port
           }
