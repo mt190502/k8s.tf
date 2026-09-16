@@ -1,5 +1,5 @@
 ## ============================================================================================= ##
-#  modules/manifests/apps/miniflux/httproute.tf                                                   #
+#  modules/manifests/apps/hedgedoc/httproute.tf                                                   #
 #                                                                                                 #
 #  HTTPRoute for Gateway API ingress - routes traffic from Gateway to Service.                    #
 #  Requires cert-manager Gateway to be configured.                                                #

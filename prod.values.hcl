@@ -156,6 +156,23 @@ locals {
           storage_size = "2Gi"
         }
       }
+      hedgedoc = {
+        enabled = true
+        config = {
+          basic_auth   = true
+          hostname     = "md"
+          storage_size = "1Gi"
+          env = {
+            CMD_ALLOW_ANONYMOUS       = "true"
+            CMD_ALLOW_ANONYMOUS_EDITS = "true"
+            CMD_DB_URL                = "sqlite:///data/database.sqlite"
+            CMD_DOCUMENT_MAX_LENGTH   = "100000000"
+            CMD_DOMAIN                = "md.mtaha.dev"
+            CMD_PROTOCOL_USESSL       = "true"
+            CMD_URL_ADDPORT           = "false"
+          }
+        }
+      }
       slimserve = {
         enabled = true
         config = {

@@ -368,6 +368,27 @@ unit "redmine" {
   }
 }
 
+unit "hedgedoc" {
+  source = "./apps/hedgedoc"
+  path   = "apps/hedgedoc"
+  values = {
+    enabled = try(local.apps.hedgedoc.enabled, false)
+    config = merge(
+      try(local.apps.hedgedoc.config, {}),
+      {
+        domain            = try(local.apps.hedgedoc.config.domain, local.rootvars.cluster_url.dns)
+        preferred_gateway = local.rootvars.preferred_gateway
+      }
+    )
+    secrets = {
+      app = {
+        session_secret = try(local.secrets.manifests.apps.hedgedoc.app.session_secret, "")
+      }
+      basic_auth = try(local.secrets.manifests.apps.hedgedoc.basic_auth, try(local.secrets.manifests.apps.misc.basic_auth, { username = "", password_hash = "" }))
+    }
+  }
+}
+
 unit "slimserve" {
   source = "./apps/slimserve"
   path   = "apps/slimserve"

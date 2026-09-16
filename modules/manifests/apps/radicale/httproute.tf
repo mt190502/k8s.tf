@@ -118,14 +118,14 @@ resource "kubernetes_manifest" "httproute" {
               name  = local.traefik_service_enabled ? local.traefik_service_name : kubernetes_service_v1.this[0].metadata[0].name
               group = local.traefik_service_enabled ? "traefik.io" : ""
               kind  = local.traefik_service_enabled ? "TraefikService" : "Service"
-              port = var.config.port
+              port  = var.config.port
             }
           ]
         }
       ]
     }
   }
-  depends_on = [null_resource.traefik_service, 
+  depends_on = [null_resource.traefik_service,
     kubernetes_manifest.redirect_middleware,
     kubernetes_manifest.backend_tls_policy
   ]
