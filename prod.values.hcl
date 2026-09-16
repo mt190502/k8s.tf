@@ -218,8 +218,9 @@ locals {
             TZ                 = "Europe/Istanbul"
           }
           hostname = "t1d"
+          replicas = 3
           mongo = {
-            replicas     = 2
+            replicas     = 3
             storage_size = "2Gi"
           }
         }

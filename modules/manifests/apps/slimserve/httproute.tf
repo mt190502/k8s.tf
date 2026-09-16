@@ -36,7 +36,9 @@ resource "kubernetes_manifest" "httproute" {
           ]
           backendRefs = [
             {
-              name = kubernetes_service_v1.this[0].metadata[0].name
+              name  = local.traefik_service_enabled ? local.traefik_service_name : kubernetes_service_v1.this[0].metadata[0].name
+              group = local.traefik_service_enabled ? "traefik.io" : ""
+              kind  = local.traefik_service_enabled ? "TraefikService" : "Service"
               port = var.config.port
             }
           ]
@@ -54,6 +56,7 @@ resource "kubernetes_manifest" "httproute" {
       ]
     }
   }
+  depends_on = [null_resource.traefik_service]
 }
 
 resource "kubernetes_secret_v1" "basic_auth" {
