@@ -65,7 +65,7 @@ resource "kubernetes_deployment_v1" "this" {
         }
         container {
           name  = var.config.name
-          image = "gotify/server:3.1.0"
+          image = "gotify/server:3.1.1"
           dynamic "port" {
             for_each = var.config.port != null ? [var.config.port] : []
             content {
