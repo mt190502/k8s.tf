@@ -9,30 +9,13 @@ resource "helm_release" "this" {
   namespace       = data.kubernetes_namespace_v1.this.metadata[0].name
   upgrade_install = true
   set = [
-    {
-      name  = "deschedulerPolicyAPIVersion"
-      value = "descheduler/v1alpha2"
-    },
-    {
-      name  = "deschedulingInterval"
-      value = var.config.descheduling_interval
-    },
-    {
-      name  = "kind"
-      value = "Deployment"
-    },
-    {
-      name  = "leaderElection.enabled"
-      value = "true"
-    },
-    {
-      name  = "replicas"
-      value = var.config.replicas
-    },
-    {
-      name  = "serviceMonitor.enabled"
-      value = "true"
-    }
+    { name = "deschedulerPolicyAPIVersion", value = "descheduler/v1alpha2", },
+    { name = "deschedulerPolicy.nodeSelector", value = "!node-role.kubernetes.io/control-plane", },
+    { name = "deschedulingInterval", value = var.config.descheduling_interval, },
+    { name = "kind", value = "Deployment", },
+    { name = "leaderElection.enabled", value = "true", },
+    { name = "replicas", value = var.config.replicas, },
+    { name = "serviceMonitor.enabled", value = "true", }
   ]
   values = [yamlencode({
     deschedulerPolicy = {
@@ -43,12 +26,14 @@ resource "helm_release" "this" {
             {
               name = "DefaultEvictor"
               args = {
+                minReplicas = 2
                 podProtections = {
                   defaultDisabled = [
                     "PodsWithLocalStorage",
                   ]
                   extraEnabled = [
                     "PodsWithPVC",
+                    "PodsWithoutPDB",
                   ]
                 }
               }
@@ -57,16 +42,16 @@ resource "helm_release" "this" {
               name = "LowNodeUtilization"
               args = {
                 thresholds = {
-                  cpu    = 20
-                  memory = 20
-                  pods   = 20
-                }
-                targetThresholds = {
                   cpu    = 70
-                  memory = 70
+                  memory = 65
                   pods   = 35
                 }
-                numberOfNodes = 1
+                targetThresholds = {
+                  cpu    = 75
+                  memory = 70
+                  pods   = 40
+                }
+                numberOfNodes = 0
                 evictableNamespaces = {
                   exclude = [
                     "kube-system",
