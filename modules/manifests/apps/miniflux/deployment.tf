@@ -116,6 +116,10 @@ resource "kubernetes_deployment_v1" "this" {
             name  = "LOG_FORMAT"
             value = "json"
           }
+          env {
+            name  = "METRICS_COLLECTOR"
+            value = "1"
+          }
           dynamic "env" {
             for_each = var.config.env != null ? var.config.env : {}
             content {

@@ -97,6 +97,10 @@ resource "helm_release" "this" {
   version         = "1.12.1"
   namespace       = var.config.kps_namespace
   upgrade_install = true
+  set = [{
+    name  = "serviceMonitor.enabled"
+    value = true
+  }]
   values = [yamlencode({
     alloy = {
       configMap = {

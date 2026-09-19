@@ -61,6 +61,9 @@ resource "kubernetes_manifest" "postgres" {
       namespace = kubernetes_namespace_v1.this[0].metadata[0].name
     }
     spec = {
+      monitoring = {
+        enablePodMonitor = true
+      }
       instances             = var.config.pg.replicas
       primaryUpdateStrategy = "unsupervised"
       postgresql = {

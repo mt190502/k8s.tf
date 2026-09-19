@@ -25,6 +25,11 @@ resource "kubernetes_config_map_v1" "repo_config" {
   }
   data = {
     "atlantis.yaml" = yamlencode({
+      metrics = {
+        prometheus = {
+          endpoint = "/metrics"
+        }
+      }
       repos = [
         {
           id                     = "/.*/"

@@ -300,7 +300,19 @@ unit "miniflux" {
     enabled = try(local.apps.miniflux.enabled, false)
     config = merge(
       try(local.apps.miniflux.config, {}),
-      { domain = local.rootvars.cluster_url.dns, preferred_gateway = local.rootvars.preferred_gateway }
+      {
+        domain            = local.rootvars.cluster_url.dns
+        preferred_gateway = local.rootvars.preferred_gateway
+        env = merge(
+          try(local.apps.miniflux.config.env, {}),
+          {
+            METRICS_ALLOWED_NETWORKS = join(",", compact([
+              try(local.infra.kubernetes.ipcfg.pod.ipv4, "127.0.0.1/8"),
+              try(local.infra.kubernetes.ipcfg.pod.ipv6, ""),
+            ]))
+          }
+        )
+      }
     )
     secrets = {
       app = {

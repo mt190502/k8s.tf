@@ -11,74 +11,45 @@ resource "helm_release" "this" {
   skip_crds       = true
   upgrade_install = true
   set = [
-    {
-      name  = "alertmanager.config.global.resolve_timeout"
-      value = "5m"
-    },
-    {
-      name  = "alertmanager.alertmanagerSpec.logFormat"
-      value = "json"
-    },
-    {
-      name  = "crds.enabled"
-      value = "false"
-    },
-    {
-      name  = "defaultRules.rules.kubeProxy"
-      value = "false"
-    },
-    {
-      name  = "grafana.persistence.enabled"
-      value = "true"
-    },
-    {
-      name  = "grafana.persistence.accessModes[0]"
-      value = "ReadWriteOnce"
-    },
-    {
-      name  = "grafana.persistence.size"
-      value = var.config.storage_size
-    },
-    {
-      name  = "grafana.route.main.enabled"
-      value = "true"
-    },
-    {
-      name  = "grafana.route.main.apiVersion"
-      value = "gateway.networking.k8s.io/v1"
-    },
-    {
-      name  = "grafana.route.main.kind"
-      value = "HTTPRoute"
-    },
-    {
-      name  = "grafana.route.main.hostnames[0]"
-      value = "${var.config.hostname}.${var.config.domain}"
-    },
-    {
-      name  = "grafana.route.main.parentRefs[0].name"
-      value = var.config.gateway_name
-    },
-    {
-      name  = "grafana.route.main.parentRefs[0].namespace"
-      value = var.config.gateway_namespace
-    },
-    {
-      name  = "grafana.route.main.matches[0].path.type"
-      value = "PathPrefix"
-    },
-    {
-      name  = "grafana.route.main.matches[0].path.value"
-      value = "/"
-    },
-    {
-      name  = "kubeProxy.enabled"
-      value = "false"
-    },
-    {
-      name  = "prometheus.prometheusSpec.logFormat"
-      value = "json"
-    }
+    { name = "alertmanager.alertmanagerSpec.externalUrl", value = "http://kube-prometheus-stack-alertmanager.${kubernetes_namespace_v1.this.metadata[0].name}.svc.cluster.local:9093", },
+    { name = "alertmanager.alertmanagerSpec.logFormat", value = "json", },
+    { name = "alertmanager.config.global.resolve_timeout", value = "5m", },
+    { name = "alertmanager.route.main.apiVersion", value = "gateway.networking.k8s.io/v1", },
+    { name = "alertmanager.route.main.enabled", value = "true", },
+    { name = "alertmanager.route.main.hostnames[0]", value = "${var.config.alertmanager_hostname}.${var.config.domain}", },
+    { name = "alertmanager.route.main.kind", value = "HTTPRoute", },
+    { name = "alertmanager.route.main.matches[0].path.type", value = "PathPrefix", },
+    { name = "alertmanager.route.main.matches[0].path.value", value = "/", },
+    { name = "alertmanager.route.main.parentRefs[0].name", value = var.config.gateway_name, },
+    { name = "alertmanager.route.main.parentRefs[0].namespace", value = var.config.gateway_namespace, },
+    { name = "alertmanager.route.main.parentRefs[0].sectionName", value = "srv-websecure", },
+    { name = "crds.enabled", value = "false", },
+    { name = "defaultRules.rules.kubeProxy", value = "false", },
+    { name = "grafana.persistence.accessModes[0]", value = "ReadWriteOnce", },
+    { name = "grafana.persistence.enabled", value = "true", },
+    { name = "grafana.persistence.size", value = var.config.storage_size, },
+    { name = "grafana.route.main.apiVersion", value = "gateway.networking.k8s.io/v1", },
+    { name = "grafana.route.main.enabled", value = "true", },
+    { name = "grafana.route.main.hostnames[0]", value = "${var.config.hostname}.${var.config.domain}", },
+    { name = "grafana.route.main.kind", value = "HTTPRoute", },
+    { name = "grafana.route.main.matches[0].path.type", value = "PathPrefix", },
+    { name = "grafana.route.main.matches[0].path.value", value = "/", },
+    { name = "grafana.route.main.parentRefs[0].name", value = var.config.gateway_name, },
+    { name = "grafana.route.main.parentRefs[0].namespace", value = var.config.gateway_namespace, },
+    { name = "kubeProxy.enabled", value = "false", },
+    { name = "prometheus.prometheusSpec.externalUrl", value = "http://kube-prometheus-stack-prometheus.${kubernetes_namespace_v1.this.metadata[0].name}.svc.cluster.local:9090", },
+    { name = "prometheus.prometheusSpec.logFormat", value = "json", },
+    { name = "prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues", value = false, },
+    { name = "prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues", value = false, },
+    { name = "prometheus.route.main.apiVersion", value = "gateway.networking.k8s.io/v1", },
+    { name = "prometheus.route.main.enabled", value = "true", },
+    { name = "prometheus.route.main.hostnames[0]", value = "${var.config.prometheus_hostname}.${var.config.domain}", },
+    { name = "prometheus.route.main.kind", value = "HTTPRoute", },
+    { name = "prometheus.route.main.matches[0].path.type", value = "PathPrefix", },
+    { name = "prometheus.route.main.matches[0].path.value", value = "/", },
+    { name = "prometheus.route.main.parentRefs[0].name", value = var.config.gateway_name, },
+    { name = "prometheus.route.main.parentRefs[0].namespace", value = var.config.gateway_namespace, },
+    { name = "prometheus.route.main.parentRefs[0].sectionName", value = "srv-websecure", }
   ]
   values = [sensitive(yamlencode({
     alertmanager = {
@@ -112,6 +83,44 @@ resource "helm_release" "this" {
                 alertname = "InfoInhibitor"
               }
               receiver = "null"
+            }],
+            [{
+              match = {
+                alertname = "LonghornVolumeSpaceUsageHigh"
+              }
+              repeat_interval = "3h"
+              routes = concat(
+                (try(var.secrets.alertmanager.discord_webhook_url, "") != "") ? [{
+                  receiver = "discord"
+                  continue = true
+                }] : [],
+                var.config.gotify_enabled ? [
+                  for name, endpoint in var.config.gotify_bridge_endpoints : {
+                    receiver = "gotify-${name}"
+                    continue = true
+                  } if name != "loki"
+                ] : [],
+                [{ receiver = "null" }]
+              )
+            }],
+            [{
+              match = {
+                alertname = "TraefikHighLatency"
+              }
+              repeat_interval = "1h"
+              routes = concat(
+                (try(var.secrets.alertmanager.discord_webhook_url, "") != "") ? [{
+                  receiver = "discord"
+                  continue = true
+                }] : [],
+                var.config.gotify_enabled ? [
+                  for name, endpoint in var.config.gotify_bridge_endpoints : {
+                    receiver = "gotify-${name}"
+                    continue = true
+                  } if name != "loki"
+                ] : [],
+                [{ receiver = "null" }]
+              )
             }],
             (try(var.secrets.alertmanager.discord_webhook_url, "") != "") ? [{
               receiver = "discord"
@@ -166,7 +175,53 @@ resource "helm_release" "this" {
         )
       }
     }
+    prometheus = {
+      prometheusSpec = {
+        retention     = var.config.prometheus_retention
+        retentionSize = var.config.prometheus_retention_size
+        storageSpec = {
+          volumeClaimTemplate = {
+            spec = {
+              accessModes = ["ReadWriteOnce"]
+              resources = {
+                requests = {
+                  storage = var.config.prometheus_storage_size
+                }
+              }
+            }
+          }
+        }
+      }
+    }
     grafana = {
+      dashboardProviders = {
+        "dashboardproviders.yaml" = {
+          apiVersion = 1
+          providers = [
+            {
+              name            = "default"
+              orgId           = 1
+              folder          = ""
+              type            = "file"
+              disableDeletion = false
+              editable        = true
+              options = {
+                path = "/var/lib/grafana/dashboards/default"
+              }
+            }
+          ]
+        }
+      }
+      dashboards = {
+        default = {
+          atlantis       = { gnetId = 23419, revision = 1, datasource = "Prometheus", }
+          cert_manager   = { gnetId = 11001, revision = 1, datasource = "Prometheus", }
+          cloudnative_pg = { gnetId = 20417, revision = 4, datasource = "Prometheus", }
+          loki           = { gnetId = 14055, revision = 5, datasource = "Loki", }
+          longhorn       = { gnetId = 13032, revision = 6, datasource = "Prometheus", }
+          traefik        = { gnetId = 17346, revision = 9, datasource = "Prometheus", }
+        }
+      }
       route = {
         main = {
           filters = var.config.basic_auth && var.config.preferred_gateway == "traefik" ? [

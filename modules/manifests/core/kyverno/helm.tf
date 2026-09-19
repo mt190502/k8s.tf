@@ -7,22 +7,15 @@ resource "helm_release" "this" {
   upgrade_install  = true
   create_namespace = false
   set = [
-    {
-      name  = "admissionController.replicas"
-      value = "3"
-    },
-    {
-      name  = "backgroundController.replicas"
-      value = "2"
-    },
-    {
-      name  = "cleanupController.replicas"
-      value = "2"
-    },
-    {
-      name  = "reportsController.replicas"
-      value = "2"
-    }
+    { name = "admissionController.replicas", value = "3", },
+    { name = "admissionController.serviceMonitor.enabled", value = true, },
+    { name = "backgroundController.replicas", value = "2", },
+    { name = "backgroundController.serviceMonitor.enabled", value = true, },
+    { name = "cleanupController.replicas", value = "2", },
+    { name = "cleanupController.serviceMonitor.enabled", value = true, },
+    { name = "grafana.enabled", value = true, },
+    { name = "reportsController.replicas", value = "2", },
+    { name = "reportsController.serviceMonitor.enabled", value = true, }
   ]
 
   depends_on = [kubernetes_namespace_v1.this]

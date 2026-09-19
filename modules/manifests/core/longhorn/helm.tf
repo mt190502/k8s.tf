@@ -9,18 +9,10 @@ resource "helm_release" "this" {
   namespace       = kubernetes_namespace_v1.this.metadata[0].name
   upgrade_install = true
   set = [
-    {
-      name  = "longhornUI.replicas"
-      value = 3
-    },
-    {
-      name  = "preUpgradeChecker.jobEnabled"
-      value = false
-    },
-    {
-      name  = "preUpgradeChecker.upgradeVersionCheck"
-      value = false
-    }
+    { name = "longhornUI.replicas", value = 3, },
+    { name = "metrics.serviceMonitor.enabled", value = true, },
+    { name = "preUpgradeChecker.jobEnabled", value = false, },
+    { name = "preUpgradeChecker.upgradeVersionCheck", value = false, }
   ]
   depends_on = [kubernetes_namespace_v1.this]
 }

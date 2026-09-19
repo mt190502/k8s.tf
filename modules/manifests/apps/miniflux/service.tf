@@ -59,12 +59,16 @@ resource "kubernetes_service_v1" "this" {
   metadata {
     name      = var.config.name
     namespace = kubernetes_namespace_v1.this[0].metadata[0].name
+    labels = {
+      "app.kubernetes.io/name" = var.config.name
+    }
   }
   spec {
     selector = {
       "app.kubernetes.io/name" = var.config.name
     }
     port {
+      name        = "http"
       port        = var.config.port
       target_port = var.config.port
     }

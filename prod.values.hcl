@@ -313,9 +313,12 @@ locals {
       kube_prometheus_stack = {
         enabled = true
         config = {
-          gotify_enabled = true
-          hostname       = "dash"
-          storage_size   = "1Gi"
+          gotify_enabled            = true
+          hostname                  = "dash"
+          prometheus_retention      = "7d"
+          prometheus_retention_size = "6GB"
+          prometheus_storage_size   = "8Gi"
+          storage_size              = "1Gi"
         }
       }
       kyverno = {

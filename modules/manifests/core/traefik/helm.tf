@@ -46,94 +46,31 @@ resource "helm_release" "this" {
   upgrade_install = true
   skip_crds       = true
   set = [
-    {
-      name  = "deployment.kind"
-      value = "DaemonSet"
-    },
-    {
-      name  = "updateStrategy.type"
-      value = "RollingUpdate"
-    },
-    {
-      name  = "updateStrategy.rollingUpdate.maxUnavailable"
-      value = 1
-    },
-    {
-      name  = "updateStrategy.rollingUpdate.maxSurge"
-      value = null
-    },
-    {
-      name  = "updateStrategy.rollingUpdate.priorityClassName"
-      value = "system-cluster-critical"
-    },
-    {
-      name  = "ingressClass.enabled"
-      value = true
-    },
-    {
-      name  = "ingressClass.isDefaultClass"
-      value = true
-    },
-    {
-      name  = "ingressRoute.dashboard.enabled"
-      value = false
-    },
-    {
-      name  = "providers.kubernetesGateway.enabled"
-      value = true
-    },
-    {
-      name  = "providers.kubernetesGateway.experimentalChannel"
-      value = true
-    },
-    {
-      name  = "providers.kubernetesCRD.enabled"
-      value = true
-    },
-    {
-      name  = "providers.kubernetesCRD.allowCrossNamespace"
-      value = true
-    },
-    {
-      name  = "providers.kubernetesCRD.allowExternalNameServices"
-      value = true
-    },
-    {
-      name  = "gateway.enabled"
-      value = false
-    },
-    {
-      name  = "service.enabled"
-      value = false
-    },
-    {
-      name  = "ports.websecure.port"
-      value = 443
-    },
-    {
-      name  = "ports.websecure.hostPort"
-      value = 443
-    },
-    {
-      name  = "ports.websecure.http.tls.enabled"
-      value = true
-    },
-    {
-      name  = "resources.limits.cpu"
-      value = "500m"
-    },
-    {
-      name  = "resources.limits.memory"
-      value = "256Mi"
-    },
-    {
-      name  = "resources.requests.cpu"
-      value = "100m"
-    },
-    {
-      name  = "resources.requests.memory"
-      value = "64Mi"
-    }
+    { name = "deployment.kind", value = "DaemonSet", },
+    { name = "gateway.enabled", value = false, },
+    { name = "ingressClass.enabled", value = true, },
+    { name = "ingressClass.isDefaultClass", value = true, },
+    { name = "ingressRoute.dashboard.enabled", value = false, },
+    { name = "metrics.prometheus.entryPoint", value = "metrics", },
+    { name = "metrics.prometheus.service.enabled", value = true, },
+    { name = "metrics.prometheus.serviceMonitor.enabled", value = true, },
+    { name = "ports.websecure.hostPort", value = 443, },
+    { name = "ports.websecure.http.tls.enabled", value = true, },
+    { name = "ports.websecure.port", value = 443, },
+    { name = "providers.kubernetesCRD.allowCrossNamespace", value = true, },
+    { name = "providers.kubernetesCRD.allowExternalNameServices", value = true, },
+    { name = "providers.kubernetesCRD.enabled", value = true, },
+    { name = "providers.kubernetesGateway.enabled", value = true, },
+    { name = "providers.kubernetesGateway.experimentalChannel", value = true, },
+    { name = "resources.limits.cpu", value = "500m", },
+    { name = "resources.limits.memory", value = "256Mi", },
+    { name = "resources.requests.cpu", value = "100m", },
+    { name = "resources.requests.memory", value = "64Mi", },
+    { name = "service.enabled", value = false, },
+    { name = "updateStrategy.rollingUpdate.maxSurge", value = null, },
+    { name = "updateStrategy.rollingUpdate.maxUnavailable", value = 1, },
+    { name = "updateStrategy.rollingUpdate.priorityClassName", value = "system-cluster-critical", },
+    { name = "updateStrategy.type", value = "RollingUpdate", }
   ]
   values = [yamlencode({
     tolerations = [

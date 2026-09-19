@@ -9,10 +9,9 @@ resource "helm_release" "this" {
   namespace       = kubernetes_namespace_v1.this.metadata[0].name
   upgrade_install = true
   set = [
-    {
-      name  = "replicaCount"
-      value = var.config.controlplane_count
-    }
+    { name = "monitoring.grafanaDashboard.create", value = true },
+    { name = "monitoring.podMonitorEnabled", value = true },
+    { name = "replicaCount", value = var.config.controlplane_count }
   ]
   values = [yamlencode({
     tolerations = [
