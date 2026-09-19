@@ -255,7 +255,7 @@ locals {
           hostname   = "red"
           pg = {
             replicas     = 3
-            storage_size = "1Gi"
+            storage_size = "2Gi"
           }
         }
       }
@@ -265,7 +265,7 @@ locals {
           hostname = "umami"
           pg = {
             replicas     = 2
-            storage_size = "1Gi"
+            storage_size = "2Gi"
           }
         }
       }
@@ -306,7 +306,7 @@ locals {
           hostname = "ntfy"
           pg = {
             replicas     = 1
-            storage_size = "1Gi"
+            storage_size = "2Gi"
           }
         }
       }

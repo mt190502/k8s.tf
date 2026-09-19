@@ -32,7 +32,7 @@ terraform {
       "${get_repo_root()}/.ci/public-domain.sh",
       "--name", "HedgeDoc",
       "--domain", "https://${try(values.config.hostname, "md")}.${try(values.config.domain, "mtaha.dev")}",
-      "--statcodes", "200",
+      "--statcodes", try(values.config.basic_auth, false) ? "200:401:403" : "200",
     ] : ["sh", "-c", "true"]
   }
 

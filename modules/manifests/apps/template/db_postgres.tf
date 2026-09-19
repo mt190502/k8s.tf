@@ -59,5 +59,10 @@ resource "kubernetes_manifest" "postgres" {
       }
     }
   }
+
+  field_manager {
+    force_conflicts = true
+  }
+
   depends_on = [kubernetes_namespace_v1.this, kubernetes_secret_v1.postgres]
 }
