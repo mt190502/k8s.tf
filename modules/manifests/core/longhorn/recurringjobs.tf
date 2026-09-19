@@ -19,6 +19,11 @@ resource "kubernetes_manifest" "recurring_snapshot" {
       retain      = 3
       concurrency = 1
       groups      = ["default"]
+      labels = {
+        "longhorn.io/recurring-job" = "true"
+        "srv.mtaha.dev/automated"   = "true"
+        "srv.mtaha.dev/terraform"   = "true"
+      }
     }
   }
 
@@ -40,6 +45,11 @@ resource "kubernetes_manifest" "recurring_backup" {
       retain      = 12
       concurrency = 1
       groups      = ["default"]
+      labels = {
+        "longhorn.io/recurring-job" = "true"
+        "srv.mtaha.dev/automated"   = "true"
+        "srv.mtaha.dev/terraform"   = "true"
+      }
     }
   }
 
