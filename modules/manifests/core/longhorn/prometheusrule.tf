@@ -72,14 +72,14 @@ resource "kubernetes_manifest" "prometheus_rule" {
             },
             {
               alert = "LonghornDiskSpaceUsageHigh"
-              expr  = "100 * longhorn_disk_usage_bytes / longhorn_disk_capacity_bytes > 80"
+              expr  = "100 * longhorn_disk_usage_bytes / longhorn_disk_capacity_bytes >= 90"
               "for" = "15m"
               labels = {
                 severity  = "warning"
                 component = "longhorn"
               }
               annotations = {
-                summary     = "Longhorn disk usage is above 80%"
+                summary     = "Longhorn disk usage is at or above 90%"
                 description = "Disk {{ $labels.disk }} on {{ $labels.node }} is {{ $value | humanize }}% full."
               }
             },
