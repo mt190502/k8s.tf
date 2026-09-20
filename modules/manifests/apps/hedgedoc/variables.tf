@@ -10,6 +10,8 @@
 #      gateway_name      --- Gateway name (from cert-manager)                                     #
 #      gateway_namespace --- Gateway namespace (from cert-manager)                                #
 #      hostname          --- HTTPRoute hostname subdomain (e.g., "app" -> app.{domain})           #
+#      ingress_hash_by   --- NGINX upstream-hash-by expression; replaces the HTTPRoute +          #
+#                            TraefikService with a hash-pinned Ingress (opt-in)                   #
 #      name              --- Application name (used for resources)                                #
 #      port              --- Container port                                                       #
 #      pg                --- PostgreSQL related options                                           #
@@ -41,6 +43,7 @@ variable "config" {
     gateway_name      = optional(string)
     gateway_namespace = optional(string)
     hostname          = optional(string)
+    ingress_hash_by   = optional(string)
     name              = optional(string, "hedgedoc")
     port              = optional(number, 3000)
     pg = optional(object({

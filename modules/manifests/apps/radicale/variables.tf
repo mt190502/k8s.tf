@@ -9,6 +9,8 @@
 #      gateway_name      --- Gateway name (from cert-manager)                                     #
 #      gateway_namespace --- Gateway namespace (from cert-manager)                                #
 #      hostname          --- HTTPRoute hostname subdomain (e.g., "app" -> app.{domain})           #
+#      ingress_hash_by   --- NGINX upstream-hash-by expression; replaces the HTTPRoute +          #
+#                            TraefikService with a hash-pinned Ingress (opt-in)                   #
 #      name              --- Application name (used for resources)                                #
 #      port              --- Container port                                                       #
 #      preferred_gateway --- Preferred Gateway for basic auth (e.g., "traefik")                   #
@@ -35,6 +37,7 @@ variable "config" {
     gateway_name      = optional(string)
     gateway_namespace = optional(string)
     hostname          = optional(string)
+    ingress_hash_by   = optional(string)
     name              = optional(string, "radicale")
     port              = optional(number, 5232)
     preferred_gateway = optional(string, "cilium")

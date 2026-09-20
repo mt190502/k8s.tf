@@ -234,8 +234,9 @@ locals {
             TIME_FORMAT        = "24"
             TZ                 = "Europe/Istanbul"
           }
-          hostname = "t1d"
-          replicas = 3
+          hostname        = "t1d"
+          ingress_hash_by = "$http_cf_connecting_ip"
+          replicas        = 3
           mongo = {
             replicas     = 3
             storage_size = "2Gi"

@@ -62,6 +62,7 @@ resource "helm_release" "this" {
     { name = "providers.kubernetesCRD.enabled", value = true, },
     { name = "providers.kubernetesGateway.enabled", value = true, },
     { name = "providers.kubernetesGateway.experimentalChannel", value = true, },
+    { name = "providers.kubernetesIngressNGINX.enabled", value = true, },
     { name = "resources.limits.cpu", value = "500m", },
     { name = "resources.limits.memory", value = "256Mi", },
     { name = "resources.requests.cpu", value = "100m", },

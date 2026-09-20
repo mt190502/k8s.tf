@@ -10,7 +10,7 @@
 #    2. / fallback for all other requests                                                         #
 ## ============================================================================================= ##
 resource "kubernetes_manifest" "httproute" {
-  count = (var.enabled && var.config.hostname != null) ? 1 : 0
+  count = (var.enabled && var.config.hostname != null && !local.hash_ingress_enabled) ? 1 : 0
   manifest = {
     apiVersion = "gateway.networking.k8s.io/v1"
     kind       = "HTTPRoute"

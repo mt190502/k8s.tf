@@ -5,7 +5,7 @@
 #  Used as HTTPRoute backend for Gateway API ingress.                                             #
 ## ============================================================================================= ##
 locals {
-  traefik_service_enabled = var.enabled && var.config.port != null && try(var.config.replicas, 1) > 1
+  traefik_service_enabled = var.enabled && var.config.port != null && try(var.config.replicas, 1) > 1 && !local.hash_ingress_enabled
   traefik_service_name    = "${var.config.name}-sticky"
   traefik_service_manifest = yamlencode({
     apiVersion = "traefik.io/v1alpha1"

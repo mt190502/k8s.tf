@@ -8,6 +8,8 @@
 #      gateway_name      --- Gateway name (from cert-manager)                                     #
 #      gateway_namespace --- Gateway namespace (from cert-manager)                                #
 #      hostname          --- HTTPRoute hostname subdomain (e.g., "app" -> app.{domain})           #
+#      ingress_hash_by   --- NGINX upstream-hash-by expression; replaces the HTTPRoute +          #
+#                            TraefikService with a hash-pinned Ingress (cookie-less clients)      #
 #      mongo             --- MongoDB related options                                              #
 #        limits          --- Resource limits for mongo instances (cpu, memory)                    #
 #        requests        --- Resource requests for mongo instances (cpu, memory)                  #
@@ -35,6 +37,7 @@ variable "config" {
     gateway_name      = optional(string)
     gateway_namespace = optional(string)
     hostname          = optional(string)
+    ingress_hash_by   = optional(string)
     mongo = optional(object({
       limits       = optional(map(string))
       requests     = optional(map(string))

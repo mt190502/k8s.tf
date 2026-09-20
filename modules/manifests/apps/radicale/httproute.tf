@@ -8,7 +8,7 @@
 #  BackendTLSPolicy for HTTPS backend connection with passHostHeader                              #
 ## ============================================================================================= ##
 resource "kubernetes_manifest" "redirect_middleware" {
-  count = (var.enabled && var.config.preferred_gateway == "traefik") ? 1 : 0
+  count = (var.enabled && var.config.preferred_gateway == "traefik" && !local.hash_ingress_enabled) ? 1 : 0
   manifest = {
     apiVersion = "traefik.io/v1alpha1"
     kind       = "Middleware"
