@@ -9,8 +9,7 @@ resource "kubernetes_manifest" "prometheus_rule" {
       name      = "alloy-alerts"
       namespace = var.config.kps_namespace
       labels = {
-        release                     = "kube-prometheus-stack"
-        "app.kubernetes.io/part-of" = "alloy"
+        "app.kubernetes.io/part-of" = helm_release.this.name
       }
     }
     spec = {

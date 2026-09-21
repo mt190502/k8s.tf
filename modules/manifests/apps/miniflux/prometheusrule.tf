@@ -10,7 +10,6 @@ resource "kubernetes_manifest" "prometheus_rule" {
       name      = "miniflux-alerts"
       namespace = kubernetes_namespace_v1.this[0].metadata[0].name
       labels = {
-        release                     = "kube-prometheus-stack"
         "app.kubernetes.io/part-of" = var.config.name
       }
     }

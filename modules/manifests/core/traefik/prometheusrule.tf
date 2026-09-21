@@ -10,8 +10,7 @@ resource "kubernetes_manifest" "prometheus_rule" {
       name      = "traefik-alerts"
       namespace = kubernetes_namespace_v1.this[0].metadata[0].name
       labels = {
-        release                     = "kube-prometheus-stack"
-        "app.kubernetes.io/part-of" = "traefik"
+        "app.kubernetes.io/part-of" = helm_release.this[0].name
       }
     }
     spec = {
