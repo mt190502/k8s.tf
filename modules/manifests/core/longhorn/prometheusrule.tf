@@ -85,15 +85,15 @@ resource "kubernetes_manifest" "prometheus_rule" {
             },
             {
               alert = "LonghornVolumeSpaceUsageHigh"
-              expr  = "max by (volume, pvc, pvc_namespace) (100 * longhorn_volume_actual_size_bytes / longhorn_volume_capacity_bytes) > 90"
+              expr  = "max by (namespace, persistentvolumeclaim) (100 * (1 - kubelet_volume_stats_available_bytes{job=\"kubelet\", metrics_path=\"/metrics\"} / kubelet_volume_stats_capacity_bytes{job=\"kubelet\", metrics_path=\"/metrics\"}) and on (namespace, persistentvolumeclaim) kube_persistentvolumeclaim_info{storageclass=\"longhorn\"}) > 90"
               "for" = "15m"
               labels = {
                 severity  = "warning"
                 component = "longhorn"
               }
               annotations = {
-                summary     = "Longhorn volume reported usage is above 90%"
-                description = "Volume {{ $labels.volume }} for {{ $labels.pvc_namespace }}/{{ $labels.pvc }} reports {{ $value | humanize }}% actual allocated or snapshot-accounted size relative to nominal capacity."
+                summary     = "Longhorn PVC filesystem usage is above 90%"
+                description = "PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} filesystem is {{ $value | humanize }}% full, excluding Longhorn snapshots."
               }
             }
           ]

@@ -34,7 +34,7 @@ resource "kubernetes_manifest" "prometheus_rule" {
             },
             {
               alert = "TraefikHighLatency"
-              expr  = "histogram_quantile(0.95, sum by (le, exported_service) (rate(traefik_service_request_duration_seconds_bucket{exported_service!=\"nightscout-nightscout-1337@kubernetescrd\"}[5m]))) > 2 and on(exported_service) sum by (exported_service) (rate(traefik_service_requests_total{exported_service!=\"nightscout-nightscout-1337@kubernetescrd\"}[5m])) > 0.1"
+              expr  = "histogram_quantile(0.95, sum by (le, exported_service) (rate(traefik_service_request_duration_seconds_bucket{exported_service!~\"^nightscout-.*@kubernetes.*$\"}[5m]))) > 2 and on(exported_service) sum by (exported_service) (rate(traefik_service_requests_total{exported_service!~\"^nightscout-.*@kubernetes.*$\"}[5m])) > 0.1"
               "for" = "15m"
               labels = {
                 severity  = "warning"
