@@ -173,42 +173,20 @@ locals {
           }
         }
       }
-      slimserve = {
-        enabled = true
-        config = {
-          dirs     = "/data"
-          hostname = "files"
-          persistence = {
-            enabled      = true
-            bucket_name  = "files"
-            s3_endpoint  = "http://100.100.30.2:3900"
-            s3_region    = "us-east-1"
-            storage_size = "1T"
-          }
-        }
-      }
-      syncstorage_rs = {
-        enabled = true
-        config = {
-          hostname = "ffsync"
-          pg = {
-            replicas     = 1
-            storage_size = "1Gi"
-          }
-        }
-      }
       miniflux = {
         enabled = true
         config = {
           env = {
             CLEANUP_ARCHIVE_READ_DAYS   = "30"
             CLEANUP_ARCHIVE_UNREAD_DAYS = "30"
+            POLLING_LIMIT_PER_HOST      = "1"
           }
           hostname = "rss"
           pg = {
             replicas     = 1
             storage_size = "1Gi"
           }
+          replicas = 1
         }
       }
       nightscout = {
@@ -257,6 +235,30 @@ locals {
           pg = {
             replicas     = 3
             storage_size = "2Gi"
+          }
+        }
+      }
+      slimserve = {
+        enabled = true
+        config = {
+          dirs     = "/data"
+          hostname = "files"
+          persistence = {
+            enabled      = true
+            bucket_name  = "files"
+            s3_endpoint  = "http://100.100.30.2:3900"
+            s3_region    = "us-east-1"
+            storage_size = "1T"
+          }
+        }
+      }
+      syncstorage_rs = {
+        enabled = true
+        config = {
+          hostname = "ffsync"
+          pg = {
+            replicas     = 1
+            storage_size = "1Gi"
           }
         }
       }
@@ -316,8 +318,9 @@ locals {
         config = {
           gotify_enabled            = true
           hostname                  = "dash"
+          prometheus_node           = "w2"
           prometheus_retention      = "7d"
-          prometheus_retention_size = "6GB"
+          prometheus_retention_size = "4GB"
           prometheus_storage_size   = "8Gi"
           storage_size              = "1Gi"
         }
