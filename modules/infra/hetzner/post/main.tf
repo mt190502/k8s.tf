@@ -63,14 +63,16 @@ resource "hcloud_firewall" "fw" {
 #  image and user_data are ignored after creation to prevent unintended replacements.             #
 ## --------------------------------------------------------------------------------------------- ##
 resource "hcloud_server" "nodes" {
-  for_each     = { for node in var.config.nodes : node.name => node }
-  name         = each.value.name
-  server_type  = each.value.server_type
-  location     = each.value.location
-  image        = each.value.image_id
-  labels       = { "role" : each.value.role }
-  user_data    = var.deps.talos.machine_configurations[each.value.name]
-  firewall_ids = var.config.firewall.enabled ? [hcloud_firewall.fw[0].id] : []
+  for_each           = { for node in var.config.nodes : node.name => node }
+  name               = each.value.name
+  server_type        = each.value.server_type
+  location           = each.value.location
+  image              = each.value.image_id
+  labels             = { "role" : each.value.role }
+  user_data          = var.deps.talos.machine_configurations[each.value.name]
+  delete_protection  = true
+  rebuild_protection = true
+  firewall_ids       = var.config.firewall.enabled ? [hcloud_firewall.fw[0].id] : []
   public_net {
     ipv4_enabled = true
     ipv6_enabled = var.config.dualstack
