@@ -17,6 +17,7 @@
 #      prometheus_retention_size --- Maximum Prometheus TSDB block size                            #
 #      prometheus_storage_class  --- StorageClass for the Prometheus TSDB PVC                      #
 #      prometheus_storage_size   --- Prometheus TSDB PVC size                                      #
+#      prometheus_node           --- Preferred node hostname for the Prometheus pod (soft)         #
 #      storage_size              --- Volume size for Grafana                                       #
 ## ============================================================================================== ##
 variable "enabled" {
@@ -38,6 +39,7 @@ variable "config" {
     hostname                  = optional(string)
     preferred_gateway         = optional(string, "cilium")
     prometheus_hostname       = optional(string, "prometheus.srv")
+    prometheus_node           = optional(string)
     prometheus_retention      = optional(string, "7d")
     prometheus_retention_size = optional(string, "6GB")
     prometheus_storage_size   = optional(string, "8Gi")

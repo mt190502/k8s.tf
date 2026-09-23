@@ -9,12 +9,12 @@ resource "kubernetes_manifest" "recurring_snapshot" {
     apiVersion = "longhorn.io/v1beta2"
     kind       = "RecurringJob"
     metadata = {
-      name      = "every-6h-snapshot"
+      name      = "nightly-snapshot"
       namespace = kubernetes_namespace_v1.this.metadata[0].name
     }
     spec = {
-      name        = "every-6h-snapshot"
-      cron        = "0 */6 * * *"
+      name        = "nightly-snapshot"
+      cron        = "0 23 * * *"
       task        = "snapshot"
       retain      = 3
       concurrency = 1

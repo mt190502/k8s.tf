@@ -25,6 +25,8 @@ resource "helm_release" "this" {
     { name = "alertmanager.route.main.parentRefs[0].sectionName", value = "srv-websecure", },
     { name = "crds.enabled", value = "false", },
     { name = "defaultRules.disabled.NodeDiskIOSaturation", value = true, },
+    { name = "defaultRules.rules.kubeApiserverAvailability", value = false, },
+    { name = "defaultRules.rules.kubeApiserverBurnrate", value = false, },
     { name = "defaultRules.rules.kubeProxy", value = "false", },
     { name = "grafana.persistence.accessModes[0]", value = "ReadWriteOnce", },
     { name = "grafana.persistence.enabled", value = "true", },
@@ -94,6 +96,25 @@ resource "helm_release" "this" {
                 alertname = "LonghornVolumeSpaceUsageHigh"
               }
               repeat_interval = "3h"
+              routes = concat(
+                (try(var.secrets.alertmanager.discord_webhook_url, "") != "") ? [{
+                  receiver = "discord"
+                  continue = true
+                }] : [],
+                var.config.gotify_enabled ? [
+                  for name, endpoint in var.config.gotify_bridge_endpoints : {
+                    receiver = "gotify-${name}"
+                    continue = true
+                  } if name != "loki"
+                ] : [],
+                [{ receiver = "null" }]
+              )
+            }],
+            [{
+              match_re = {
+                alertname = "Miniflux.*"
+              }
+              repeat_interval = "6h"
               routes = concat(
                 (try(var.secrets.alertmanager.discord_webhook_url, "") != "") ? [{
                   receiver = "discord"
@@ -196,6 +217,24 @@ resource "helm_release" "this" {
             }
           }
         }
+        affinity = var.config.prometheus_node != null ? {
+          nodeAffinity = {
+            preferredDuringSchedulingIgnoredDuringExecution = [
+              {
+                weight = 100
+                preference = {
+                  matchExpressions = [
+                    {
+                      key      = "kubernetes.io/hostname"
+                      operator = "In"
+                      values   = [var.config.prometheus_node]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        } : null
       }
     }
     grafana = {
