@@ -37,3 +37,4 @@ machine:
     %{~ endif ~}
     extraArgs:
       rotate-server-certificates: true
+      eviction-hard: "imagefs.available<5%,imagefs.inodesFree<5%,memory.available<100Mi,nodefs.available<5%,nodefs.inodesFree<5%"
