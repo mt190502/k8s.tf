@@ -97,10 +97,13 @@ resource "helm_release" "this" {
   version         = "1.12.1"
   namespace       = var.config.kps_namespace
   upgrade_install = true
-  set = [{
-    name  = "serviceMonitor.enabled"
-    value = true
-  }]
+  set = [
+    { name = "alloy.resources.limits.memory", value = "224Mi", },
+    { name = "alloy.resources.requests.cpu", value = "25m", },
+    { name = "alloy.resources.requests.memory", value = "144Mi", },
+    { name = "configReloader.resources.limits.memory", value = "128Mi", },
+    { name = "serviceMonitor.enabled", value = true, },
+  ]
   values = [yamlencode({
     alloy = {
       configMap = {

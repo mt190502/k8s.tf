@@ -13,6 +13,10 @@ resource "helm_release" "this" {
   set = [
     { name = "alertmanager.alertmanagerSpec.externalUrl", value = "http://kube-prometheus-stack-alertmanager.${kubernetes_namespace_v1.this.metadata[0].name}.svc.cluster.local:9093", },
     { name = "alertmanager.alertmanagerSpec.logFormat", value = "json", },
+    { name = "alertmanager.alertmanagerSpec.resources.limits.cpu", value = "250m", },
+    { name = "alertmanager.alertmanagerSpec.resources.limits.memory", value = "64Mi", },
+    { name = "alertmanager.alertmanagerSpec.resources.requests.cpu", value = "10m", },
+    { name = "alertmanager.alertmanagerSpec.resources.requests.memory", value = "48Mi", },
     { name = "alertmanager.config.global.resolve_timeout", value = "5m", },
     { name = "alertmanager.route.main.apiVersion", value = "gateway.networking.k8s.io/v1", },
     { name = "alertmanager.route.main.enabled", value = "true", },
@@ -25,12 +29,16 @@ resource "helm_release" "this" {
     { name = "alertmanager.route.main.parentRefs[0].sectionName", value = "srv-websecure", },
     { name = "crds.enabled", value = "false", },
     { name = "defaultRules.disabled.NodeDiskIOSaturation", value = true, },
+    { name = "defaultRules.disabled.CPUThrottlingHigh", value = true, },
     { name = "defaultRules.rules.kubeApiserverAvailability", value = false, },
     { name = "defaultRules.rules.kubeApiserverBurnrate", value = false, },
     { name = "defaultRules.rules.kubeProxy", value = "false", },
     { name = "grafana.persistence.accessModes[0]", value = "ReadWriteOnce", },
     { name = "grafana.persistence.enabled", value = "true", },
     { name = "grafana.persistence.size", value = var.config.storage_size, },
+    { name = "grafana.resources.limits.memory", value = "1312Mi", },
+    { name = "grafana.resources.requests.cpu", value = "25m", },
+    { name = "grafana.resources.requests.memory", value = "352Mi", },
     { name = "grafana.route.main.apiVersion", value = "gateway.networking.k8s.io/v1", },
     { name = "grafana.route.main.enabled", value = "true", },
     { name = "grafana.route.main.hostnames[0]", value = "${var.config.hostname}.${var.config.domain}", },
@@ -39,11 +47,20 @@ resource "helm_release" "this" {
     { name = "grafana.route.main.matches[0].path.value", value = "/", },
     { name = "grafana.route.main.parentRefs[0].name", value = var.config.gateway_name, },
     { name = "grafana.route.main.parentRefs[0].namespace", value = var.config.gateway_namespace, },
+    { name = "grafana.sidecar.resources.limits.memory", value = "128Mi", },
+    { name = "grafana.sidecar.resources.requests.cpu", value = "10m", },
+    { name = "grafana.sidecar.resources.requests.memory", value = "96Mi", },
+    { name = "kube-state-metrics.resources.limits.memory", value = "256Mi", },
+    { name = "kube-state-metrics.resources.requests.cpu", value = "10m", },
+    { name = "kube-state-metrics.resources.requests.memory", value = "64Mi", },
     { name = "kubeProxy.enabled", value = "false", },
+    { name = "prometheus-node-exporter.resources.limits.memory", value = "32Mi", },
+    { name = "prometheus-node-exporter.resources.requests.cpu", value = "10m", },
+    { name = "prometheus-node-exporter.resources.requests.memory", value = "16Mi", },
     { name = "prometheus.prometheusSpec.externalUrl", value = "http://kube-prometheus-stack-prometheus.${kubernetes_namespace_v1.this.metadata[0].name}.svc.cluster.local:9090", },
     { name = "prometheus.prometheusSpec.logFormat", value = "json", },
     { name = "prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues", value = false, },
-    { name = "prometheus.prometheusSpec.resources.limits.memory", value = "1536Mi", },
+    { name = "prometheus.prometheusSpec.resources.limits.memory", value = "2Gi", },
     { name = "prometheus.prometheusSpec.resources.requests.cpu", value = "250m", },
     { name = "prometheus.prometheusSpec.resources.requests.memory", value = "500Mi", },
     { name = "prometheus.prometheusSpec.ruleSelectorNilUsesHelmValues", value = false, },
@@ -56,7 +73,16 @@ resource "helm_release" "this" {
     { name = "prometheus.route.main.matches[0].path.value", value = "/", },
     { name = "prometheus.route.main.parentRefs[0].name", value = var.config.gateway_name, },
     { name = "prometheus.route.main.parentRefs[0].namespace", value = var.config.gateway_namespace, },
-    { name = "prometheus.route.main.parentRefs[0].sectionName", value = "srv-websecure", }
+    { name = "prometheus.route.main.parentRefs[0].sectionName", value = "srv-websecure", },
+    { name = "prometheusOperator.admissionWebhooks.patch.resources.limits.memory", value = "64Mi", },
+    { name = "prometheusOperator.admissionWebhooks.patch.resources.requests.cpu", value = "10m", },
+    { name = "prometheusOperator.admissionWebhooks.patch.resources.requests.memory", value = "16Mi", },
+    { name = "prometheusOperator.prometheusConfigReloader.resources.limits.memory", value = "32Mi", },
+    { name = "prometheusOperator.prometheusConfigReloader.resources.requests.cpu", value = "10m", },
+    { name = "prometheusOperator.prometheusConfigReloader.resources.requests.memory", value = "16Mi", },
+    { name = "prometheusOperator.resources.limits.memory", value = "128Mi", },
+    { name = "prometheusOperator.resources.requests.cpu", value = "50m", },
+    { name = "prometheusOperator.resources.requests.memory", value = "48Mi", },
   ]
   values = [sensitive(yamlencode({
     alertmanager = {
@@ -207,6 +233,12 @@ resource "helm_release" "this" {
         retentionSize = var.config.prometheus_retention_size
         storageSpec = {
           volumeClaimTemplate = {
+            metadata = {
+              labels = {
+                "recurring-job.longhorn.io/source"                 = "enabled"
+                "recurring-job-group.longhorn.io/no-recurring-job" = "enabled"
+              }
+            }
             spec = {
               accessModes = ["ReadWriteOnce"]
               resources = {

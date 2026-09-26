@@ -9,10 +9,10 @@ resource "helm_release" "this" {
   namespace       = kubernetes_namespace_v1.this.metadata[0].name
   upgrade_install = true
   set = [
-    {
-      name  = "cron.schedule"
-      value = "*/15 * * * *"
-    }
+    { name = "cron.schedule", value = "*/15 * * * *", },
+    { name = "resources.limits.memory", value = "736Mi", },
+    { name = "resources.requests.cpu", value = "25m", },
+    { name = "resources.requests.memory", value = "528Mi", },
   ]
   values = [yamlencode({
     tolerations = [

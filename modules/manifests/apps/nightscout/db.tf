@@ -75,6 +75,19 @@ locals {
                       memory = "256Mi"
                     } : var.config.mongo.requests
                   }
+                },
+                {
+                  name = "mongodb-agent"
+                  resources = {
+                    limits = {
+                      cpu    = "800m"
+                      memory = "320Mi"
+                    }
+                    requests = {
+                      cpu    = "200m"
+                      memory = "160Mi"
+                    }
+                  }
                 }
               ]
             }

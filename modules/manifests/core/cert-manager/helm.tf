@@ -9,30 +9,21 @@ resource "helm_release" "this" {
   namespace       = kubernetes_namespace_v1.this.metadata[0].name
   upgrade_install = true
   set = [
-    {
-      name  = "config.apiVersion"
-      value = "controller.config.cert-manager.io/v1alpha1"
-    },
-    {
-      name  = "config.kind"
-      value = "ControllerConfiguration"
-    },
-    {
-      name  = "config.enableGatewayAPI"
-      value = true
-    },
-    {
-      name  = "crds.enabled"
-      value = true
-    },
-    {
-      name  = "prometheus.enabled"
-      value = true
-    },
-    {
-      name  = "prometheus.servicemonitor.enabled"
-      value = true
-    }
+    { name = "cainjector.resources.limits.memory", value = "128Mi", },
+    { name = "cainjector.resources.requests.cpu", value = "50m", },
+    { name = "cainjector.resources.requests.memory", value = "96Mi", },
+    { name = "config.apiVersion", value = "controller.config.cert-manager.io/v1alpha1", },
+    { name = "config.enableGatewayAPI", value = true, },
+    { name = "config.kind", value = "ControllerConfiguration", },
+    { name = "crds.enabled", value = true, },
+    { name = "prometheus.enabled", value = true, },
+    { name = "prometheus.servicemonitor.enabled", value = true, },
+    { name = "resources.limits.memory", value = "64Mi", },
+    { name = "resources.requests.cpu", value = "50m", },
+    { name = "resources.requests.memory", value = "48Mi", },
+    { name = "webhook.resources.limits.memory", value = "64Mi", },
+    { name = "webhook.resources.requests.cpu", value = "25m", },
+    { name = "webhook.resources.requests.memory", value = "32Mi", },
   ]
   values = [yamlencode({
     extraArgs = [

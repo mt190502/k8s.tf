@@ -9,14 +9,11 @@ resource "helm_release" "this" {
   namespace       = kubernetes_namespace_v1.this.metadata[0].name
   upgrade_install = true
   set = [
-    {
-      name  = "operatorConfig.defaultTags"
-      value = "tag:k8s-operator"
-    },
-    {
-      name  = "proxyConfig.defaultTags"
-      value = "tag:k8s-pods"
-    }
+    { name = "operatorConfig.defaultTags", value = "tag:k8s-operator", },
+    { name = "operatorConfig.resources.limits.memory", value = "96Mi", },
+    { name = "operatorConfig.resources.requests.cpu", value = "50m", },
+    { name = "operatorConfig.resources.requests.memory", value = "64Mi", },
+    { name = "proxyConfig.defaultTags", value = "tag:k8s-pods", },
   ]
   values = [yamlencode({
     tolerations = [

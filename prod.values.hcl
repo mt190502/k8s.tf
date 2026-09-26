@@ -152,15 +152,35 @@ locals {
       anki = {
         enabled = true
         config = {
-          hostname     = "anki"
+          hostname = "anki"
+          resources = {
+            limits = {
+              cpu    = "50m"
+              memory = "32Mi"
+            }
+            requests = {
+              cpu    = "10m"
+              memory = "16Mi"
+            }
+          }
           storage_size = "2Gi"
         }
       }
       hedgedoc = {
         enabled = true
         config = {
-          basic_auth   = true
-          hostname     = "md"
+          basic_auth = true
+          hostname   = "md"
+          resources = {
+            limits = {
+              cpu    = "100m"
+              memory = "256Mi"
+            }
+            requests = {
+              cpu    = "25m"
+              memory = "144Mi"
+            }
+          }
           storage_size = "1Gi"
           env = {
             CMD_ALLOW_ANONYMOUS       = "true"
@@ -183,10 +203,28 @@ locals {
           }
           hostname = "rss"
           pg = {
-            replicas     = 1
+            limits = {
+              cpu    = "500m"
+              memory = "512Mi"
+            }
+            replicas = 1
+            requests = {
+              cpu    = "50m"
+              memory = "272Mi"
+            }
             storage_size = "1Gi"
           }
           replicas = 1
+          resources = {
+            limits = {
+              cpu    = "100m"
+              memory = "96Mi"
+            }
+            requests = {
+              cpu    = "25m"
+              memory = "48Mi"
+            }
+          }
         }
       }
       nightscout = {
@@ -216,8 +254,26 @@ locals {
           ingress_hash_by = "$http_cf_connecting_ip"
           replicas        = 3
           mongo = {
-            replicas     = 3
+            limits = {
+              cpu    = "600m"
+              memory = "960Mi"
+            }
+            replicas = 3
+            requests = {
+              cpu    = "150m"
+              memory = "640Mi"
+            }
             storage_size = "2Gi"
+          }
+          resources = {
+            limits = {
+              cpu    = "200m"
+              memory = "544Mi"
+            }
+            requests = {
+              cpu    = "20m"
+              memory = "320Mi"
+            }
           }
         }
       }
@@ -225,6 +281,16 @@ locals {
         enabled = true
         config = {
           hostname = "dav"
+          resources = {
+            limits = {
+              cpu    = "50m"
+              memory = "96Mi"
+            }
+            requests = {
+              cpu    = "10m"
+              memory = "48Mi"
+            }
+          }
         }
       }
       redmine = {
@@ -232,8 +298,26 @@ locals {
         config = {
           basic_auth = true
           hostname   = "red"
+          resources = {
+            limits = {
+              cpu    = "100m"
+              memory = "608Mi"
+            }
+            requests = {
+              cpu    = "25m"
+              memory = "352Mi"
+            }
+          }
           pg = {
-            replicas     = 3
+            limits = {
+              cpu    = "500m"
+              memory = "512Mi"
+            }
+            replicas = 3
+            requests = {
+              cpu    = "100m"
+              memory = "256Mi"
+            }
             storage_size = "2Gi"
           }
         }
@@ -243,6 +327,16 @@ locals {
         config = {
           dirs     = "/data"
           hostname = "files"
+          resources = {
+            limits = {
+              cpu    = "50m"
+              memory = "160Mi"
+            }
+            requests = {
+              cpu    = "10m"
+              memory = "64Mi"
+            }
+          }
           persistence = {
             enabled      = true
             bucket_name  = "files"
@@ -257,8 +351,26 @@ locals {
         config = {
           hostname = "ffsync"
           pg = {
-            replicas     = 1
+            limits = {
+              cpu    = "500m"
+              memory = "512Mi"
+            }
+            replicas = 1
+            requests = {
+              cpu    = "50m"
+              memory = "112Mi"
+            }
             storage_size = "1Gi"
+          }
+          resources = {
+            limits = {
+              cpu    = "50m"
+              memory = "96Mi"
+            }
+            requests = {
+              cpu    = "10m"
+              memory = "64Mi"
+            }
           }
         }
       }
@@ -267,8 +379,26 @@ locals {
         config = {
           hostname = "umami"
           pg = {
-            replicas     = 2
+            limits = {
+              cpu    = "750m"
+              memory = "512Mi"
+            }
+            replicas = 2
+            requests = {
+              cpu    = "100m"
+              memory = "192Mi"
+            }
             storage_size = "2Gi"
+          }
+          resources = {
+            limits = {
+              cpu    = "100m"
+              memory = "512Mi"
+            }
+            requests = {
+              cpu    = "25m"
+              memory = "304Mi"
+            }
           }
         }
       }
@@ -308,8 +438,26 @@ locals {
         config = {
           hostname = "ntfy"
           pg = {
-            replicas     = 1
+            limits = {
+              cpu    = "500m"
+              memory = "512Mi"
+            }
+            replicas = 1
+            requests = {
+              cpu    = "50m"
+              memory = "128Mi"
+            }
             storage_size = "2Gi"
+          }
+          resources = {
+            limits = {
+              cpu    = "50m"
+              memory = "32Mi"
+            }
+            requests = {
+              cpu    = "10m"
+              memory = "16Mi"
+            }
           }
         }
       }

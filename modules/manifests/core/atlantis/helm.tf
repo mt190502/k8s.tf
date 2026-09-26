@@ -46,10 +46,10 @@ resource "helm_release" "atlantis" {
     { name = "logLevel", value = "info" },
     { name = "orgAllowlist", value = var.config.repo_allowlist },
     { name = "replicaCount", value = 1 },
-    { name = "resources.limits.cpu", value = "1" },
-    { name = "resources.limits.memory", value = "2Gi" },
-    { name = "resources.requests.cpu", value = "250m" },
-    { name = "resources.requests.memory", value = "512Mi" },
+    { name = "resources.limits.cpu", value = "512m" },
+    { name = "resources.limits.memory", value = "1Gi" },
+    { name = "resources.requests.cpu", value = "256m" },
+    { name = "resources.requests.memory", value = "256Mi" },
     { name = "route.ui.apiVersion", value = "gateway.networking.k8s.io/v1" },
     { name = "route.ui.enabled", value = true },
     { name = "route.ui.hostnames[0]", value = "${var.config.hostname}.${var.config.domain}" },
@@ -81,10 +81,10 @@ resource "helm_release" "atlantis" {
     # the in-flight `atlantis apply`. OnDelete keeps the pod running; restart it
     # manually after the apply to pick up new image/config.
     { name = "statefulSet.updateStrategy.type", value = "OnDelete" },
+    { name = "test.enabled", value = false },
     { name = "volumeClaim.accessModes[0]", value = "ReadWriteOnce" },
     { name = "volumeClaim.dataStorage", value = "1Gi" },
     { name = "volumeClaim.enabled", value = true },
-    { name = "test.enabled", value = false }
   ]
   set_sensitive = [
     { name = "githubApp.key", value = try(var.secrets.app.github_app_key, "") },

@@ -16,40 +16,18 @@ resource "helm_release" "this" {
   namespace       = kubernetes_namespace_v1.this.metadata[0].name
   upgrade_install = true
   set = [
-    {
-      name  = "awsAccessSecret.name"
-      value = kubernetes_secret_v1.garage_credentials.metadata[0].name
-    },
-    {
-      name  = "awsAccessSecret.keyId"
-      value = "key_id"
-    },
-    {
-      name  = "awsAccessSecret.accessKey"
-      value = "access_key"
-    },
-    {
-      name  = "node.tolerateAllTaints"
-      value = true
-    },
-    {
-      name  = "node.defaultTolerations"
-      value = true
-    },
-    {
-      name  = "mountpointPod.createNamespace"
-      value = false
-    },
-    {
-      name  = "mountpointPod.namespace"
-      value = kubernetes_namespace_v1.this.metadata[0].name
-    },
+    { name = "awsAccessSecret.accessKey", value = "access_key", },
+    { name = "awsAccessSecret.keyId", value = "key_id", },
+    { name = "awsAccessSecret.name", value = kubernetes_secret_v1.garage_credentials.metadata[0].name, },
+    { name = "controller.resources.limits.memory", value = "64Mi", },
+    { name = "controller.resources.requests.cpu", value = "10m", },
+    { name = "controller.resources.requests.memory", value = "40Mi", },
+    { name = "mountpointPod.createNamespace", value = false, },
+    { name = "mountpointPod.namespace", value = kubernetes_namespace_v1.this.metadata[0].name, },
+    { name = "node.defaultTolerations", value = true, },
+    { name = "node.tolerateAllTaints", value = true, },
+    { name = "node.seLinuxOptions", value = null, },
   ]
-  values = [yamlencode({
-    node = {
-      seLinuxOptions = {}
-    }
-  })]
   depends_on = [
     kubernetes_namespace_v1.this,
     kubernetes_secret_v1.garage_credentials,

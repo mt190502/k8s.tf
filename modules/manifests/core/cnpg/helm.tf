@@ -11,7 +11,10 @@ resource "helm_release" "this" {
   set = [
     { name = "monitoring.grafanaDashboard.create", value = true },
     { name = "monitoring.podMonitorEnabled", value = true },
-    { name = "replicaCount", value = var.config.controlplane_count }
+    { name = "replicaCount", value = var.config.controlplane_count },
+    { name = "resources.limits.memory", value = "256Mi" },
+    { name = "resources.requests.cpu", value = "50m" },
+    { name = "resources.requests.memory", value = "80Mi" },
   ]
   values = [yamlencode({
     tolerations = [

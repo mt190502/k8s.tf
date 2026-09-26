@@ -26,6 +26,16 @@ resource "kubernetes_daemon_set_v1" "dnsutils_daemonset" {
           name    = "dnsutils"
           image   = "registry.k8s.io/e2e-test-images/agnhost:2.61"
           command = ["sleep", "infinity"]
+          resources {
+            requests = {
+              cpu    = "10m"
+              memory = "16Mi"
+            }
+            limits = {
+              cpu    = "25m"
+              memory = "32Mi"
+            }
+          }
         }
         toleration {
           key      = "node-role.kubernetes.io/control-plane"
