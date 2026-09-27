@@ -95,16 +95,6 @@ dependency "pre" {
   skip_outputs = true
 }
 
-dependency "cert_manager" {
-  config_path = "../cert-manager"
-  mock_outputs = {
-    gateway_name      = "mock-gateway"
-    gateway_namespace = "mock-namespace"
-  }
-  mock_outputs_allowed_terraform_commands = include.common.locals.mock_outputs_allowed_terraform_commands
-  mock_outputs_merge_strategy_with_state  = include.common.locals.mock_outputs_merge_strategy_with_state
-}
-
 dependency "gotify" {
   config_path = "../gotify"
   mock_outputs = {
