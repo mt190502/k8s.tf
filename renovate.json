@@ -17,7 +17,7 @@
   "branchConcurrentLimit": 10,
   "rebaseWhen": "conflicted",
   "lockFileMaintenance": {
-    "enabled": true
+    "enabled": false
   },
   "labels": ["dependencies"],
   "enabledManagers": ["custom.regex", "terraform"],
