@@ -1,7 +1,7 @@
 keys:
   - &lenovo-thinkpad-e14-nixos-personal age1vshrm5lkqp3s0v3wgnhyjf8dlvhnf53u9779xs7ntycpeleud38q48eq53
   - &msi-h510m-pro-nixos-personal age15xalxx87nllapelvvd7c435ktjcd84u96238g8mek26mg9aljuvqhm60uj
-  - &ci age1mhyra0vlqwk6kx3y5mphxck65jh7wjpghcwj0nrhxt99esj97u3swshq6q
+  - &atlantis age1auzyvypccgkhwmrxrq8shyvvrze57r49a0n82l4axe3l68ljmfpswpumh7
 
 creation_rules:
   - path_regex: ^.*secrets?\..*$
@@ -9,4 +9,4 @@ creation_rules:
       - age:
           - *lenovo-thinkpad-e14-nixos-personal
           - *msi-h510m-pro-nixos-personal
-          - *ci
+          - *atlantis
