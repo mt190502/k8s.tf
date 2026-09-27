@@ -11,7 +11,7 @@
 #  Copyright (c) 2026 Taha. All rights reserved.                                                  #
 #  Licensed under the AGPL License. See LICENSE in the project root for license information.      #
 ## ============================================================================================= ##
-.PHONY: default generate plan apply destroy clean decrypt encrypt build infra-plan infra-apply infra-destroy manifests-plan manifests-apply manifests-destroy _check_values
+.PHONY: default generate plan apply destroy clean decrypt encrypt build infra-plan infra-apply infra-destroy manifests-plan manifests-apply manifests-destroy _check_values _with_secrets
 .SILENT:
 
 ## --------------------------------------------------------------------------------------------- ##
@@ -134,6 +134,18 @@ encrypt:
 		$(MAKE) _sops MODE=encrypt TARGET_FILE="$$file"; \
 	done
 
+_with_secrets:
+	set -euo pipefail; \
+	[ -f "$(SECRETS)" ] || { echo "Error: Secrets file not found at $(SECRETS)"; exit 1; }; \
+	tmp_dir=$$(mktemp -d /tmp/k8s.tf-secrets.XXXXXX); \
+	trap 'rm -rf "$$tmp_dir"' EXIT; \
+	trap 'exit 130' INT; \
+	trap 'exit 143' TERM; \
+	umask 077; \
+	tmp_secrets="$$tmp_dir/$(ENV).secrets.hcl"; \
+	sops --decrypt "$(SECRETS)" > "$$tmp_secrets"; \
+	$(MAKE) "$(WRAPPED_TARGET)" _SECRETS_READY=1 SECRETS="$$tmp_secrets"
+
 
 ##~ ---------------------------------------------------------------------------- ~##
 #  Default target: shows usage info. You can also run 'make help' for the same.    #
@@ -166,6 +178,13 @@ default:
 ##~ ---------------------------------------------------------------------------- ~##
 #  Generate stack units based on the specified environment.                        #
 ##~ ---------------------------------------------------------------------------- ~##
+ifeq ($(_SECRETS_READY),)
+
+generate infra-plan infra-apply infra-destroy manifests-plan manifests-apply manifests-destroy plan apply destroy:
+	$(MAKE) _with_secrets WRAPPED_TARGET=$@
+
+else
+
 generate:
 	command -v clear >/dev/null 2>&1 && clear || true
 	mkdir -p "$(TF_PLUGIN_CACHE_DIR)"
@@ -267,6 +286,8 @@ destroy: _check_values
 	$(TG_RUN_INFRA) destroy
 	rm -rf $(STACK_NESTED_DIRS)
 	rm -rf $(STACK_DIR) .terraform
+
+endif
 
 clean:
 	read -p 'Are you sure you want to clean the stack? (y/n): ' -r answer; \

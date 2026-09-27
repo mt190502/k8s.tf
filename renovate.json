@@ -16,9 +16,11 @@
   "prConcurrentLimit": 5,
   "branchConcurrentLimit": 10,
   "rebaseWhen": "conflicted",
+  "lockFileMaintenance": {
+    "enabled": true
+  },
   "labels": ["dependencies"],
   "enabledManagers": ["custom.regex", "terraform"],
-  "ignorePaths": ["modules/manifests/apps/template/**"],
   "customManagers": [
     {
       "customType": "regex",
@@ -33,12 +35,30 @@
       "description": "Update Terraform provider versions in terragrunt.hcl generate blocks",
       "managerFilePatterns": ["modules/**/terragrunt.hcl"],
       "matchStrings": [
-        "(?<depName>\\w+/\\w+)\\s*=\\s*\\{[^}]*version\\s*=\\s*\"(?<currentValue>[^\"]+)\""
+        "\\w+\\s*=\\s*\\{\\s*source\\s*=\\s*\"(?<depName>[^\"]+)\"\\s*,\\s*version\\s*=\\s*\"(?<currentValue>[^\"]+)\"\\s*\\}"
       ],
-      "datasourceTemplate": "terraform-provider"
+      "datasourceTemplate": "terraform-provider",
+      "versioningTemplate": "hashicorp"
     }
   ],
   "packageRules": [
+    {
+      "description": "Use the OpenTofu registry for Terraform providers",
+      "matchDatasources": ["terraform-provider"],
+      "registryUrls": ["https://registry.opentofu.org"]
+    },
+    {
+      "description": "Ignore non-provider dependencies in the app template",
+      "matchFileNames": ["modules/manifests/apps/template/**"],
+      "enabled": false
+    },
+    {
+      "description": "Allow provider updates in the app template",
+      "matchManagers": ["custom.regex"],
+      "matchDatasources": ["terraform-provider"],
+      "matchFileNames": ["modules/manifests/apps/template/terragrunt.hcl"],
+      "enabled": true
+    },
     {
       "description": "Core Infrastructure (modules/infra)",
       "matchManagers": ["custom.regex", "terraform"],
