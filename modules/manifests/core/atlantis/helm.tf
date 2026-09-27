@@ -3,7 +3,7 @@
 ## ============================================================================================= ##
 locals {
   # renovate: datasource=github-releases depName=kubernetes/kubernetes
-  kubectl_version = "v1.37.0"
+  kubectl_version = "v1.37.1"
 
   # renovate: datasource=github-releases depName=jqlang/jq
   jq_version = "1.8.1"
@@ -15,7 +15,7 @@ locals {
   sops_version = "3.13.3"
 
   # renovate: datasource=github-releases depName=gruntwork-io/terragrunt
-  terragrunt_version = "v1.1.5"
+  terragrunt_version = "v1.1.6"
 }
 
 resource "helm_release" "atlantis" {
@@ -24,7 +24,7 @@ resource "helm_release" "atlantis" {
   namespace  = kubernetes_namespace_v1.this[0].metadata[0].name
   repository = "https://runatlantis.github.io/helm-charts"
   chart      = "atlantis"
-  version    = "6.15.1"
+  version    = "6.16.0"
   set = [
     { name = "atlantisDataDirectory", value = "/atlantis-data" },
     { name = "atlantisUrl", value = "https://${var.config.hostname}.${var.config.domain}" },
