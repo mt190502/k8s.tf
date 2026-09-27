@@ -26,21 +26,24 @@ resource "kubernetes_service_v1" "this" {
 
 #~ bridge service generator
 resource "kubernetes_service_v1" "bridge" {
-  for_each = toset(nonsensitive(keys(var.secrets.bridges)))
+  for_each = local.bridge_keys
   metadata {
     name      = "${each.key}-${var.config.name}-bridge"
     namespace = kubernetes_namespace_v1.this[0].metadata[0].name
   }
   spec {
     selector = {
-      "app.kubernetes.io/name" = "${each.key}-${var.config.name}-bridge"
+      "app.kubernetes.io/name" = contains(local.alertmanager_bridge_keys, each.key) ? local.alertmanager_adapters_labels["app.kubernetes.io/name"] : "${each.key}-${var.config.name}-bridge"
     }
     port {
       port        = 8080
-      target_port = 8080
+      target_port = each.key == "alertmanager-info" ? 8081 : 8080
     }
     ip_family_policy = "PreferDualStack"
     type             = "ClusterIP"
   }
-  depends_on = [kubernetes_deployment_v1.bridge]
+  depends_on = [
+    kubernetes_deployment_v1.alertmanager_adapters,
+    kubernetes_deployment_v1.bridge,
+  ]
 }

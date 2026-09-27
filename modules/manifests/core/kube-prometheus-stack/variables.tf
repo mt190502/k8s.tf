@@ -1,25 +1,26 @@
-## ============================================================================================== ##
-#  modules/manifests/core/kube-prometheus-stack/variables.tf                                       #
-#                                                                                                  #
-#    enabled                     --- Enable this module                                            #
-#    config                      --- Configuration object                                          #
-#      alertmanager_hostname     --- Alertmanager HTTPRoute hostname prefix                        #
-#      basic_auth                --- Enable basic authentication for Grafana (only with Traefik)   #
-#      domain                    --- Base domain for HTTPRoute hostname                            #
-#      gateway_name              --- Gateway name (from cert-manager)                              #
-#      gateway_namespace         --- Gateway namespace (from cert-manager)                         #
-#      gotify_enabled            --- Enable Alertmanager -> Gotify webhook receivers               # 
-#      gotify_bridge_endpoints   --- Map of bridge name -> webhook URL (e.g., {loki="http://..."}) #       
-#      hostname                  --- HTTPRoute hostname subdomain (e.g., "app" -> app.{domain})    #
-#      preferred_gateway         --- Preferred Gateway for basic auth (e.g., "traefik")            #
-#      prometheus_retention      --- Maximum time to retain Prometheus metrics                     #
-#      prometheus_hostname       --- Prometheus HTTPRoute hostname prefix                          #
-#      prometheus_retention_size --- Maximum Prometheus TSDB block size                            #
-#      prometheus_storage_class  --- StorageClass for the Prometheus TSDB PVC                      #
-#      prometheus_storage_size   --- Prometheus TSDB PVC size                                      #
-#      prometheus_node           --- Preferred node hostname for the Prometheus pod (soft)         #
-#      storage_size              --- Volume size for Grafana                                       #
-## ============================================================================================== ##
+## =============================================================================================== ##
+#  modules/manifests/core/kube-prometheus-stack/variables.tf                                        #
+#                                                                                                   #
+#    enabled                     --- Enable this module                                             #
+#    config                      --- Configuration object                                           #
+#      alertmanager_hostname     --- Alertmanager HTTPRoute hostname prefix                         #
+#      basic_auth                --- Enable basic authentication for Grafana (only with Traefik)    #
+#      domain                    --- Base domain for HTTPRoute hostname                             #
+#      gateway_name              --- Gateway name (from cert-manager)                               #
+#      gateway_namespace         --- Gateway namespace (from cert-manager)                          #
+#      gotify_enabled            --- Enable Alertmanager -> Gotify webhook receivers                # 
+#      gotify_bridge_endpoints   --- Map of bridge name -> webhook URL (e.g., {loki="http://..."})  #       
+#      discord_adapter_endpoint  --- Discord webhook endpoint hosted by the Gotify notification Pod #
+#      hostname                  --- HTTPRoute hostname subdomain (e.g., "app" -> app.{domain})     #
+#      preferred_gateway         --- Preferred Gateway for basic auth (e.g., "traefik")             #
+#      prometheus_retention      --- Maximum time to retain Prometheus metrics                      #
+#      prometheus_hostname       --- Prometheus HTTPRoute hostname prefix                           #
+#      prometheus_retention_size --- Maximum Prometheus TSDB block size                             #
+#      prometheus_storage_class  --- StorageClass for the Prometheus TSDB PVC                       #
+#      prometheus_storage_size   --- Prometheus TSDB PVC size                                       #
+#      prometheus_node           --- Preferred node hostname for the Prometheus pod (soft)          #
+#      storage_size              --- Volume size for Grafana                                        #
+## =============================================================================================== ##
 variable "enabled" {
   description = "Enable this module"
   type        = bool
@@ -36,6 +37,7 @@ variable "config" {
     gateway_namespace         = optional(string)
     gotify_enabled            = optional(bool, false)
     gotify_bridge_endpoints   = optional(map(string), {})
+    discord_adapter_endpoint  = optional(string, "")
     hostname                  = optional(string)
     preferred_gateway         = optional(string, "cilium")
     prometheus_hostname       = optional(string, "prometheus.srv")

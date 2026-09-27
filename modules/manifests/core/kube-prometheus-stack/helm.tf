@@ -1,6 +1,24 @@
 ## ============================================================================================= ##
 #  modules/manifests/core/kube-prometheus-stack/helm.tf                                           #
 ## ============================================================================================= ##
+locals {
+  gotify_info_routes = var.config.gotify_enabled ? [
+    for name, endpoint in var.config.gotify_bridge_endpoints : {
+      receiver = "gotify-${name}"
+      match    = { severity = "info" }
+      continue = true
+    } if name == "alertmanager-info"
+  ] : []
+  gotify_regular_routes = var.config.gotify_enabled ? [
+    for name, endpoint in var.config.gotify_bridge_endpoints : {
+      receiver = "gotify-${name}"
+      matchers = ["severity!=\"info\""]
+      continue = true
+    } if name != "loki" && name != "alertmanager-info"
+  ] : []
+  discord_adapter_enabled = trimspace(var.config.discord_adapter_endpoint) != ""
+}
+
 resource "helm_release" "this" {
   name            = "kube-prometheus-stack"
   repository      = "https://prometheus-community.github.io/helm-charts"
@@ -100,10 +118,10 @@ resource "helm_release" "this" {
           },
         ]
         route = {
-          group_by        = ["alertname", "namespace", "pod", "container"]
-          group_wait      = "1s"
-          group_interval  = "1s"
-          repeat_interval = "5m"
+          group_by        = ["alertname", "namespace", "severity"]
+          group_wait      = "30s"
+          group_interval  = "5m"
+          repeat_interval = "15m"
           routes = concat(
             [{
               match = {
@@ -123,16 +141,12 @@ resource "helm_release" "this" {
               }
               repeat_interval = "3h"
               routes = concat(
-                (try(var.secrets.alertmanager.discord_webhook_url, "") != "") ? [{
+                local.discord_adapter_enabled ? [{
                   receiver = "discord"
                   continue = true
                 }] : [],
-                var.config.gotify_enabled ? [
-                  for name, endpoint in var.config.gotify_bridge_endpoints : {
-                    receiver = "gotify-${name}"
-                    continue = true
-                  } if name != "loki"
-                ] : [],
+                local.gotify_info_routes,
+                local.gotify_regular_routes,
                 [{ receiver = "null" }]
               )
             }],
@@ -142,16 +156,12 @@ resource "helm_release" "this" {
               }
               repeat_interval = "6h"
               routes = concat(
-                (try(var.secrets.alertmanager.discord_webhook_url, "") != "") ? [{
+                local.discord_adapter_enabled ? [{
                   receiver = "discord"
                   continue = true
                 }] : [],
-                var.config.gotify_enabled ? [
-                  for name, endpoint in var.config.gotify_bridge_endpoints : {
-                    receiver = "gotify-${name}"
-                    continue = true
-                  } if name != "loki"
-                ] : [],
+                local.gotify_info_routes,
+                local.gotify_regular_routes,
                 [{ receiver = "null" }]
               )
             }],
@@ -161,20 +171,16 @@ resource "helm_release" "this" {
               }
               repeat_interval = "1h"
               routes = concat(
-                (try(var.secrets.alertmanager.discord_webhook_url, "") != "") ? [{
+                local.discord_adapter_enabled ? [{
                   receiver = "discord"
                   continue = true
                 }] : [],
-                var.config.gotify_enabled ? [
-                  for name, endpoint in var.config.gotify_bridge_endpoints : {
-                    receiver = "gotify-${name}"
-                    continue = true
-                  } if name != "loki"
-                ] : [],
+                local.gotify_info_routes,
+                local.gotify_regular_routes,
                 [{ receiver = "null" }]
               )
             }],
-            (try(var.secrets.alertmanager.discord_webhook_url, "") != "") ? [{
+            local.discord_adapter_enabled ? [{
               receiver = "discord"
               continue = true
             }] : [],
@@ -184,35 +190,17 @@ resource "helm_release" "this" {
                 match    = { alertname = "LokiErrorLog" }
               } if name == "loki"
             ] : [],
-            var.config.gotify_enabled ? [
-              for name, endpoint in var.config.gotify_bridge_endpoints : {
-                receiver = "gotify-${name}"
-                continue = true
-              } if name != "loki"
-            ] : []
+            local.gotify_info_routes,
+            local.gotify_regular_routes
           )
         }
         receivers = concat(
           [{ name = "null" }],
-          (try(var.secrets.alertmanager.discord_webhook_url, "") != "") ? [{
+          local.discord_adapter_enabled ? [{
             name = "discord"
-            discord_configs = [{
-              webhook_url   = var.secrets.alertmanager.discord_webhook_url
+            webhook_configs = [{
+              url           = var.config.discord_adapter_endpoint
               send_resolved = true
-              title         = "{{ if eq .Status \"firing\" }}:fire: Firing{{ else }}:white_check_mark: Resolved{{ end }}: {{ .Alerts | len }} alert(s)"
-              message       = <<-EOT
-                {{ range .Alerts }}
-                **Alert:** {{ .Labels.alertname }}
-                **Severity:** {{ .Labels.severity | toUpper }}
-                **Description:** {{ .Annotations.description }}
-                **Labels:**
-                ```{{ printf "%-15s | %s" "label" "value" }}
-                ----------------+-----------------------------------
-                {{- range .Labels.SortedPairs }}
-                {{ printf "%-15s | %s" .Name .Value }}
-                {{- end }}```
-                {{ end }}
-              EOT
             }]
           }] : [],
           var.config.gotify_enabled ? [

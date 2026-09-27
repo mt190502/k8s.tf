@@ -131,7 +131,8 @@ unit "gotify" {
       app = {
         password = try(local.secrets.manifests.core.gotify.app.password, "")
       }
-      bridges = try(local.secrets.manifests.core.gotify.bridges, {})
+      bridges             = try(local.secrets.manifests.core.gotify.bridges, {})
+      discord_webhook_url = try(local.secrets.manifests.core.kube_prometheus_stack.alertmanager.discord_webhook_url, "")
       pg = {
         password = try(local.secrets.manifests.core.gotify.pg.password, "")
       }
@@ -149,9 +150,7 @@ unit "kube_prometheus_stack" {
       { domain = local.rootvars.cluster_url.dns, preferred_gateway = local.rootvars.preferred_gateway }
     )
     secrets = {
-      alertmanager = {
-        discord_webhook_url = try(local.secrets.manifests.core.kube_prometheus_stack.alertmanager.discord_webhook_url, "")
-      }
+      basic_auth = try(local.secrets.manifests.core.kube_prometheus_stack.basic_auth, try(local.secrets.manifests.apps.misc.basic_auth, { username = "", password_hash = "" }))
     }
   }
 }

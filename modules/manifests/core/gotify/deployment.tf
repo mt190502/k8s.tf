@@ -4,6 +4,17 @@
 #  Deployment for stateless applications - manages replica pods with rolling updates.             #
 #  Uses environment variables from config and secrets from Kubernetes Secret.                     #
 ## ============================================================================================= ##
+locals {
+  bridge_names = try(nonsensitive(keys(var.secrets.bridges)), [])
+  bridge_keys  = toset(concat(local.bridge_names, contains(local.bridge_names, "alertmanager") ? ["alertmanager-info"] : []))
+
+  alertmanager_bridge_keys      = toset(["alertmanager", "alertmanager-info"])
+  alertmanager_adapters_labels  = { "app.kubernetes.io/name" = "alertmanager-notification-adapters" }
+  alertmanager_adapters_enabled = var.enabled && contains(local.bridge_keys, "alertmanager")
+  discord_adapter_enabled       = local.alertmanager_adapters_enabled && nonsensitive(try(trimspace(var.secrets.discord_webhook_url), "")) != ""
+  individual_bridge_keys        = setsubtract(local.bridge_keys, local.alertmanager_bridge_keys)
+}
+
 resource "kubernetes_deployment_v1" "this" {
   count = (var.enabled && var.config.replicas != null) ? 1 : 0
   metadata {
@@ -48,7 +59,6 @@ resource "kubernetes_deployment_v1" "this" {
             }
           }
         }
-
         init_container {
           name  = "${var.config.name}-init"
           image = "busybox:latest"
@@ -137,7 +147,7 @@ resource "kubernetes_deployment_v1" "this" {
 
 #~ bridge deployment generator
 resource "kubernetes_deployment_v1" "bridge" {
-  for_each = toset(nonsensitive(keys(var.secrets.bridges)))
+  for_each = local.individual_bridge_keys
   metadata {
     name      = "${each.key}-${var.config.name}-bridge"
     namespace = kubernetes_namespace_v1.this[0].metadata[0].name
@@ -145,7 +155,6 @@ resource "kubernetes_deployment_v1" "bridge" {
       "app.kubernetes.io/name" = "${each.key}-${var.config.name}-bridge"
     }
   }
-
   spec {
     replicas = 1
     selector {
@@ -181,7 +190,7 @@ resource "kubernetes_deployment_v1" "bridge" {
           }
           env {
             name  = "DEFAULT_PRIORITY"
-            value = "5"
+            value = each.key == "alertmanager-info" ? "0" : "5"
           }
           env {
             name  = "EXTENDED_DETAILS"

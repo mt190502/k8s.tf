@@ -17,13 +17,13 @@ resource "kubernetes_secret_v1" "this" {
 
 #~ bridge secret generator
 resource "kubernetes_secret_v1" "bridge" {
-  for_each = toset(nonsensitive(keys(var.secrets.bridges)))
+  for_each = local.bridge_keys
   metadata {
     name      = "${each.key}-${var.config.name}-bridge-secret"
     namespace = kubernetes_namespace_v1.this[0].metadata[0].name
   }
   data = {
-    gotify_token = var.secrets.bridges[each.key].token
+    gotify_token = var.secrets.bridges[each.key == "alertmanager-info" ? "alertmanager" : each.key].token
   }
   type       = "Opaque"
   depends_on = [kubernetes_namespace_v1.this]
