@@ -31,7 +31,7 @@ generate "versions" {
   contents  = <<-EOF
     terraform {
       required_providers {
-        cloudflare = { source = "cloudflare/cloudflare", version = "~> 5.18.0" }
+        cloudflare = { source = "cloudflare/cloudflare", version = "~> 5.26.0" }
       }
     }
   EOF
