@@ -300,12 +300,12 @@ locals {
           hostname   = "red"
           resources = {
             limits = {
-              cpu    = "100m"
-              memory = "608Mi"
+              cpu    = "1"
+              memory = "1Gi"
             }
             requests = {
-              cpu    = "25m"
-              memory = "352Mi"
+              cpu    = "250m"
+              memory = "250Mi"
             }
           }
           pg = {
