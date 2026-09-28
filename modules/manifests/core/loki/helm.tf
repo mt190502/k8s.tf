@@ -77,6 +77,9 @@ resource "helm_release" "this" {
   ]
   values = [yamlencode({
     singleBinary = {
+      podAnnotations = {
+        "checksum/loki-rules" = sha256(local.loki_alert_rules)
+      }
       extraVolumes = [
         {
           name = "loki-rules-source"
