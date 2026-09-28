@@ -4,6 +4,31 @@
 #  Deployment for stateless applications - manages replica pods with rolling updates.             #
 #  Uses environment variables from config and secrets from Kubernetes Secret.                     #
 ## ============================================================================================= ##
+resource "kubernetes_config_map_v1" "task_sync_adapter_app" {
+  count = (var.enabled && var.config.task_sync_adapter.enabled) ? 1 : 0
+  metadata {
+    name      = "${var.config.task_sync_adapter.name}-app"
+    namespace = kubernetes_namespace_v1.this[0].metadata[0].name
+  }
+  data = {
+    "task_sync_adapter.py" = file("${path.module}/task_sync_adapter.py")
+  }
+}
+
+resource "kubernetes_secret_v1" "task_sync_adapter_app" {
+  count = (var.enabled && var.config.task_sync_adapter.enabled) ? 1 : 0
+  metadata {
+    name      = "${var.config.task_sync_adapter.name}-app"
+    namespace = kubernetes_namespace_v1.this[0].metadata[0].name
+  }
+  type = "Opaque"
+  data = {
+    redmine_api_key   = try(var.secrets.task_sync_adapter["redmine_api_key"], "")
+    radicale_username = try(var.secrets.task_sync_adapter["radicale_username"], "")
+    radicale_password = try(var.secrets.task_sync_adapter["radicale_password"], "")
+  }
+}
+
 resource "kubernetes_deployment_v1" "this" {
   count = (var.enabled && var.config.replicas != null) ? 1 : 0
   metadata {
@@ -34,6 +59,9 @@ resource "kubernetes_deployment_v1" "this" {
         labels = {
           "app.kubernetes.io/name" = var.config.name
         }
+        annotations = var.config.task_sync_adapter.enabled ? {
+          "checksum/task-sync-adapter" = filesha256("${path.module}/task_sync_adapter.py")
+        } : {}
       }
       spec {
         affinity {
@@ -60,8 +88,18 @@ resource "kubernetes_deployment_v1" "this" {
               echo "Waiting for PostgreSQL to be ready..."
               sleep 5
             done
+            %{if var.config.task_sync_adapter.enabled~}
+            mkdir -p /data/gateway-state
+            %{endif~}
             EOT
           ]
+          dynamic "volume_mount" {
+            for_each = var.config.task_sync_adapter.enabled ? [1] : []
+            content {
+              name       = "${var.config.name}-data"
+              mount_path = "/data"
+            }
+          }
         }
         container {
           name  = var.config.name
@@ -136,6 +174,106 @@ resource "kubernetes_deployment_v1" "this" {
             sub_path   = "themes"
           }
         }
+        dynamic "container" {
+          for_each = var.config.task_sync_adapter.enabled ? [var.config.task_sync_adapter] : []
+          iterator = adapter
+          content {
+            name              = adapter.value.name
+            image             = "python:3.13-alpine"
+            image_pull_policy = "IfNotPresent"
+            command           = ["python", "/app/task_sync_adapter.py"]
+            env {
+              name  = "REDMINE_URL"
+              value = "http://127.0.0.1:${var.config.port}"
+            }
+            env {
+              name  = "REDMINE_PROJECT"
+              value = adapter.value.redmine_project
+            }
+            env {
+              name  = "RADICALE_URL"
+              value = "https://radicale.radicale.svc.cluster.local:5232"
+            }
+            env {
+              name  = "RADICALE_TLS_SERVER_NAME"
+              value = "dav.${var.config.domain}"
+            }
+            env {
+              name  = "RADICALE_CALENDAR"
+              value = adapter.value.radicale_calendar
+            }
+            env {
+              name  = "SYNC_INTERVAL_SECONDS"
+              value = tostring(adapter.value.sync_interval_seconds)
+            }
+            env {
+              name  = "REDMINE_CLOSED_STATUS_ID"
+              value = tostring(adapter.value.redmine_closed_status_id)
+            }
+            env {
+              name  = "CALENDAR_DELETE_CLOSE"
+              value = tostring(adapter.value.calendar_delete_close)
+            }
+            env {
+              name  = "STATE_DB"
+              value = "/data/state.sqlite3"
+            }
+            env {
+              name = "REDMINE_API_KEY"
+              value_from {
+                secret_key_ref {
+                  name = kubernetes_secret_v1.task_sync_adapter_app[0].metadata[0].name
+                  key  = "redmine_api_key"
+                }
+              }
+            }
+            env {
+              name = "RADICALE_USERNAME"
+              value_from {
+                secret_key_ref {
+                  name = kubernetes_secret_v1.task_sync_adapter_app[0].metadata[0].name
+                  key  = "radicale_username"
+                }
+              }
+            }
+            env {
+              name = "RADICALE_PASSWORD"
+              value_from {
+                secret_key_ref {
+                  name = kubernetes_secret_v1.task_sync_adapter_app[0].metadata[0].name
+                  key  = "radicale_password"
+                }
+              }
+            }
+            dynamic "resources" {
+              for_each = adapter.value.resources != null ? [1] : []
+              content {
+                limits   = try(adapter.value.resources.limits, {})
+                requests = try(adapter.value.resources.requests, {})
+              }
+            }
+            volume_mount {
+              name       = "gateway-app"
+              mount_path = "/app/task_sync_adapter.py"
+              sub_path   = "task_sync_adapter.py"
+              read_only  = true
+            }
+            volume_mount {
+              name       = "${var.config.name}-data"
+              mount_path = "/data"
+              sub_path   = "gateway-state"
+            }
+          }
+        }
+        dynamic "volume" {
+          for_each = var.config.task_sync_adapter.enabled ? [1] : []
+          content {
+            name = "gateway-app"
+            config_map {
+              name = kubernetes_config_map_v1.task_sync_adapter_app[0].metadata[0].name
+            }
+          }
+        }
         volume {
           name = "${var.config.name}-data"
           persistent_volume_claim {
@@ -147,6 +285,8 @@ resource "kubernetes_deployment_v1" "this" {
   }
   depends_on = [
     kubernetes_namespace_v1.this,
-    kubernetes_manifest.postgres
+    kubernetes_manifest.postgres,
+    kubernetes_config_map_v1.task_sync_adapter_app,
+    kubernetes_secret_v1.task_sync_adapter_app,
   ]
 }

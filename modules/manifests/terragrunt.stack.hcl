@@ -372,6 +372,11 @@ unit "redmine" {
     )
     secrets = {
       basic_auth = try(local.secrets.manifests.apps.redmine.basic_auth, try(local.secrets.manifests.apps.misc.basic_auth, { username = "", password_hash = "" }))
+      task_sync_adapter = {
+        redmine_api_key   = try(local.secrets.manifests.apps.redmine.task_sync_adapter.redmine_api_key, try(local.secrets.manifests.apps.redmine.gateway.redmine_api_key, try(local.secrets.manifests.apps.redmine_gateway.redmine_api_key, "")))
+        radicale_username = try(local.secrets.manifests.apps.redmine.task_sync_adapter.radicale_username, try(local.secrets.manifests.apps.redmine.gateway.radicale_username, try(local.secrets.manifests.apps.redmine_gateway.radicale_username, "")))
+        radicale_password = try(local.secrets.manifests.apps.redmine.task_sync_adapter.radicale_password, try(local.secrets.manifests.apps.redmine.gateway.radicale_password, try(local.secrets.manifests.apps.redmine_gateway.radicale_password, "")))
+      }
       pg = {
         password = try(local.secrets.manifests.apps.redmine.pg.password, "")
       }

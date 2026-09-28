@@ -34,6 +34,9 @@ resource "kubernetes_deployment_v1" "this" {
         labels = {
           "app.kubernetes.io/name" = var.config.name
         }
+        annotations = {
+          "checksum/config" = filesha256("${path.module}/configmap.tf")
+        }
       }
       spec {
         affinity {

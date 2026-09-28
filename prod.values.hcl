@@ -308,6 +308,23 @@ locals {
               memory = "250Mi"
             }
           }
+          task_sync_adapter = {
+            calendar_delete_close    = true
+            enabled                  = true
+            redmine_closed_status_id = 6
+            redmine_project          = "tasks"
+            radicale_calendar        = "c0cdd77a-af63-ec57-d840-dd8e07853cef"
+            resources = {
+              limits = {
+                memory = "128Mi"
+              }
+              requests = {
+                cpu    = "10m"
+                memory = "64Mi"
+              }
+            }
+            sync_interval_seconds = 10
+          }
           pg = {
             limits = {
               cpu    = "500m"

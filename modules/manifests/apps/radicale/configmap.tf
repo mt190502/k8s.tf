@@ -58,7 +58,7 @@ resource "kubernetes_config_map_v1" "configmap" {
       [storage]
       filesystem_cache_folder = /app/data/cache
       filesystem_folder = /app/data/collections
-      hook = false
+      hook = true
       max_sync_token_age = 2592000
       predefined_collections = 
       skip_broken_item = true
