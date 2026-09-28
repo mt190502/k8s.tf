@@ -76,10 +76,9 @@ resource "helm_release" "atlantis" {
     { name = "statefulSet.securityContext.fsGroup", value = 1000 },
     { name = "statefulSet.securityContext.fsGroupChangePolicy", value = "OnRootMismatch" },
     { name = "statefulSet.securityContext.runAsUser", value = 100 },
-    # Atlantis may apply changes to its own Helm release. With a single replica,
-    # a StatefulSet rolling update will terminate the running pod and interrupt
-    # the in-flight `atlantis apply`. OnDelete keeps the pod running; restart it
-    # manually after the apply to pick up new image/config.
+    # Keep the running Atlantis process alive while its apply updates this release.
+    # The restart-watcher sidecar waits for /status to report no in-flight operations,
+    # then deletes the stale pod so the StatefulSet recreates it from the new template.
     { name = "statefulSet.updateStrategy.type", value = "OnDelete" },
     { name = "test.enabled", value = false },
     { name = "volumeClaim.accessModes[0]", value = "ReadWriteOnce" },
@@ -91,6 +90,15 @@ resource "helm_release" "atlantis" {
     { name = "githubApp.secret", value = try(var.secrets.app.webhook_secret, "") }
   ]
   values = [yamlencode({
+    podTemplate = {
+      annotations = {
+        "checksum/external-configmaps" = sha256(jsonencode({
+          repo_config = try(kubernetes_config_map_v1.repo_config[0].data, {})
+          kubeconfig  = try(kubernetes_config_map_v1.kubeconfig[0].data, {})
+        }))
+        "checksum/restart-watcher" = sha256(file("${path.module}/restart_watcher.py"))
+      }
+    }
     route = {
       ui = {
         filters = var.config.basic_auth && var.config.preferred_gateway == "traefik" ? [
@@ -105,10 +113,33 @@ resource "helm_release" "atlantis" {
         ] : []
       }
     }
+    extraContainers = [
+      {
+        name            = "restart-watcher"
+        image           = "python:3.13-alpine3.22"
+        imagePullPolicy = "IfNotPresent"
+        command         = ["python", "-B", "/opt/restart-watcher/restart_watcher.py"]
+        env = [
+          { name = "ATLANTIS_STATUS_URL", value = "http://127.0.0.1:4141/status" },
+          { name = "IDLE_CONFIRMATIONS", value = "3" },
+          { name = "POD_NAME", valueFrom = { fieldRef = { fieldPath = "metadata.name" } } },
+          { name = "POD_NAMESPACE", valueFrom = { fieldRef = { fieldPath = "metadata.namespace" } } },
+          { name = "POLL_INTERVAL_SECONDS", value = "10" }
+        ]
+        resources = {
+          requests = { cpu = "10m", memory = "32Mi" }
+          limits   = { memory = "64Mi" }
+        }
+        volumeMounts = [
+          { name = "restart-watcher", mountPath = "/opt/restart-watcher", readOnly = true }
+        ]
+      }
+    ]
     extraVolumes = [
       { name = "kubeconfig", configMap = { name = "${var.config.name}-kubeconfig" } },
       { name = "repo-config", configMap = { name = "${var.config.name}-repo-config" } },
-      { name = "runtime-secrets", secret = { secretName = "${var.config.name}-secrets" } }
+      { name = "runtime-secrets", secret = { secretName = "${var.config.name}-secrets" } },
+      { name = "restart-watcher", configMap = { name = "${var.config.name}-restart-watcher" } }
     ]
     extraVolumeMounts = [
       { name = "kubeconfig", mountPath = "/etc/kube", readOnly = true },
@@ -163,6 +194,7 @@ resource "helm_release" "atlantis" {
     kubernetes_secret_v1.atlantis,
     kubernetes_config_map_v1.repo_config,
     kubernetes_config_map_v1.kubeconfig,
+    kubernetes_config_map_v1.restart_watcher,
     kubernetes_secret_v1.basic_auth,
     kubernetes_manifest.basic_auth_middleware
   ]
