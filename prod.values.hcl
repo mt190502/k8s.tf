@@ -316,7 +316,8 @@ locals {
             radicale_calendar        = "c0cdd77a-af63-ec57-d840-dd8e07853cef"
             resources = {
               limits = {
-                memory = "128Mi"
+                cpu    = "250m"
+                memory = "256Mi"
               }
               requests = {
                 cpu    = "10m"
