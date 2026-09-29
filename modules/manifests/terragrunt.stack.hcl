@@ -395,6 +395,9 @@ unit "silverbullet" {
     )
     secrets = {
       basic_auth = try(local.secrets.manifests.apps.silverbullet.basic_auth, try(local.secrets.manifests.apps.misc.basic_auth, { username = "", password_hash = "" }))
+      mcp = {
+        token = try(local.secrets.manifests.apps.silverbullet.mcp.token, "")
+      }
     }
   }
 }

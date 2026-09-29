@@ -172,6 +172,10 @@ locals {
           basic_auth   = true
           hostname     = "md"
           storage_size = "2Gi"
+          mcp = {
+            enabled = true
+            # token = "bearer-token"
+          }
           resources = {
             limits = {
               cpu    = "200m"

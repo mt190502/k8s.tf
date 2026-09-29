@@ -10,6 +10,7 @@
 #      gateway_namespace --- Gateway namespace (from cert-manager)                                #
 #      hostname          --- HTTPRoute hostname subdomain (e.g., "md" -> md.{domain})             #
 #      image             --- Pinned SilverBullet image                                            #
+#      mcp               --- Optional in-pod MCP sidecar (/.fs bridge, tailnet-only port)         #
 #      name              --- Application name (used for resources)                                #
 #      port              --- HTTP port SilverBullet listens on                                    #
 #      preferred_gateway --- Preferred Gateway for basic auth (e.g., "traefik")                   #
@@ -35,6 +36,14 @@ variable "config" {
     gateway_namespace = optional(string)
     hostname          = optional(string)
     image             = optional(string, "ghcr.io/silverbulletmd/silverbullet:2.11.1")
+    mcp = optional(object({
+      enabled      = optional(bool, false)
+      instructions = optional(string, "")
+      resources = optional(object({
+        requests = optional(map(string), { cpu = "25m", memory = "64Mi" })
+        limits   = optional(map(string), { cpu = "200m", memory = "256Mi" })
+      }), {})
+    }), {})
     name              = optional(string, "silverbullet")
     port              = optional(number, 3000)
     preferred_gateway = optional(string, "cilium")
