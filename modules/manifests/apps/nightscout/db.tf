@@ -10,7 +10,7 @@
 ## ============================================================================================= ##
 locals {
   mongodb_name      = "${var.config.name}-mongo"
-  mongodb_namespace = kubernetes_namespace_v1.this[0].metadata[0].name
+  mongodb_namespace = try(kubernetes_namespace_v1.this[0].metadata[0].name, "")
   mongodb = yamlencode({
     apiVersion = "mongodbcommunity.mongodb.com/v1"
     kind       = "MongoDBCommunity"
@@ -33,7 +33,7 @@ locals {
           name = "${var.config.name}"
           db   = var.config.name
           passwordSecretRef = {
-            name = kubernetes_secret_v1.mongo_password[0].metadata[0].name
+            name = try(kubernetes_secret_v1.mongo_password[0].metadata[0].name, "")
           }
           roles = [
             {
@@ -61,7 +61,7 @@ locals {
         spec = {
           template = {
             spec = {
-              serviceAccountName = kubernetes_service_account_v1.mongodb_database[0].metadata[0].name
+              serviceAccountName = try(kubernetes_service_account_v1.mongodb_database[0].metadata[0].name, "")
               containers = [
                 {
                   name = "mongod"

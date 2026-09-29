@@ -13,13 +13,13 @@ locals {
     kind       = "TraefikService"
     metadata = {
       name      = local.traefik_service_name
-      namespace = kubernetes_namespace_v1.this[0].metadata[0].name
+      namespace = try(kubernetes_namespace_v1.this[0].metadata[0].name, "")
     }
     spec = {
       weighted = {
         services = [
           {
-            name   = kubernetes_service_v1.this[0].metadata[0].name
+            name   = try(kubernetes_service_v1.this[0].metadata[0].name, "")
             port   = var.config.port
             kind   = "Service"
             weight = 1
