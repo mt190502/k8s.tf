@@ -166,8 +166,26 @@ locals {
           storage_size = "2Gi"
         }
       }
-      hedgedoc = {
+      silverbullet = {
         enabled = true
+        config = {
+          basic_auth   = true
+          hostname     = "md"
+          storage_size = "2Gi"
+          resources = {
+            limits = {
+              cpu    = "200m"
+              memory = "512Mi"
+            }
+            requests = {
+              cpu    = "25m"
+              memory = "96Mi"
+            }
+          }
+        }
+      }
+      hedgedoc = {
+        enabled = false
         config = {
           basic_auth = true
           hostname   = "md"

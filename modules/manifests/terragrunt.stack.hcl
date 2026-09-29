@@ -384,6 +384,21 @@ unit "redmine" {
   }
 }
 
+unit "silverbullet" {
+  source = "./apps/silverbullet"
+  path   = "apps/silverbullet"
+  values = {
+    enabled = try(local.apps.silverbullet.enabled, false)
+    config = merge(
+      try(local.apps.silverbullet.config, {}),
+      { domain = local.rootvars.cluster_url.dns, preferred_gateway = local.rootvars.preferred_gateway }
+    )
+    secrets = {
+      basic_auth = try(local.secrets.manifests.apps.silverbullet.basic_auth, try(local.secrets.manifests.apps.misc.basic_auth, { username = "", password_hash = "" }))
+    }
+  }
+}
+
 unit "hedgedoc" {
   source = "./apps/hedgedoc"
   path   = "apps/hedgedoc"
