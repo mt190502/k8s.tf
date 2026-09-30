@@ -26,6 +26,12 @@ resource "kubernetes_secret_v1" "mcp" {
   data = {
     token = try(var.secrets.mcp["token"], "")
   }
+  lifecycle {
+    precondition {
+      condition     = !var.config.mcp.public || can(regex("^[A-Za-z0-9_-]{32,256}$", try(var.secrets.mcp["token"], "")))
+      error_message = "Public MCP exposure requires a 32..256 character URL-safe ASCII bearer token in manifests.apps.silverbullet.mcp.token."
+    }
+  }
 }
 
 resource "kubernetes_deployment_v1" "this" {
@@ -163,6 +169,14 @@ resource "kubernetes_deployment_v1" "this" {
             }
             env {
               name  = "SILVERBULLET_MCP_PUBLIC_HOST"
+              value = "${var.config.name}-mcp.${kubernetes_namespace_v1.this[0].metadata[0].name}.svc.cluster.local"
+            }
+            env {
+              name  = "SILVERBULLET_MCP_PUBLIC_HOSTS"
+              value = "${var.config.hostname}.${var.config.domain}"
+            }
+            env {
+              name  = "SILVERBULLET_MCP_INTERNAL_HOSTS"
               value = "${var.config.name}-mcp.${kubernetes_namespace_v1.this[0].metadata[0].name}.svc.cluster.local"
             }
             env {

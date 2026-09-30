@@ -21,7 +21,16 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 BASE_URL = os.getenv("SILVERBULLET_URL", "http://127.0.0.1:3000").rstrip("/")
 TOKEN = os.getenv("SILVERBULLET_MCP_TOKEN", "")
-PUBLIC_HOST = os.getenv("SILVERBULLET_MCP_PUBLIC_HOST", "")
+PUBLIC_HOSTS = [
+    host.strip()
+    for host in os.getenv("SILVERBULLET_MCP_PUBLIC_HOSTS", "").split(",")
+    if host.strip()
+]
+INTERNAL_HOSTS = [
+    host.strip()
+    for host in os.getenv("SILVERBULLET_MCP_INTERNAL_HOSTS", "").split(",")
+    if host.strip()
+]
 PORT = int(os.getenv("SILVERBULLET_MCP_PORT", "8765"))
 
 # ---------------------------------------------------------------------------
@@ -129,14 +138,13 @@ mcp = FastMCP(
     transport_security=TransportSecuritySettings(
         enable_dns_rebinding_protection=True,
         allowed_hosts=[
-            PUBLIC_HOST,
-            f"{PUBLIC_HOST}:{PORT}",
-            f"localhost:{PORT}",
-            f"127.0.0.1:{PORT}",
-            "localhost",
-            "127.0.0.1",
-        ],
-        allowed_origins=[],
+            allowed_host
+            for public_host in [*PUBLIC_HOSTS, *INTERNAL_HOSTS]
+            if public_host
+            for allowed_host in (public_host, f"{public_host}:{PORT}")
+        ]
+        + [f"localhost:{PORT}", f"127.0.0.1:{PORT}", "localhost", "127.0.0.1"],
+        allowed_origins=[f"https://{public_host}" for public_host in PUBLIC_HOSTS if public_host],
     ),
 )
 
@@ -230,20 +238,39 @@ for _tool_name, (_tool_fn, _tool_enabled) in _TOOL_REGISTRY.items():
 
 
 class AuthAndHealth:
-    """Adds /healthz and optional Bearer auth in front of the MCP app."""
+    """Adds /healthz and host-scoped Bearer auth in front of the MCP app.
 
-    def __init__(self, app: ASGIApp, token: str):
+    Requests whose Host header matches a public hostname require the Bearer
+    token when one is configured; requests arriving on internal service DNS
+    hostnames (cluster or tailnet) are tokenless.
+    """
+
+    def __init__(self, app: ASGIApp, token: str, public_hosts: list[str], internal_hosts: list[str]):
         self.app = app
-        self.token = token.encode("utf-8")
+        self.token = token.encode("utf-8") if token else b""
+        port = str(PORT)
+        self.public_hosts = {
+            normalized
+            for host in public_hosts
+            for normalized in (host.lower(), f"{host.lower()}:{port}", f"{host.lower()}:443")
+        }
+        self.internal_hosts = {
+            normalized
+            for host in internal_hosts
+            for normalized in (host.lower(), f"{host.lower()}:{port}")
+        } | {f"localhost:{port}", f"127.0.0.1:{port}", "localhost", "127.0.0.1"}
 
-    async def _respond(self, send: Send, status: int, body: bytes) -> None:
+    async def _respond(self, send: Send, status: int, body: bytes, extra_headers: dict | None = None) -> None:
+        headers = [
+            (b"content-type", b"text/plain; charset=utf-8"),
+            (b"cache-control", b"no-store"),
+        ]
+        for key, value in (extra_headers or {}).items():
+            headers.append((key.encode("latin-1"), value.encode("latin-1")))
         await send({
             "type": "http.response.start",
             "status": status,
-            "headers": [
-                (b"content-type", b"text/plain; charset=utf-8"),
-                (b"cache-control", b"no-store"),
-            ],
+            "headers": headers,
         })
         await send({"type": "http.response.body", "body": body})
 
@@ -257,17 +284,23 @@ class AuthAndHealth:
         if scope["path"] != "/mcp":
             await self._respond(send, 404, b"not found")
             return
-        if self.token:
+        host_header = dict(scope["headers"]).get(b"host", b"").decode("utf-8", "replace").lower()
+        if self.token and host_header in self.public_hosts:
             provided = dict(scope["headers"]).get(b"authorization", b"")
             provided = provided[7:] if provided[:7].lower() == b"bearer " else b""
             if not (0 < len(provided) <= 256 and hmac.compare_digest(provided, self.token)):
-                await self._respond(send, 401, b"unauthorized")
+                await self._respond(
+                    send,
+                    401,
+                    b"unauthorized",
+                    {"WWW-Authenticate": 'Bearer realm="silverbullet-mcp"'},
+                )
                 return
         await self.app(scope, receive, send)
 
 
 def create_app() -> ASGIApp:
-    return AuthAndHealth(mcp.streamable_http_app(), TOKEN)
+    return AuthAndHealth(mcp.streamable_http_app(), TOKEN, PUBLIC_HOSTS, INTERNAL_HOSTS)
 
 
 if __name__ == "__main__":

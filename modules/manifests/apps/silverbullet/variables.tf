@@ -38,6 +38,7 @@ variable "config" {
     image             = optional(string, "ghcr.io/silverbulletmd/silverbullet:2.11.1")
     mcp = optional(object({
       enabled      = optional(bool, false)
+      public       = optional(bool, false)
       instructions = optional(string, "")
       resources = optional(object({
         requests = optional(map(string), { cpu = "25m", memory = "64Mi" })

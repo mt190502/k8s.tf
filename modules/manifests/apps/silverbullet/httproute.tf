@@ -86,3 +86,54 @@ resource "kubernetes_manifest" "basic_auth_middleware" {
   }
   depends_on = [kubernetes_secret_v1.basic_auth]
 }
+
+# Public /mcp path on the same HTTPS hostname. Intentionally WITHOUT the UI
+# BasicAuth middleware: clients authenticate with the sidecar Bearer token,
+# which is enforced as non-empty by the precondition below (fail closed).
+resource "kubernetes_manifest" "mcp_public_httproute" {
+  count = (
+    var.enabled
+    && var.config.mcp.enabled
+    && var.config.mcp.public
+    && var.config.hostname != null
+    && var.config.preferred_gateway == "traefik"
+  ) ? 1 : 0
+
+  manifest = {
+    apiVersion = "gateway.networking.k8s.io/v1"
+    kind       = "HTTPRoute"
+    metadata = {
+      name      = "${var.config.name}-mcp-public"
+      namespace = kubernetes_namespace_v1.this[0].metadata[0].name
+    }
+    spec = {
+      parentRefs = [
+        {
+          name        = var.config.gateway_name
+          namespace   = var.config.gateway_namespace
+          sectionName = "websecure"
+        }
+      ]
+      hostnames = ["${var.config.hostname}.${var.config.domain}"]
+      rules = [
+        {
+          matches = [
+            {
+              path = {
+                type  = "PathPrefix"
+                value = "/mcp"
+              }
+            }
+          ]
+          backendRefs = [
+            {
+              name = kubernetes_service_v1.mcp[0].metadata[0].name
+              port = 8765
+            }
+          ]
+        }
+      ]
+    }
+  }
+  depends_on = [kubernetes_service_v1.mcp]
+}

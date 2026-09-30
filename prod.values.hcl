@@ -174,7 +174,7 @@ locals {
           storage_size = "2Gi"
           mcp = {
             enabled = true
-            # token = "bearer-token"
+            public  = true
           }
           resources = {
             limits = {
