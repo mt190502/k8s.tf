@@ -24,10 +24,10 @@ resource "kubernetes_service_v1" "this" {
   depends_on = [kubernetes_namespace_v1.this]
 }
 
-# MCP sidecar endpoint. SingleStack IPv4: the sidecar listens on IPv4 only,
-# and a dual-stack Service here would advertise dead IPv6 endpoints (502s).
-# Reachable over the tailnet (subnet router) and - with mcp.public - through
-# the public /mcp Gateway route behind the sidecar bearer token.
+# MCP sidecar endpoint. PreferDualStack with explicit families: the sidecar
+# binds one dual-stack socket (IPv6 + IPv4-mapped), so both endpoint families
+# serve. Reachable over the tailnet (subnet router) and - with mcp.public -
+# through the public /mcp Gateway route behind the sidecar bearer token.
 resource "kubernetes_service_v1" "mcp" {
   count = (var.enabled && var.config.mcp.enabled) ? 1 : 0
   metadata {
@@ -43,8 +43,7 @@ resource "kubernetes_service_v1" "mcp" {
       port        = 8765
       target_port = 8765
     }
-    ip_family_policy = "SingleStack"
-    ip_families      = ["IPv4"]
+    ip_family_policy = "PreferDualStack"
     type             = "ClusterIP"
   }
   depends_on = [kubernetes_namespace_v1.this]

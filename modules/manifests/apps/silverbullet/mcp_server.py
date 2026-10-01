@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.12"
-# dependencies = ["mcp==1.30.0"]
+# dependencies = ["mcp==2.2.0"]
 # ///
-"""FastMCP sidecar exposing the SilverBullet space over Streamable HTTP.
+"""MCP SDK 2 sidecar exposing the SilverBullet space over Streamable HTTP.
 
 Runs as a sidecar next to SilverBullet and reaches it through the
 cluster-internal /.fs API (no gateway BasicAuth involved). Dependencies are
@@ -15,7 +15,7 @@ import os
 import urllib.error
 import urllib.request
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server import MCPServer
 from mcp.server.transport_security import TransportSecuritySettings
 from starlette.types import ASGIApp, Receive, Scope, Send
 
@@ -32,6 +32,9 @@ INTERNAL_HOSTS = [
     if host.strip()
 ]
 PORT = int(os.getenv("SILVERBULLET_MCP_PORT", "8765"))
+# "::" is made genuinely dual-stack below by setting IPV6_V6ONLY=0 before
+# handing the pre-bound socket to uvicorn.
+BIND_HOST = os.getenv("SILVERBULLET_MCP_BIND_HOST", "::")
 
 # ---------------------------------------------------------------------------
 # Method switches. Flip to False and the matching capability disappears from
@@ -127,25 +130,28 @@ def clean_page_path(path: str) -> str:
     return cleaned
 
 
-mcp = FastMCP(
-    "silverbullet",
+TRANSPORT_SECURITY = TransportSecuritySettings(
+    enable_dns_rebinding_protection=True,
+    allowed_hosts=[
+        allowed_host
+        for configured_host in [*PUBLIC_HOSTS, *INTERNAL_HOSTS]
+        if configured_host
+        for allowed_host in (configured_host, f"{configured_host}:{PORT}")
+    ]
+    + [
+        f"localhost:{PORT}",
+        f"127.0.0.1:{PORT}",
+        f"[::1]:{PORT}",
+        "localhost",
+        "127.0.0.1",
+        "[::1]",
+    ],
+    allowed_origins=[f"https://{public_host}" for public_host in PUBLIC_HOSTS if public_host],
+)
+
+mcp = MCPServer(
+    name="silverbullet",
     instructions=INSTRUCTIONS,
-    host="0.0.0.0",
-    port=PORT,
-    streamable_http_path="/mcp",
-    stateless_http=True,
-    json_response=True,
-    transport_security=TransportSecuritySettings(
-        enable_dns_rebinding_protection=True,
-        allowed_hosts=[
-            allowed_host
-            for public_host in [*PUBLIC_HOSTS, *INTERNAL_HOSTS]
-            if public_host
-            for allowed_host in (public_host, f"{public_host}:{PORT}")
-        ]
-        + [f"localhost:{PORT}", f"127.0.0.1:{PORT}", "localhost", "127.0.0.1"],
-        allowed_origins=[f"https://{public_host}" for public_host in PUBLIC_HOSTS if public_host],
-    ),
 )
 
 
@@ -300,12 +306,36 @@ class AuthAndHealth:
 
 
 def create_app() -> ASGIApp:
-    return AuthAndHealth(mcp.streamable_http_app(), TOKEN, PUBLIC_HOSTS, INTERNAL_HOSTS)
+    mcp_app = mcp.streamable_http_app(
+        streamable_http_path="/mcp",
+        json_response=True,
+        stateless_http=True,
+        transport_security=TRANSPORT_SECURITY,
+        host=BIND_HOST,
+    )
+    return AuthAndHealth(mcp_app, TOKEN, PUBLIC_HOSTS, INTERNAL_HOSTS)
 
 
 if __name__ == "__main__":
+    import socket as socket_module
+
     import uvicorn
 
     if not BASE_URL:
         raise SystemExit("SILVERBULLET_URL is required")
-    uvicorn.run(create_app(), host="0.0.0.0", port=PORT, log_level="warning", access_log=False)
+
+    app = create_app()
+    if BIND_HOST == "::":
+        # asyncio/uvicorn forces IPv6-only semantics when it creates a socket
+        # for "::". Pre-bind with dualstack_ipv6=True so IPv6 and IPv4-mapped
+        # connections share this listener.
+        sock = socket_module.create_server(
+            (BIND_HOST, PORT),
+            family=socket_module.AF_INET6,
+            backlog=2048,
+            dualstack_ipv6=True,
+        )
+        config = uvicorn.Config(app, log_level="warning", access_log=False)
+        uvicorn.Server(config).run(sockets=[sock])
+    else:
+        uvicorn.run(app, host=BIND_HOST, port=PORT, log_level="warning", access_log=False)
