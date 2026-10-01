@@ -9,7 +9,7 @@ locals {
   jq_version = "1.8.1"
 
   # renovate: datasource=github-releases depName=opentofu/opentofu
-  opentofu_version = "1.12.6"
+  opentofu_version = "1.13.1"
 
   # renovate: datasource=github-releases depName=getsops/sops
   sops_version = "3.13.3"
