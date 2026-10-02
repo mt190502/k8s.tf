@@ -12,6 +12,7 @@ pinned via PEP 723 and installed by uv at container start.
 
 import hmac
 import os
+import re
 import urllib.error
 import urllib.request
 
@@ -35,6 +36,17 @@ PORT = int(os.getenv("SILVERBULLET_MCP_PORT", "8765"))
 # "::" is made genuinely dual-stack below by setting IPV6_V6ONLY=0 before
 # handing the pre-bound socket to uvicorn.
 BIND_HOST = os.getenv("SILVERBULLET_MCP_BIND_HOST", "::")
+
+# The MCP sidecar owns a deliberately small, fixed writable layout. Keep this
+# policy in code, not only in the agent prompt: clients that ignore the prompt
+# must still receive a local validation error before any /.fs request is sent.
+STANDARD_CATEGORIES = frozenset({"AGENTS", "RCA", "RUNBOOKS", "SKILLS"})
+STANDARD_ROOT_FILES = frozenset({"CONFIG.md"})
+_TOPIC_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+_PAGE_FILE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}-[a-z0-9][a-z0-9._-]*\.md$")
+_SCRIPT_FILE_RE = re.compile(
+    r"^\d{4}-\d{2}-\d{2}-[a-z0-9][a-z0-9._-]*\.[a-z0-9][a-z0-9._-]*$"
+)
 
 # ---------------------------------------------------------------------------
 # Method switches. Flip to False and the matching capability disappears from
@@ -67,6 +79,19 @@ DEFAULT_INSTRUCTIONS = (
     "2. When the user asks you to create something, run list_pages first and "
     "check Templates/ for that category's template file. Prefer existing "
     "category folders from the listing when one matches the topic.\n"
+    "Strict path policy: writable paths must match exactly one of these forms: "
+    "CONFIG.md; Templates/<CATEGORY>.md; "
+    "<CATEGORY>/<topic>/YYYY-MM-DD-title.md where CATEGORY is AGENTS, RCA, "
+    "RUNBOOKS, or SKILLS; or SCRIPTS/<topic>/YYYY-MM-DD-title.<ext>. Never "
+    "create AGENTS/topic.md, any other two-level category path, a new "
+    "top-level folder, or a filename without the YYYY-MM-DD- prefix. Any "
+    "path outside this layout is rejected by the server; stop and ask the "
+    "user instead.\n"
+    "Language policy: all new and updated page content must be written in "
+    "English. Translate Turkish user content to English before saving. Keep "
+    "commands, paths, code, identifiers, proper names, and quoted error "
+    "messages unchanged unless translation is explicitly requested. Never "
+    "save Turkish prose.\n"
     "3. If the template exists, write the filled-in page as "
     "<CATEGORY>/<topic>/YYYY-MM-DD-title.md (for example "
     "RCA/talos/2026-09-29-talos-linux-upgrade-error.md). Writing the page "
@@ -123,11 +148,54 @@ def sb_request(method: str, path: str, body: str | None = None, extra_headers: d
 
 
 def clean_page_path(path: str) -> str:
-    cleaned = (path or "").strip().lstrip("/")
-    parts = cleaned.split("/")
-    if not cleaned or cleaned.endswith("/") or ".." in parts or any(part.startswith(".") for part in parts):
+    """Validate a path against the fixed SilverBullet space layout.
+
+    This is intentionally strict and is used by every file operation. In
+    particular, ``AGENTS/topic.md`` is rejected; category pages must include a
+    topic directory and a date-prefixed filename.
+    """
+    if not isinstance(path, str):
+        raise ValueError("invalid page path: path must be a string")
+    cleaned = path.strip()
+    parts = cleaned.split("/") if cleaned else []
+    if (
+        not cleaned
+        or cleaned.startswith("/")
+        or cleaned.endswith("/")
+        or ".." in parts
+        or any(part.startswith(".") for part in parts)
+    ):
         raise ValueError("invalid page path")
-    return cleaned
+
+    if cleaned in STANDARD_ROOT_FILES:
+        return cleaned
+
+    if len(parts) == 2 and parts[0] == "Templates":
+        template_name = parts[1]
+        if template_name in {f"{category}.md" for category in STANDARD_CATEGORIES}:
+            return cleaned
+
+    if len(parts) == 3 and parts[1] and _TOPIC_RE.fullmatch(parts[1]):
+        category, _, filename = parts
+        if category in STANDARD_CATEGORIES and _PAGE_FILE_RE.fullmatch(filename):
+            return cleaned
+        if category == "SCRIPTS" and _SCRIPT_FILE_RE.fullmatch(filename):
+            return cleaned
+
+    raise ValueError(
+        "path violates the SilverBullet standard layout; allowed paths are "
+        "CONFIG.md, Templates/<CATEGORY>.md, "
+        "<CATEGORY>/<topic>/YYYY-MM-DD-title.md, or "
+        "SCRIPTS/<topic>/YYYY-MM-DD-title.<ext>"
+    )
+
+
+def _is_standard_path(path: str) -> bool:
+    try:
+        clean_page_path(path)
+    except ValueError:
+        return False
+    return True
 
 
 TRANSPORT_SECURITY = TransportSecuritySettings(
@@ -170,6 +238,7 @@ def list_pages() -> dict:
         }
         for item in __import__("json").loads(body)
         if str(item.get("name", "")).endswith(".md")
+        and _is_standard_path(str(item.get("name", "")))
     ]
     return {"count": len(pages), "pages": pages}
 
