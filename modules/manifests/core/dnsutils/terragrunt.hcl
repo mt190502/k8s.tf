@@ -35,7 +35,7 @@ generate "versions" {
   contents  = <<-EOF
     terraform {
       required_providers {
-        kubernetes = { source = "hashicorp/kubernetes", version = "~> 3.2.0" }
+        kubernetes = { source = "hashicorp/kubernetes", version = "~> 3.3.0" }
       }
     }
   EOF

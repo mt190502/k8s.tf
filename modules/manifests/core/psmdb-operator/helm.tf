@@ -2,11 +2,12 @@
 #  modules/manifests/core/psmdb-operator/helm.tf                                                  #
 ## ============================================================================================= ##
 resource "helm_release" "this" {
+  count           = var.enabled ? 1 : 0
   name            = "psmdb-operator"
   repository      = "https://percona.github.io/percona-helm-charts"
   chart           = "psmdb-operator"
   version         = "1.23.1"
-  namespace       = kubernetes_namespace_v1.this.metadata[0].name
+  namespace       = kubernetes_namespace_v1.this[0].metadata[0].name
   upgrade_install = true
   set = [
     {

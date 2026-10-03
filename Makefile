@@ -187,6 +187,7 @@ else
 
 generate:
 	command -v clear >/dev/null 2>&1 && clear || true
+	rm -rf $(STACK_DIR) .terraform
 	mkdir -p "$(TF_PLUGIN_CACHE_DIR)"
 	echo "Checking secret file for $(ENV) stack: $(SECRETS)"
 	if [ ! -f "$(SECRETS)" ]; then \
