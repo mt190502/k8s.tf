@@ -159,6 +159,7 @@ resource "kubernetes_role_binding_v1" "mongodb_database" {
 }
 
 data "external" "mongodb_exists" {
+  count = var.enabled ? 1 : 0
   program = [
     "bash",
     "-c",
@@ -167,11 +168,12 @@ data "external" "mongodb_exists" {
 }
 
 resource "null_resource" "mongodb" {
+  count = var.enabled ? 1 : 0
   triggers = {
     name         = local.mongodb_name
     namespace    = local.mongodb_namespace
     manifest_sha = sha256(local.mongodb)
-    exists       = data.external.mongodb_exists.result.exists
+    exists       = data.external.mongodb_exists[0].result.exists
   }
   provisioner "local-exec" {
     command = "kubectl apply -f - <<EOF\n${local.mongodb}\nEOF"
