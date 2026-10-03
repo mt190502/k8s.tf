@@ -28,7 +28,7 @@
 variable "enabled" {
   description = "Enable this module"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "config" {

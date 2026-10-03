@@ -13,7 +13,7 @@ include "common" {
 }
 
 exclude {
-  if      = !try(values.enabled, true)
+  if      = !try(values.enabled, false)
   actions = ["all"]
 }
 
@@ -80,7 +80,7 @@ dependency "reflector" {
 }
 
 inputs = {
-  enabled = try(values.enabled, true)
+  enabled = try(values.enabled, false)
   config = {
     acme_email                     = try(values.config.acme_email, "")
     dns_domain                     = try(values.config.dns_domain, "")

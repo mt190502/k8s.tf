@@ -35,7 +35,7 @@ unit "alloy" {
   source = "./core/alloy"
   path   = "core/alloy"
   values = {
-    enabled = try(local.core.kube_prometheus_stack.enabled, true)
+    enabled = try(local.core.alloy.enabled, false)
   }
 }
 
@@ -76,7 +76,7 @@ unit "cert_manager" {
   source = "./core/cert-manager"
   path   = "core/cert-manager"
   values = {
-    enabled = try(local.core.cert_manager.enabled, true)
+    enabled = try(local.core.cert_manager.enabled, false)
     config = {
       acme_email                     = try(local.core.cert_manager.config.acme_email, "")
       dns_domain                     = local.rootvars.cluster_url.dns
@@ -94,7 +94,7 @@ unit "cnpg" {
   source = "./core/cnpg"
   path   = "core/cnpg"
   values = {
-    enabled = try(local.core.cnpg.enabled, true)
+    enabled = try(local.core.cnpg.enabled, false)
     config = {
       controlplane_count = try(length([for node in local.infra.kubernetes.nodes : node if node.role == "controlplane"]), 1)
     }
@@ -105,7 +105,7 @@ unit "descheduler" {
   source = "./core/descheduler"
   path   = "core/descheduler"
   values = {
-    enabled = try(local.core.descheduler.enabled, true)
+    enabled = try(local.core.descheduler.enabled, false)
     config  = try(local.core.descheduler.config, {})
   }
 }
@@ -144,7 +144,7 @@ unit "kube_prometheus_stack" {
   source = "./core/kube-prometheus-stack"
   path   = "core/kube-prometheus-stack"
   values = {
-    enabled = try(local.core.kube_prometheus_stack.enabled, true)
+    enabled = try(local.core.kube_prometheus_stack.enabled, false)
     config = merge(
       try(local.core.kube_prometheus_stack.config, {}),
       { domain = local.rootvars.cluster_url.dns, preferred_gateway = local.rootvars.preferred_gateway }
@@ -159,7 +159,7 @@ unit "kyverno" {
   source = "./core/kyverno"
   path   = "core/kyverno"
   values = {
-    enabled = try(local.core.kyverno.enabled, true)
+    enabled = try(local.core.kyverno.enabled, false)
   }
 }
 
@@ -167,7 +167,7 @@ unit "kyverno_policies" {
   source = "./core/kyverno/policies"
   path   = "core/kyverno/policies"
   values = {
-    enabled = try(local.core.kyverno.enabled, true)
+    enabled = try(local.core.kyverno_policies.enabled, false)
   }
 }
 
@@ -175,7 +175,7 @@ unit "loki" {
   source = "./core/loki"
   path   = "core/loki"
   values = {
-    enabled = try(local.core.kube_prometheus_stack.enabled, true)
+    enabled = try(local.core.loki.enabled, false)
     config  = try(local.core.loki.config, {})
     secrets = try(local.secrets.manifests.core.loki, {})
   }
@@ -185,7 +185,7 @@ unit "longhorn" {
   source = "./core/longhorn"
   path   = "core/longhorn"
   values = {
-    enabled = try(local.core.longhorn.enabled, true)
+    enabled = try(local.core.longhorn.enabled, false)
     secrets = try(local.secrets.manifests.core.longhorn, {})
   }
 }
@@ -194,7 +194,7 @@ unit "s3_csi" {
   source = "./core/s3-csi"
   path   = "core/s3-csi"
   values = {
-    enabled = try(local.core.s3_csi.enabled, true)
+    enabled = try(local.core.s3_csi.enabled, false)
     config  = try(local.core.s3_csi.config, {})
     secrets = try(local.secrets.manifests.core.s3_csi, {})
   }
@@ -204,7 +204,7 @@ unit "mongodb_community_operator" {
   source = "./core/mongodb-community-operator"
   path   = "core/mongodb-community-operator"
   values = {
-    enabled = try(local.core.mongodb_community_operator.enabled, true)
+    enabled = try(local.core.mongodb_community_operator.enabled, false)
   }
 }
 
@@ -212,7 +212,7 @@ unit "psmdb_operator" {
   source = "./core/psmdb-operator"
   path   = "core/psmdb-operator"
   values = {
-    enabled = try(local.core.psmdb_operator.enabled, true)
+    enabled = try(local.core.psmdb_operator.enabled, false)
   }
 }
 
@@ -220,7 +220,7 @@ unit "reflector" {
   source = "./core/reflector"
   path   = "core/reflector"
   values = {
-    enabled = try(local.core.reflector.enabled, true)
+    enabled = try(local.core.reflector.enabled, false)
     config = {
       wildcard_reflection_namespaces = try(local.core.reflector.config.wildcard_reflection_namespaces, [])
     }
@@ -231,7 +231,7 @@ unit "tailscale_operator" {
   source = "./core/tailscale-operator"
   path   = "core/tailscale-operator"
   values = {
-    enabled = try(local.core.tailscale_operator.enabled, true)
+    enabled = try(local.core.tailscale_operator.enabled, false)
     config = {
       subnet_router_advertised_cidrs = concat(
         try([local.infra.kubernetes.ipcfg.service.ipv4], []),
@@ -250,7 +250,7 @@ unit "traefik" {
   source = "./core/traefik"
   path   = "core/traefik"
   values = {
-    enabled = local.rootvars.preferred_gateway == "traefik"
+    enabled = try(local.core.traefik.enabled, false) && local.rootvars.preferred_gateway == "traefik"
     config = {
       gateway_name = try(local.core.traefik.config.gateway_name, "traefik-gateway")
       dns_domain   = local.rootvars.cluster_url.dns

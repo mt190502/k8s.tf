@@ -444,6 +444,9 @@ locals {
       }
     }
     core = {
+      alloy = {
+        enabled = true
+      }
       atlantis = {
         enabled = true
         config = {
@@ -516,7 +519,11 @@ locals {
       kyverno = {
         enabled = true
       }
+      kyverno_policies = {
+        enabled = true
+      }
       loki = {
+        enabled = true
         config = {
           s3               = "loki"
           endpoint         = "http://100.100.30.2:3900"
@@ -547,6 +554,9 @@ locals {
         }
       }
       tailscale_operator = {
+        enabled = true
+      }
+      traefik = {
         enabled = true
       }
       tests = {

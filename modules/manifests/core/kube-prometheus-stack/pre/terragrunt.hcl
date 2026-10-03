@@ -12,7 +12,7 @@ include "common" {
 }
 
 exclude {
-  if      = !try(values.enabled, true)
+  if      = !try(values.enabled, false)
   actions = ["all"]
 }
 

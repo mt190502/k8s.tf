@@ -11,13 +11,18 @@ include "common" {
   expose = true
 }
 
+exclude {
+  if      = !try(values.enabled, false)
+  actions = ["all"]
+}
+
 terraform {
   source = "./"
 
   after_hook "public_sites_apply" {
     commands     = ["apply"]
     run_on_error = false
-    execute = try(values.enabled, true) ? [
+    execute = try(values.enabled, false) ? [
       "bash",
       "${get_repo_root()}/.ci/public-domain.sh",
       "--name", "SlimServe",
@@ -86,7 +91,7 @@ dependency "s3_csi" {
 }
 
 inputs = {
-  enabled = try(values.enabled, true)
+  enabled = try(values.enabled, false)
   config = merge(
     try(values.config, {}),
     {

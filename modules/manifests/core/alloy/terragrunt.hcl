@@ -12,7 +12,7 @@ include "common" {
 }
 
 exclude {
-  if      = !try(values.enabled, true)
+  if      = !try(values.enabled, false)
   actions = ["all"]
 }
 
@@ -61,7 +61,7 @@ dependency "kube_prometheus_stack" {
 }
 
 inputs = {
-  enabled = try(values.enabled, true)
+  enabled = try(values.enabled, false)
   config = {
     kps_namespace = dependency.kube_prometheus_stack.outputs.namespace
   }

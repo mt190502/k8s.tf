@@ -10,6 +10,11 @@ include "common" {
   expose = true
 }
 
+exclude {
+  if      = !try(values.enabled, false)
+  actions = ["all"]
+}
+
 terraform {
   source = "./"
 }
@@ -50,7 +55,7 @@ dependency "cert_manager" {
 }
 
 inputs = {
-  enabled = try(values.enabled, true)
+  enabled = try(values.enabled, false)
   config = {
     domain       = try(values.config.domain, "mock.local")
     gateway_name = dependency.cert_manager.outputs.gateway_name

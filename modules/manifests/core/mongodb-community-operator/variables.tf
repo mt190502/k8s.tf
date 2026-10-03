@@ -4,5 +4,5 @@
 variable "enabled" {
   description = "Enable MongoDB Community Operator"
   type        = bool
-  default     = true
+  default     = false
 }

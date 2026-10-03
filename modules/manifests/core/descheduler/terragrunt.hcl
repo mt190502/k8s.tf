@@ -10,7 +10,7 @@ include "common" {
 }
 
 exclude {
-  if      = !try(values.enabled, true)
+  if      = !try(values.enabled, false)
   actions = ["all"]
 }
 
@@ -52,7 +52,7 @@ dependency "kube_prometheus_stack_pre" {
 }
 
 inputs = {
-  enabled = try(values.enabled, true)
+  enabled = try(values.enabled, false)
   config = {
     descheduling_interval = try(values.config.descheduling_interval, "5m")
     replicas              = try(values.config.replicas, 2)
