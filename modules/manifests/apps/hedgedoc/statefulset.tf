@@ -44,6 +44,32 @@ resource "kubernetes_stateful_set_v1" "this" {
               value = env.value
             }
           }
+          dynamic "liveness_probe" {
+            for_each = var.config.port != null ? [1] : []
+            content {
+              http_get {
+                path = "/_health"
+                port = var.config.port
+              }
+              initial_delay_seconds = 60
+              period_seconds        = 30
+              timeout_seconds       = 5
+              failure_threshold     = 3
+            }
+          }
+          dynamic "readiness_probe" {
+            for_each = var.config.port != null ? [1] : []
+            content {
+              http_get {
+                path = "/_health"
+                port = var.config.port
+              }
+              initial_delay_seconds = 15
+              period_seconds        = 10
+              timeout_seconds       = 5
+              failure_threshold     = 3
+            }
+          }
           dynamic "resources" {
             for_each = var.config.resources != null ? [1] : []
             content {

@@ -29,6 +29,26 @@ resource "kubernetes_daemon_set_v1" "echoserver_daemonset" {
           port {
             container_port = 80
           }
+          liveness_probe {
+            http_get {
+              path = "/"
+              port = 80
+            }
+            initial_delay_seconds = 30
+            period_seconds        = 30
+            timeout_seconds       = 5
+            failure_threshold     = 3
+          }
+          readiness_probe {
+            http_get {
+              path = "/"
+              port = 80
+            }
+            initial_delay_seconds = 10
+            period_seconds        = 10
+            timeout_seconds       = 5
+            failure_threshold     = 3
+          }
           env {
             name = "NODENAME"
             value_from {

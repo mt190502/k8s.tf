@@ -18,11 +18,7 @@ resource "kubernetes_deployment_v1" "this" {
     min_ready_seconds         = 300
     progress_deadline_seconds = 1200
     strategy {
-      type = "RollingUpdate"
-      rolling_update {
-        max_surge       = "1%"
-        max_unavailable = "0%"
-      }
+      type = "Recreate"
     }
     selector {
       match_labels = {
@@ -73,6 +69,24 @@ resource "kubernetes_deployment_v1" "this" {
               name  = env.key
               value = env.value
             }
+          }
+          liveness_probe {
+            exec {
+              command = ["anki-sync-server", "--healthcheck"]
+            }
+            initial_delay_seconds = 30
+            period_seconds        = 30
+            timeout_seconds       = 5
+            failure_threshold     = 3
+          }
+          readiness_probe {
+            exec {
+              command = ["anki-sync-server", "--healthcheck"]
+            }
+            initial_delay_seconds = 10
+            period_seconds        = 10
+            timeout_seconds       = 5
+            failure_threshold     = 3
           }
           dynamic "resources" {
             for_each = var.config.resources != null ? [1] : []

@@ -93,6 +93,34 @@ resource "kubernetes_deployment_v1" "this" {
           port {
             container_port = var.config.port
           }
+          dynamic "liveness_probe" {
+            for_each = var.config.port != null ? [1] : []
+            content {
+              tcp_socket {
+                port = var.config.port
+              }
+              initial_delay_seconds = 30
+              period_seconds        = 30
+              timeout_seconds       = 5
+              failure_threshold     = 3
+            }
+          }
+          dynamic "readiness_probe" {
+            for_each = var.config.port != null ? [1] : []
+            content {
+              exec {
+                command = [
+                  "sh",
+                  "-c",
+                  "curl --silent --show-error --fail --insecure --user \"$(cat /app/secret/username):$(cat /app/secret/password)\" \"https://127.0.0.1:${var.config.port}/.web\" >/dev/null",
+                ]
+              }
+              initial_delay_seconds = 10
+              period_seconds        = 10
+              timeout_seconds       = 5
+              failure_threshold     = 3
+            }
+          }
           dynamic "resources" {
             for_each = var.config.resources != null ? [1] : []
             content {
