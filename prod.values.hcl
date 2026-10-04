@@ -512,7 +512,7 @@ locals {
           prometheus_node           = "w2"
           prometheus_retention      = "7d"
           prometheus_retention_size = "4GB"
-          prometheus_storage_size   = "8Gi"
+          prometheus_storage_size   = "4Gi"
           storage_size              = "1Gi"
         }
       }
