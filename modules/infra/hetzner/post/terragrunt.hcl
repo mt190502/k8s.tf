@@ -35,7 +35,7 @@ generate "versions" {
   contents  = <<-EOF
     terraform {
       required_providers {
-        hcloud = { source = "hetznercloud/hcloud", version = "~> 1.69.0" }
+        hcloud = { source = "hetznercloud/hcloud", version = "~> 1.70.0" }
       }
     }
   EOF
