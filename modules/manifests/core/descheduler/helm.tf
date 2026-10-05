@@ -5,7 +5,7 @@ resource "helm_release" "this" {
   name            = "descheduler"
   repository      = "https://kubernetes-sigs.github.io/descheduler/"
   chart           = "descheduler"
-  version         = "0.36.0"
+  version         = "0.37.0"
   namespace       = data.kubernetes_namespace_v1.this.metadata[0].name
   upgrade_install = true
   set = [
