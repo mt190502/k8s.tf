@@ -112,12 +112,12 @@ resource "kubernetes_deployment_v1" "this" {
                 command = [
                   "sh",
                   "-c",
-                  "curl --silent --show-error --fail --insecure --user \"$(cat /app/secret/username):$(cat /app/secret/password)\" \"https://127.0.0.1:${var.config.port}/.web\" >/dev/null",
+                  "curl --silent --show-error --fail --insecure \"https://127.0.0.1:${var.config.port}/.web\" >/dev/null",
                 ]
               }
               initial_delay_seconds = 10
               period_seconds        = 10
-              timeout_seconds       = 5
+              timeout_seconds       = 10
               failure_threshold     = 3
             }
           }
