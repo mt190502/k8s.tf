@@ -75,7 +75,7 @@ resource "kubernetes_cron_job_v1" "retention" {
             }
             container {
               name    = "retention"
-              image   = "alpine:3.21"
+              image   = "alpine:3.24"
               command = ["/bin/sh", "-c"]
               # apk needs root inside the container to install the sqlite3 CLI.
               args = [
