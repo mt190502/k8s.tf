@@ -555,7 +555,7 @@ locals {
       renovate = {
         enabled = true
         config = {
-          schedule            = "0 */15 * * *"
+          schedule            = "*/15 * * * *"
           timezone            = "Europe/Istanbul"
           autodiscover        = true
           autodiscover_filter = "mt190502/*"
