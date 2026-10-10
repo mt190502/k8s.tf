@@ -17,7 +17,7 @@ resource "kubernetes_manifest" "persistent_volume_rollout" {
             {
               key      = "kubernetes.io/metadata.name"
               operator = "NotIn"
-              values   = ["slimserve", "anki"]
+              values   = ["slimserve", "anki", "picoshare"]
             }
           ]
         }
@@ -83,5 +83,8 @@ resource "kubernetes_manifest" "persistent_volume_rollout" {
         }
       ]
     }
+  }
+  field_manager {
+    force_conflicts = true
   }
 }

@@ -345,6 +345,21 @@ unit "nightscout" {
   }
 }
 
+unit "picoshare" {
+  source = "./apps/picoshare"
+  path   = "apps/picoshare"
+  values = {
+    enabled = try(local.apps.picoshare.enabled, false)
+    config = merge(
+      try(local.apps.picoshare.config, {}),
+      { domain = local.rootvars.cluster_url.dns, preferred_gateway = local.rootvars.preferred_gateway }
+    )
+    secrets = {
+      shared_secret = try(local.secrets.manifests.apps.picoshare.shared_secret, "")
+    }
+  }
+}
+
 unit "radicale" {
   source = "./apps/radicale"
   path   = "apps/radicale"

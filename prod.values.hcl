@@ -299,6 +299,24 @@ locals {
           }
         }
       }
+      picoshare = {
+        enabled = true
+        config = {
+          hostname            = "link"
+          max_expiration_days = 7
+          retention_schedule  = "0 */6 * * *"
+          storage_size        = "512Mi"
+          resources = {
+            limits = {
+              memory = "256Mi"
+            }
+            requests = {
+              cpu    = "50m"
+              memory = "128Mi"
+            }
+          }
+        }
+      }
       radicale = {
         enabled = true
         config = {
