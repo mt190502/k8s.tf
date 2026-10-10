@@ -216,6 +216,21 @@ unit "psmdb_operator" {
   }
 }
 
+unit "renovate" {
+  source = "./core/renovate"
+  path   = "core/renovate"
+  values = {
+    enabled = try(local.core.renovate.enabled, false)
+    config  = try(local.core.renovate.config, {})
+    secrets = {
+      "app-id"              = try(local.secrets.manifests.core.renovate.app_id, "")
+      "app-installation-id" = try(local.secrets.manifests.core.renovate.app_installation_id, "")
+      "app-private-key"     = try(local.secrets.manifests.core.renovate.private_key, "")
+      "github-com-token"    = try(local.secrets.manifests.core.renovate.github_com_token, "")
+    }
+  }
+}
+
 unit "reflector" {
   source = "./core/reflector"
   path   = "core/reflector"

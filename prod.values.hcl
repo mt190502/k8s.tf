@@ -552,6 +552,29 @@ locals {
       longhorn = {
         enabled = true
       }
+      renovate = {
+        enabled = true
+        config = {
+          schedule            = "0 */15 * * *"
+          timezone            = "Europe/Istanbul"
+          autodiscover        = true
+          autodiscover_filter = "mt190502/*"
+          require_config      = "optional"
+          onboarding          = true
+          log_level           = "info"
+          storage_size        = "512Mi"
+          resources = {
+            limits = {
+              cpu    = "1"
+              memory = "1Gi"
+            }
+            requests = {
+              cpu    = "100m"
+              memory = "256Mi"
+            }
+          }
+        }
+      }
       s3_csi = {
         enabled = true
         config = {
