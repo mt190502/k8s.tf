@@ -106,6 +106,24 @@ resource "helm_release" "this" {
   ]
   values = [yamlencode({
     alloy = {
+      storagePath = "/var/lib/alloy/data"
+      extraEnv = [
+        {
+          name = "NODE_NAME"
+          valueFrom = {
+            fieldRef = { fieldPath = "spec.nodeName" }
+          }
+        },
+      ]
+      mounts = {
+        varlog = true
+        extra = [
+          {
+            name      = "alloy-data"
+            mountPath = "/var/lib/alloy/data"
+          },
+        ]
+      }
       configMap = {
         content = <<-EOT
           logging {
@@ -121,6 +139,10 @@ resource "helm_release" "this" {
 
           discovery.kubernetes "pods" {
             role = "pod"
+            selectors {
+              role  = "pod"
+              field = "spec.nodeName=" + sys.env("NODE_NAME")
+            }
           }
 
           discovery.relabel "pod_logs" {
@@ -173,9 +195,33 @@ resource "helm_release" "this" {
               regex = "^(\\S+):\\/\\/.+$"
               replacement = "$1"
             }
+
+            rule {
+              source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name"]
+              separator     = "/"
+              target_label  = "__tmp_ns_pod"
+              replacement   = "$1"
+            }
+
+            rule {
+              source_labels = ["__tmp_ns_pod", "__meta_kubernetes_pod_container_name"]
+              separator     = ":"
+              target_label  = "instance"
+              replacement   = "$1"
+            }
           }
 
           loki.process "pod_logs" {
+            stage.match {
+              selector = "{container_runtime=\"containerd\"}"
+              stage.cri {}
+            }
+
+            stage.match {
+              selector = "{container_runtime=\"docker\"}"
+              stage.docker {}
+            }
+
             %{~for r in local.log_parsing_rules~}
             stage.match {
               selector = "{app=\"${r.app}\"}"
@@ -188,14 +234,29 @@ resource "helm_release" "this" {
             forward_to = [loki.write.default.receiver]
           }
 
-          loki.source.kubernetes "pod_logs" {
-            targets    = discovery.relabel.pod_logs.output
+          local.file_match "pod_logs" {
+            path_targets = discovery.relabel.pod_logs.output
+          }
+
+          loki.source.file "pod_logs" {
+            targets    = local.file_match.pod_logs.targets
             forward_to = [loki.process.pod_logs.receiver]
           }
         EOT
       }
     }
     controller = {
+      volumes = {
+        extra = [
+          {
+            name = "alloy-data"
+            hostPath = {
+              path = "/var/lib/alloy"
+              type = "DirectoryOrCreate"
+            }
+          },
+        ]
+      }
       tolerations = [
         {
           key      = "node-role.kubernetes.io/control-plane",
