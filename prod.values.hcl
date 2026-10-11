@@ -323,7 +323,7 @@ locals {
           hostname = "dav"
           resources = {
             limits = {
-              cpu    = "50m"
+              cpu    = "500m"
               memory = "96Mi"
             }
             requests = {
