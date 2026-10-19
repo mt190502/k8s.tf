@@ -136,6 +136,10 @@ resource "kubernetes_cron_job_v1" "this" {
                 value = "true"
               }
               env {
+                name  = "RENOVATE_TMP_DIR"
+                value = "/renovate-tmp"
+              }
+              env {
                 name  = "LOG_FORMAT"
                 value = "json"
               }
@@ -194,10 +198,18 @@ resource "kubernetes_cron_job_v1" "this" {
                 name       = "${var.config.name}-cache"
                 mount_path = "/tmp/renovate"
               }
+              volume_mount {
+                name       = "${var.config.name}-tmp"
+                mount_path = "/renovate-tmp"
+              }
             }
 
             volume {
               name = "${var.config.name}-shared"
+              empty_dir {}
+            }
+            volume {
+              name = "${var.config.name}-tmp"
               empty_dir {}
             }
             volume {

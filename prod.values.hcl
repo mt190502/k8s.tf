@@ -562,7 +562,7 @@ locals {
           require_config      = "optional"
           onboarding          = true
           log_level           = "info"
-          storage_size        = "512Mi"
+          storage_size        = "1Gi"
           resources = {
             limits = {
               cpu    = "1"
