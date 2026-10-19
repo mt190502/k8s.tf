@@ -4,6 +4,7 @@
 #  SilverBullet is a native web application for Markdown folders: no desktop streaming.           #
 #  It is intentionally lightweight compared to a streamed Electron desktop.                       #
 #  Gateway BasicAuth remains the public access control; SilverBullet auth (SB_USER) is optional.  #
+#  The MCP sidecar mounts the space too and git-commits every MCP write/delete server-side.       #
 ## ============================================================================================= ##
 resource "kubernetes_config_map_v1" "mcp_server" {
   count = (var.enabled && var.config.mcp.enabled) ? 1 : 0
@@ -180,6 +181,17 @@ resource "kubernetes_deployment_v1" "this" {
               value = "${var.config.name}-mcp.${kubernetes_namespace_v1.this[0].metadata[0].name}.svc.cluster.local"
             }
             env {
+              name  = "SILVERBULLET_SPACE_DIR"
+              value = "/space"
+            }
+            dynamic "env" {
+              for_each = try(var.config.env.TZ, null) != null ? [var.config.env.TZ] : []
+              content {
+                name  = "TZ"
+                value = env.value
+              }
+            }
+            env {
               name  = "UV_CACHE_DIR"
               value = "/scratch/uv-cache"
             }
@@ -248,6 +260,11 @@ resource "kubernetes_deployment_v1" "this" {
               name       = var.config.name
               mount_path = "/scratch"
               sub_path   = "mcp"
+            }
+            volume_mount {
+              name       = var.config.name
+              mount_path = "/space"
+              sub_path   = "silverbullet"
             }
           }
         }
