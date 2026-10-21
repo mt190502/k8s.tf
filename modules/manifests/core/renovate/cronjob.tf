@@ -118,7 +118,7 @@ resource "kubernetes_cron_job_v1" "this" {
             ## --------------------------------------------------------------------------------- ##
             container {
               name    = var.config.name
-              image   = "ghcr.io/renovatebot/renovate:44.171.1"
+              image   = "ghcr.io/renovatebot/renovate:44.176.0"
               command = ["/bin/bash", "-c"]
               args = [
                 "export RENOVATE_TOKEN=\"$(cat /shared/token)\"; exec renovate"
