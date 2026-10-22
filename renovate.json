@@ -7,11 +7,12 @@
   ],
   "timezone": "Europe/Istanbul",
   "schedule": [
-    "after 12:00am and before 12:05am",
-    "after 6:00am and before 6:05am",
-    "after 12:00pm and before 12:05pm",
-    "after 6:00pm and before 6:05pm"
+    "after 12:00am and before 1:00am",
+    "after 6:00am and before 7:00am",
+    "after 12:00pm and before 1:00pm",
+    "after 6:00pm and before 7:00pm"
   ],
+  "updateNotScheduled": false,
   "prHourlyLimit": 0,
   "prConcurrentLimit": 5,
   "branchConcurrentLimit": 10,
@@ -116,6 +117,14 @@
       "matchDatasources": ["docker"],
       "matchPackageNames": ["ghcr.io/mt190502/docker-anki-sync-server", "nightscout/cgm-remote-monitor"],
       "versioning": "loose"
+    },
+    {
+      "description": "Renovate self-image: own branch, no self-upgrade churn inside the infra group",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["ghcr.io/renovatebot/renovate"],
+      "groupName": "renovate",
+      "groupSlug": "renovate-self",
+      "minimumReleaseAge": "7 days"
     }
   ],
   "ignoreDeps": ["busybox"],
