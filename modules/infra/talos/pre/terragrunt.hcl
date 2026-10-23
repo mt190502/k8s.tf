@@ -62,6 +62,7 @@ inputs = {
     nodes             = try(values.config.nodes, [])
     overwrite_dns     = try(values.config.overwrite_dns, false)
     preferred_gateway = try(values.config.preferred_gateway, "cilium")
+    talos_contract    = try(values.config.talos_contract, "v1.12.0")
   }
   versions = {
     cilium               = try(values.versions.cilium, "")

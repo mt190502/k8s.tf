@@ -12,6 +12,7 @@
 #      kubeprism            --- Enable KubePrism (local apiserver proxy on port 7445)             #
 #      kubespan             --- Enable KubeSpan (WireGuard overlay between nodes)                 #
 #      nodes                --- List of all nodes: name, role, arch, taints                       #
+#      talos_contract       --- Talos config contract version (pin to cluster creation version)   #
 #    secrets                --- Sensitive configuration                                           #
 #      auth_key             --- Tailscale auth key injected into each node's machine config       #
 #    versions               --- Version configuration                                             #
@@ -59,6 +60,7 @@ variable "config" {
     }))
     overwrite_dns     = bool
     preferred_gateway = string
+    talos_contract    = string
   })
 }
 

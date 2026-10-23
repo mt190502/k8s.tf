@@ -51,6 +51,7 @@ data "talos_machine_configuration" "nodes" {
   machine_type       = each.value.role
   machine_secrets    = talos_machine_secrets.this[0].machine_secrets
   kubernetes_version = var.versions.kubernetes
+  talos_version      = var.config.talos_contract
   config_patches = concat(
     each.value.role == "controlplane" ? [
       templatefile("../templates/controlplane.tmpl", {

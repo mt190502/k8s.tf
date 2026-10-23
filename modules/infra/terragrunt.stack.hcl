@@ -86,6 +86,7 @@ unit "talos_pre" {
       overwrite_dns     = try(values.infra.kubernetes.overwrite_dns, false)
       preferred_gateway = try(values.infra.kubernetes.preferred_gateway, "cilium")
       private_network   = try(values.infra.hetzner.private_network, null)
+      talos_contract    = try(values.infra.talos.contract, "v1.12.0")
     }
     secrets = {
       auth_key = try(values.secrets.tailscale.auth_key, "")
