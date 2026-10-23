@@ -15,7 +15,7 @@ locals {
   sops_version = "3.13.3"
 
   # renovate: datasource=github-releases depName=gruntwork-io/terragrunt
-  terragrunt_version = "v1.2.0"
+  terragrunt_version = "v1.2.1"
 }
 
 resource "helm_release" "atlantis" {
