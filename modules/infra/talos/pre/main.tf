@@ -25,6 +25,18 @@ locals {
       )
     )
   )
+  cilium_job_params = {
+    APISERVER_HOST    = var.config.kubeprism ? "127.0.0.1" : var.config.cluster_url.apiserver
+    CILIUM_VERSION    = var.versions.cilium
+    CLUSTER_DOMAIN    = local.cluster_domain
+    DUALSTACK         = var.config.dualstack ? "true" : "false"
+    OPERATOR_REPLICAS = max(1, length([for node in var.config.nodes : node if node.role == "controlplane"]))
+    PREFERRED_GATEWAY = var.config.preferred_gateway
+    SRV_PORT          = var.config.kubeprism ? "7445" : "6443"
+  }
+  # Talos skips objects already recorded in talos-bootstrap-manifests-inventory, so a deleted
+  # Job with the same name is never recreated. A params-derived name forces a new object.
+  cilium_job_suffix = substr(sha1(jsonencode(local.cilium_job_params)), 0, 8)
 }
 
 resource "talos_machine_secrets" "this" {
@@ -44,15 +56,9 @@ data "talos_machine_configuration" "nodes" {
       templatefile("../templates/controlplane.tmpl", {
         ETCD_CIDRS = local.cluster_cidrs
       }),
-      templatefile("../templates/cilium_postinstall_job.tmpl", {
-        APISERVER_HOST    = var.config.kubeprism ? "127.0.0.1" : var.config.cluster_url.apiserver
-        CILIUM_VERSION    = var.versions.cilium
-        CLUSTER_DOMAIN    = local.cluster_domain
-        DUALSTACK         = var.config.dualstack ? "true" : "false"
-        OPERATOR_REPLICAS = max(1, length([for node in var.config.nodes : node if node.role == "controlplane"]))
-        PREFERRED_GATEWAY = var.config.preferred_gateway
-        SRV_PORT          = var.config.kubeprism ? "7445" : "6443"
-      }),
+      templatefile("../templates/cilium_postinstall_job.tmpl", merge(local.cilium_job_params, {
+        JOB_SUFFIX = local.cilium_job_suffix
+      })),
     ] : [],
     [
       templatefile("../templates/machine.tmpl", {
@@ -90,16 +96,8 @@ data "talos_machine_configuration" "nodes" {
 }
 
 resource "null_resource" "delete_old_cilium_job" {
-  count = length(var.config.nodes) > 0 ? 1 : 0
-  triggers = {
-    APISERVER_HOST    = var.config.kubeprism ? "127.0.0.1" : var.config.cluster_url.apiserver
-    CILIUM_VERSION    = var.versions.cilium
-    CLUSTER_DOMAIN    = local.cluster_domain
-    DUALSTACK         = var.config.dualstack ? "true" : "false"
-    OPERATOR_REPLICAS = max(1, length([for node in var.config.nodes : node if node.role == "controlplane"]))
-    PREFERRED_GATEWAY = var.config.preferred_gateway
-    SRV_PORT          = var.config.kubeprism ? "7445" : "6443"
-  }
+  count    = length(var.config.nodes) > 0 ? 1 : 0
+  triggers = local.cilium_job_params
   provisioner "local-exec" {
     command = <<-CMD
       context="admin@${var.config.cluster_name}"

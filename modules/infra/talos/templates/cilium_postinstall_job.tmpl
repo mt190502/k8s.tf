@@ -42,7 +42,7 @@ cluster:
         apiVersion: batch/v1
         kind: Job
         metadata:
-          name: helm-install-cilium
+          name: helm-install-cilium-${JOB_SUFFIX}
           namespace: kube-system
         spec:
           backoffLimit: 10
