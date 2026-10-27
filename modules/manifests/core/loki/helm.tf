@@ -5,7 +5,7 @@ resource "helm_release" "this" {
   name            = "loki"
   repository      = "https://grafana-community.github.io/helm-charts"
   chart           = "loki"
-  version         = "19.3.0"
+  version         = "20.0.2"
   namespace       = var.config.kps_namespace
   upgrade_install = true
   set = [
@@ -52,13 +52,12 @@ resource "helm_release" "this" {
     { name = "loki.storage.type", value = "s3" },
     { name = "lokiCanary.enabled", value = "false" },
     { name = "memcached.enabled", value = "false" },
-    { name = "minio.enabled", value = "false" },
     { name = "querier.replicas", value = "0" },
     { name = "queryFrontend.replicas", value = "0" },
     { name = "queryScheduler.replicas", value = "0" },
     { name = "read.replicas", value = "0" },
     { name = "resultsCache.enabled", value = "false" },
-    { name = "serviceMonitor.enabled", value = "true" },
+    { name = "monitoring.serviceMonitor.enabled", value = "true" },
     { name = "sidecar.resources.limits.memory", value = "128Mi" },
     { name = "sidecar.resources.requests.cpu", value = "10m" },
     { name = "sidecar.resources.requests.memory", value = "96Mi" },
