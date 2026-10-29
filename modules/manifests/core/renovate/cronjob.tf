@@ -63,7 +63,7 @@ resource "kubernetes_cron_job_v1" "this" {
             ## --------------------------------------------------------------------------------- ##
             init_container {
               name    = "${var.config.name}-token"
-              image   = "node:24-alpine"
+              image   = "node:26-alpine"
               command = ["node", "/token-minter/github_app_token.js"]
               env {
                 name = "APP_ID"
