@@ -3,7 +3,7 @@
 ## ============================================================================================= ##
 locals {
   # renovate: datasource=github-releases depName=kubernetes/kubernetes
-  kubectl_version = "v1.37.1"
+  kubectl_version = "v1.37.2"
 
   # renovate: datasource=github-releases depName=jqlang/jq
   jq_version = "1.8.1"
