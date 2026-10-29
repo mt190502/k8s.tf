@@ -133,7 +133,7 @@ locals {
       # renovate: datasource=github-releases depName=siderolabs/talos
       talos = "v1.14.5"
       # renovate: datasource=github-releases depName=siderolabs/kubelet
-      kubernetes = "v1.37.1"
+      kubernetes = "v1.37.2"
       # renovate: datasource=github-releases depName=cilium/cilium
       cilium = "1.20.4"
       # renovate: datasource=github-releases depName=kubernetes-sigs/metrics-server
