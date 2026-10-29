@@ -5,7 +5,7 @@ resource "helm_release" "this" {
   name            = "loki"
   repository      = "https://grafana-community.github.io/helm-charts"
   chart           = "loki"
-  version         = "20.0.2"
+  version         = "20.0.3"
   namespace       = var.config.kps_namespace
   upgrade_install = true
   set = [
