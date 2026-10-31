@@ -139,7 +139,7 @@ locals {
       # renovate: datasource=github-releases depName=kubernetes-sigs/metrics-server
       metrics_server = "v0.9.1"
       # renovate: datasource=github-releases depName=kubernetes-sigs/gateway-api
-      gateway_api = "v1.6.3"
+      gateway_api = "v1.7.0"
       # renovate: datasource=github-releases depName=kubernetes-csi/external-snapshotter
       external_snapshotter = "v8.7.0"
     }
