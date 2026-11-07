@@ -500,6 +500,7 @@ locals {
         config = {
           falcosidekick_enabled = true
           minimum_priority      = "error"
+          toolchain_namespaces = ["atlantis-system"]
         }
       }
       gotify = {

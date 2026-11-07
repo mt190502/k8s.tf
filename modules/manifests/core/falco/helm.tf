@@ -60,9 +60,16 @@ resource "helm_release" "this" {
         }
       }
     }
+    mounts = {
+      volumes      = [{ name = "falco-exceptions", configMap = { name = "falco-exceptions" } }]
+      volumeMounts = [{ name = "falco-exceptions", mountPath = "/etc/falco/rules.d", readOnly = true }]
+    }
     tolerations = [
       { operator = "Exists" }
     ]
   })]
-  depends_on = [kubernetes_namespace_v1.this]
+  depends_on = [
+    kubernetes_namespace_v1.this,
+    kubernetes_config_map_v1.exceptions
+  ]
 }
