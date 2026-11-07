@@ -7,8 +7,9 @@ with **Hetzner Cloud** for compute, **Tailscale** for node-to-node networking,
 observability, and certificate management.
 
 **Key Features (prod.values.hcl):**
+
 - Multi-region Talos Kubernetes clusters with IPv4/IPv6 dual-stack networking
-- Cilium CNI for pod networking (WireGuard optional, currently disabled)
+- Cilium CNI for pod networking
 - Traefik Gateway API for ingress with HTTPS/QUIC support
 - Tailscale mesh for secure node-to-node communication (Kubespan disabled)
 - AMD64 control planes and workers across Helsinki, Nuremberg, and Falkenstein
@@ -44,6 +45,7 @@ graph TD
       cert["Cert Manager"]
       descheduler["Descheduler"]
       dnsutils["DNS Utils"]
+      falco["Falco"]
       loki["Loki"]
       monitoring["Kube Prometheus Stack"]
       mongo["MongoDB Operator"]
@@ -51,17 +53,22 @@ graph TD
       psmdb["PSMDB Operator"]
       kyverno["Kyverno"]
       reflector["Reflector"]
+      renovate["Renovate"]
       testing["Testing"]
       tso["Tailscale Operator"]
       traefik["Traefik"]
       gotify["Gotify"]
+      trivy["Trivy Operator"]
     end
     subgraph APPS["Applications"]
       anki["Anki"]
+      hedgedoc["HedgeDoc"]
       miniflux["Miniflux"]
       nightscout["Nightscout"]
+      picoshare["PicoShare"]
       radicale["Radicale"]
       redmine["Redmine"]
+      silverbullet["Silverbullet"]
       slimserve["Slimserve"]
       sync["Syncstorage-rs"]
       umami["Umami"]
@@ -119,8 +126,8 @@ graph TD
 
   class domain,cloudflare infra;
   class route,gateway,gwprovider,tailscale network;
-  class atlantis,cert,monitoring,dnsutils,reflector,pg,psmdb,kyverno,testing,tso,traefik,alloy,descheduler,loki,mongo,gotify core;
-  class anki,miniflux,nightscout,radicale,redmine,umami,slimserve,sync app;
+  class atlantis,cert,monitoring,dnsutils,reflector,pg,psmdb,kyverno,testing,tso,traefik,alloy,descheduler,loki,mongo,gotify,renovate,falco,trivy core;
+  class anki,hedgedoc,miniflux,nightscout,picoshare,radicale,redmine,umami,slimserve,sync,silverbullet app;
   class storage_s3,storage_longhorn storage;
   class m1a,w1a,m2a,w2a,m3a,w3a node;
 
@@ -165,12 +172,13 @@ export SOPS_AGE_KEY_FILE=~/.config/sops/age/keys.txt
 make encrypt
 ```
 
-To edit secrets later: `make decrypt` → edit → `make encrypt`.
+To edit secrets later: `make decrypt` → edit → `make encrypt`. A `lefthook`
+pre-commit hook rejects commits containing secret files that are not SOPS-encrypted.
 
 ### 2. Cluster Configuration
 
-Update `infra` (cluster name, `cluster_url`, nodes, firewall, versions) and `apps`
-blocks in `prod.values.hcl` for your environment.
+Update `infra` (cluster name, `cluster_url`, nodes, firewall, versions) and the
+`manifests` (`core` / `apps`) blocks in `prod.values.hcl` for your environment.
 
 > [!TIP]
 > If `prod.values.hcl` is empty or missing the `infra` block, the stack runs in **mock mode**
@@ -203,7 +211,7 @@ All shared configuration lives under `locals` in `prod.values.hcl`. Sensitive va
 | Layer              | Content                                                                                                                                                                                                                                                                                                                                                                   |
 |:------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
 | **Infrastructure** | Talos machine secrets, patch templates, Hetzner servers + firewall, Tailscale devices, Talos bootstrap, kubeconfig, Cloudflare DNS records                                                                                                                                                                                                                                |
-| **Manifests**      | Longhorn, S3 CSI, Reflector, CloudNativePG, MongoDB Community Operator, PSMDB Operator (disabled), kube-prometheus-stack, Loki, Grafana Alloy, cert-manager, Descheduler, Atlantis, Gotify, Kyverno and policies, Traefik, Tailscale Operator, DNS utils, testing (disabled), plus apps (anki, miniflux, nightscout, radicale, redmine, slimserve, syncstorage-rs, umami) |
+| **Manifests**      | Longhorn, S3 CSI, Reflector, CloudNativePG, MongoDB Community Operator, PSMDB Operator (disabled), kube-prometheus-stack, Loki, Grafana Alloy, cert-manager, Descheduler, Atlantis, Gotify, Kyverno and policies, Traefik, Tailscale Operator, DNS utils, Falco, Renovate, Trivy Operator, testing (disabled), plus apps (anki, hedgedoc (disabled), miniflux, nightscout, picoshare, radicale, redmine, silverbullet, slimserve, syncstorage-rs, umami) |
 
 ---
 
@@ -229,7 +237,11 @@ graph TD
       TSP["tailscale/post<br>• Device records<br>• Cleanup on destroy"]
       TAP["talos/post<br>• Config apply<br>• etcd bootstrap<br>• kubeconfig"]
       CP["cloudflare/post<br>• A/AAAA / CNAME"]
-      TP --> HP --> TSP --> TAP --> CP
+      TP --> HP
+      TP --> TAP
+      HP --> TSP
+      HP & TSP --> TAP
+      HP & TSP & TAP --> CP
     end
 
     subgraph MANIFESTS["Stack: manifests"]
@@ -239,6 +251,7 @@ graph TD
         LH["longhorn"]
         S3["s3-csi"]
         RF["reflector"]
+        RENO["renovate"]
         CNPG["cnpg"]
         PSMDB["psmdb-operator"]
         MONGO["mongodb-community-operator"]
@@ -248,6 +261,7 @@ graph TD
         ALLOY["alloy"]
         KYV["kyverno"]
         KYVP["kyverno/policies"]
+        LHJ["longhorn/jobs"]
         GOTIFY["gotify"]
         DNS["dnsutils"]
         TSO["tailscale-operator"]
@@ -255,26 +269,36 @@ graph TD
         DESCHED["descheduler"]
         TF["traefik"]
         TS["testing"]
+        FALCO["falco"]
+        TRIVY["trivy"]
       end
       subgraph APPS["Apps"]
         ANKI["anki"]
+        HEDGE["hedgedoc"]
         MINI["miniflux"]
         NS["nightscout"]
+        PICO["picoshare"]
         RAD["radicale"]
         RED["redmine"]
+        SILVER["silverbullet"]
         SLIM["slimserve"]
         SYNC["syncstorage-rs"]
         UMA["umami"]
       end
       LH --> RF & CNPG & PSMDB & MONGO & KPS & TSO
-      KPSPRE --> KPS & DESCHED
+      KPSPRE --> KPS & DESCHED & TRIVY & LH & KYV & RENO & CNPG & CM
       LH & KPS --> LOKI
-      KPS --> ALLOY
+      KPS --> ALLOY & FALCO
       GOTIFY --> KPS
+      CM --> KPS
+      CNPG --> GOTIFY
       RF & CNPG & KPSPRE --> CM
       CM & LH --> ATL
       CM --> TF & TS & DNS & RAD & GOTIFY
+      CM --> HEDGE & PICO & SILVER
       KYV --> KYVP
+      LH --> LHJ
+      TF --> KPS & ATL & GOTIFY & ANKI & HEDGE & MINI & NS & RAD & RED & SILVER & SLIM & SYNC & UMA
       CM & CNPG --> ANKI & MINI & RED & UMA & SYNC
       CM & MONGO --> NS
       S3 & CM --> SLIM
@@ -299,8 +323,8 @@ graph TD
 
   class INPUTS inputTarget;
   class TP,HP,TSP,TAP,CP infraTarget;
-  class ATL,LH,S3,RF,CNPG,PSMDB,MONGO,KPSPRE,KPS,LOKI,ALLOY,KYV,KYVP,GOTIFY,DNS,TSO,CM,DESCHED,TF,TS coreTarget;
-  class ANKI,MINI,NS,RAD,RED,SLIM,SYNC,UMA appTarget;
+  class ATL,LH,LHJ,S3,RF,RENO,CNPG,PSMDB,MONGO,KPSPRE,KPS,LOKI,ALLOY,KYV,KYVP,GOTIFY,DNS,TSO,CM,DESCHED,TF,TS,FALCO,TRIVY coreTarget;
+  class ANKI,HEDGE,MINI,NS,PICO,RAD,RED,SILVER,SLIM,SYNC,UMA appTarget;
   class HZ,TSn,CF,TPn,V,S internalTarget;
   class INFRA,MANIFESTS,CORE,APPS inputTarget;
   class MODULES externalTarget;
@@ -319,67 +343,72 @@ graph TD
 
 ```
 /
-├── terragrunt.stack.hcl               # Root stack: infra + manifests value injection
-├── prod.values.hcl                    # Single source of truth (cluster, nodes, app versions)
-├── prod.secrets.hcl                   # Production secrets; encrypted with SOPS
-├── secrets.hcl.example                # Template
-├── .sops.yaml                         # SOPS / age rules
-├── atlantis.yaml                      # Repo-level Atlantis project config
-├── CODEOWNERS                         # Required reviewers / code ownership
-├── Makefile                           # generate, plan, apply, SOPS, packer, lint
+├── terragrunt.stack.hcl                      # Root stack: infra + manifests value injection
+├── prod.values.hcl                           # Single source of truth (cluster, nodes, infra versions)
+├── prod.secrets.hcl                          # Production secrets; encrypted with SOPS
+├── secrets.hcl.example                       # Template
+├── .sops.yaml                                # SOPS / age rules
+├── CODEOWNERS                                # Required reviewers / code ownership
+├── Makefile                                  # generate, plan, apply, SOPS, packer, lint
 ├── modules/
-│   ├── common.hcl                     # Backend, provider versions, mock outputs, mock_infra, mock_apps
-│   ├── infra/                         # Base infrastructure modules (Talos, Hetzner, Tailscale, Cloudflare)
-│   │   ├── terragrunt.stack.hcl       # Defines infra stack units and dependencies
+│   ├── common.hcl                            # Backend config, state encryption, helpers, mock outputs, mock_infra
+│   ├── infra/                                # Base infrastructure modules (Talos, Hetzner, Tailscale, Cloudflare)
+│   │   ├── terragrunt.stack.hcl              # Defines infra stack units and dependencies
 │   │   ├── talos/
-│   │   │   ├── pre/                   # Machine secrets + config generation
-│   │   │   ├── post/                  # Config apply, bootstrap, kubeconfig
-│   │   │   └── templates/             # .tmpl patch files
+│   │   │   ├── pre/                          # Machine secrets + config generation
+│   │   │   ├── post/                         # Config apply, bootstrap, kubeconfig
+│   │   │   └── templates/                    # .tmpl patch files
 │   │   ├── hetzner/
-│   │   │   ├── pre/                   # Placeholder (no resources)
-│   │   │   └── post/                  # Servers, firewall, private network
+│   │   │   ├── pre/                          # Placeholder (no resources)
+│   │   │   └── post/                         # Servers, firewall, private network
 │   │   ├── tailscale/
-│   │   │   ├── pre/                   # Placeholder (no resources)
-│   │   │   └── post/                  # Device discovery, IP resolution
+│   │   │   ├── pre/                          # Placeholder (no resources)
+│   │   │   └── post/                         # Device discovery, IP resolution
 │   │   └── cloudflare/
-│   │       ├── pre/                   # Placeholder (no resources)
-│   │       └── post/                  # DNS records (A/AAAA/CNAME)
-│   └── manifests/                     # Application modules
-│       ├── terragrunt.stack.hcl       # Defines manifests stack units and dependencies
+│   │       ├── pre/                          # Placeholder (no resources)
+│   │       └── post/                         # DNS records (A/AAAA/CNAME)
+│   └── manifests/                            # Application modules
+│       ├── terragrunt.stack.hcl              # Defines manifests stack units and dependencies
 │       ├── core/
-│       │   ├── alloy/                 # Grafana Alloy metrics/logs agent
-│       │   ├── atlantis/              # Atlantis automation server
-│       │   ├── cert-manager/          # ACME certificates + Gateway
-│       │   ├── cnpg/                  # CloudNativePG operator
-│       │   ├── descheduler/           # Pod rebalancing (RemoveDuplicates, LowNodeUtilization)
-│       │   ├── dnsutils/              # Debug DNS utilities
-│       │   ├── gotify/                # Push notification relay
-│       │   ├── kube-prometheus-stack/ # Monitoring stack (pre + post)
-│       │   ├── kyverno/               # Admission policies and policy resources
-│       │   ├── loki/                  # Distributed log aggregation (S3-backed)
-│       │   ├── longhorn/              # Distributed block storage
-│       │   ├── mongodb-community-operator/ # MongoDB Community Operator
-│       │   ├── psmdb-operator/        # Percona MongoDB operator
-│       │   ├── reflector/             # Secret/configmap reflection
-│       │   ├── s3-csi/                # S3-compatible storage CSI driver
-│       │   ├── tailscale-operator/    # Tailscale Kubernetes operator
-│       │   ├── testing/               # Smoke tests (nginx, echoserver)
-│       │   └── traefik/               # Traefik Gateway API provider
+│       │   ├── alloy/                        # Grafana Alloy metrics/logs agent
+│       │   ├── atlantis/                     # Atlantis automation server
+│       │   ├── cert-manager/                 # ACME certificates + Gateway
+│       │   ├── cnpg/                         # CloudNativePG operator
+│       │   ├── descheduler/                  # Pod rebalancing (RemoveDuplicates, LowNodeUtilization)
+│       │   ├── dnsutils/                     # Debug DNS utilities
+│       │   ├── falco/                        # Runtime security (modern eBPF) + Falcosidekick
+│       │   ├── gotify/                       # Push notification relay
+│       │   ├── kube-prometheus-stack/        # Monitoring stack (+ `pre/` subunit)
+│       │   ├── kyverno/                      # Admission policies (+ `policies/` subunit)
+│       │   ├── loki/                         # Distributed log aggregation (S3-backed)
+│       │   ├── longhorn/                     # Distributed block storage (+ `jobs/` subunit)
+│       │   ├── mongodb-community-operator/   # MongoDB Community Operator
+│       │   ├── psmdb-operator/               # Percona MongoDB operator
+│       │   ├── reflector/                    # Secret/configmap reflection
+│       │   ├── renovate/                     # Renovate dependency-update bot (CronJob)
+│       │   ├── s3-csi/                       # S3-compatible storage CSI driver
+│       │   ├── tailscale-operator/           # Tailscale Kubernetes operator
+│       │   ├── testing/                      # Smoke tests (nginx, echoserver)
+│       │   ├── traefik/                      # Traefik Gateway API provider
+│       │   └── trivy/                        # Trivy Operator (vuln/config/secret scanning)
 │       └── apps/
-│           ├── template/              # App template for new applications
-│           ├── anki/                  # Anki sync server
-│           ├── miniflux/              # RSS reader
-│           ├── nightscout/            # CGM data visualization
-│           ├── radicale/              # CalDAV/CardDAV server
-│           ├── redmine/               # Project management
-│           ├── slimserve/             # Lightweight file server
-│           ├── syncstorage-rs/        # Firefox Sync storage
-│           └── umami/                 # Web analytics
+│           ├── template/                     # App template for new applications
+│           ├── anki/                         # Anki sync server
+│           ├── hedgedoc/                     # Collaborative markdown notes
+│           ├── miniflux/                     # RSS reader
+│           ├── nightscout/                   # CGM data visualization
+│           ├── picoshare/                    # File-sharing service
+│           ├── radicale/                     # CalDAV/CardDAV server
+│           ├── redmine/                      # Project management
+│           ├── silverbullet/                 # Markdown knowledge base
+│           ├── slimserve/                    # Lightweight file server
+│           ├── syncstorage-rs/               # Firefox Sync storage
+│           └── umami/                        # Web analytics
 │
-└── packer/                            # Optional Talos image build for Hetzner
-    ├── hetzner.pkr.hcl                # Packer template
-    ├── prod.pkrvars.hcl               # Packer variables (image name, Talos version)
-    ├── secret.hcl                     # Packer-specific SOPS-encrypted secrets
+└── packer/                                   # Optional Talos image build for Hetzner
+    ├── hetzner.pkr.hcl                       # Packer template
+    ├── prod.pkrvars.hcl                      # Packer variables (image name, Talos version)
+    ├── prod.secret.hcl                       # Packer-specific SOPS-encrypted secrets
     └── ...
 ```
 
@@ -387,7 +416,7 @@ graph TD
 > When `make generate` runs, Terragrunt reads `terragrunt.stack.hcl` and generates unit
 > directories under **`.terragrunt-stack/`**; the Makefile cleans these intermediate
 > directories after plan/apply. Each module's `terragrunt.hcl` includes `common.hcl` for
-> shared backend config, provider versions, and mock outputs.
+> shared backend config, state encryption, and mock outputs.
 
 <br>
 
