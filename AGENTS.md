@@ -217,6 +217,11 @@ database needs `../../core/cnpg`.
   namespaces (NAMESPACE=ALL); a module can keep its dashboard ConfigMap in its
   own namespace (precedent: `trivy/dashboard.tf`; the falco chart installs its
   dashboard into the monitoring namespace).
+- Grafana dashboard ownership must be unique per uid: the kps `default`
+  file-provider persists gnetId downloads on the grafana PVC, so a chart that
+  also creates a `grafana_dashboard = "1"` ConfigMap with the same uid (CNPG)
+  puts provisioning into read-only mode and silently blocks all sidecar
+  dashboards. Give every dashboard exactly one source.
 - Alertmanager (v0.34): routes key off `severity` (`info|warning|critical`) and
   group on `alertname,namespace,severity`; an inhibit rule suppresses
   `info` alerts in the same `namespace` as a firing `warning` (alerts without a
