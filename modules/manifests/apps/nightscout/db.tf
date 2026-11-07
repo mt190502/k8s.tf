@@ -5,6 +5,11 @@
 #  Requires mongodb community operator to be installed. Uses credentials from                     #
 #  the provided secret.                                                                           #
 #                                                                                                 #
+#  Managed via null_resource + kubectl because the kubernetes provider does not support           #
+#  the MongoDBCommunity CRD well. Apply stamps srv.mtaha.dev/tf-owner on the live object;         #
+#  destroy deletes it only when that annotation still matches this instance, so a manifest        #
+#  change updates the object in place instead of tearing the database down and recreating it.     #
+#                                                                                                 #
 #  Connection string format:                                                                      #
 #    mongodb://databaseAdmin:{password}@{app}-mongo-svc.{namespace}.svc.cluster.local:27017/{db}  #
 ## ============================================================================================= ##
@@ -158,33 +163,25 @@ resource "kubernetes_role_binding_v1" "mongodb_database" {
   }
 }
 
-data "external" "mongodb_exists" {
-  count = var.enabled ? 1 : 0
-  program = [
-    "bash",
-    "-c",
-    "kubectl get mongodbcommunity ${local.mongodb_name} -n ${local.mongodb_namespace} >/dev/null 2>&1 && echo '{\"exists\":\"true\"}' || echo '{\"exists\":\"false\"}'",
-  ]
-}
-
 resource "null_resource" "mongodb" {
   count = var.enabled ? 1 : 0
   triggers = {
     name         = local.mongodb_name
     namespace    = local.mongodb_namespace
     manifest_sha = sha256(local.mongodb)
-    exists       = data.external.mongodb_exists[0].result.exists
+  }
+  lifecycle {
+    create_before_destroy = true
   }
   provisioner "local-exec" {
-    command = "kubectl apply -f - <<EOF\n${local.mongodb}\nEOF"
+    command = "{ kubectl apply -f - <<EOF\n${local.mongodb}\nEOF\n} && kubectl annotate --overwrite mongodbcommunity ${self.triggers.name} -n ${self.triggers.namespace} srv.mtaha.dev/tf-owner=${self.id}"
   }
   provisioner "local-exec" {
     when    = destroy
-    command = "[ \"true\" = \"${self.triggers.exists}\" ] && kubectl delete mongodbcommunity ${self.triggers.name} -n ${self.triggers.namespace} --ignore-not-found=true || true"
+    command = "owner=$(kubectl get mongodbcommunity ${self.triggers.name} -n ${self.triggers.namespace} -o jsonpath='{.metadata.annotations.srv\\.mtaha\\.dev/tf-owner}' 2>/dev/null || true); [ \"$${owner}\" = \"${self.id}\" ] && kubectl delete mongodbcommunity ${self.triggers.name} -n ${self.triggers.namespace} --ignore-not-found=true || true"
   }
   depends_on = [kubernetes_secret_v1.mongo_password, kubernetes_service_account_v1.mongodb_database, kubernetes_role_binding_v1.mongodb_database]
 }
-
 
 resource "kubernetes_secret_v1" "mongo_password" {
   count = var.enabled ? 1 : 0
