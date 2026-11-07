@@ -599,7 +599,7 @@ locals {
       reflector = {
         enabled = true
         config = {
-          wildcard_reflection_namespaces = ["radicale"]
+          wildcard_reflection_namespaces = ["radicale", "nightscout"]
         }
       }
       tailscale_operator = {
