@@ -10,6 +10,7 @@ resource "helm_release" "this" {
   upgrade_install = true
   set = [
     { name = "operator.builtInTrivyServer", value = var.config.built_in_trivy_server, },
+    { name = "operator.metricsVulnIdEnabled", value = true, },
     { name = "operator.scanJobsConcurrentLimit", value = var.config.scan_jobs_concurrent_limit, },
     { name = "operator.scannerReportTTL", value = var.config.scan_report_ttl, },
     { name = "resources.limits.memory", value = "512Mi", },

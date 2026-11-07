@@ -214,7 +214,9 @@ database needs `../../core/cnpg`.
 - Prometheus picks up **all** ServiceMonitors/PrometheusRules
   (`serviceMonitorSelectorNilUsesHelmValues = false`, no namespace selector).
 - Grafana sidecar loads ConfigMaps labelled `grafana_dashboard = "1"` from all
-  namespaces; install dashboard ConfigMaps into the monitoring namespace.
+  namespaces (NAMESPACE=ALL); a module can keep its dashboard ConfigMap in its
+  own namespace (precedent: `trivy/dashboard.tf`; the falco chart installs its
+  dashboard into the monitoring namespace).
 - Alertmanager (v0.34): routes key off `severity` (`info|warning|critical`) and
   group on `alertname,namespace,severity`; an inhibit rule suppresses
   `info` alerts in the same `namespace` as a firing `warning` (alerts without a
