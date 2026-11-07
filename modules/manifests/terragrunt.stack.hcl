@@ -118,6 +118,15 @@ unit "dnsutils" {
   }
 }
 
+unit "falco" {
+  source = "./core/falco"
+  path   = "core/falco"
+  values = {
+    enabled = try(local.core.falco.enabled, false)
+    config  = try(local.core.falco.config, {})
+  }
+}
+
 unit "gotify" {
   source = "./core/gotify"
   path   = "core/gotify"
@@ -292,6 +301,15 @@ unit "tests" {
       gateway_name      = try(local.core.tests.config.gateway_name, "")
       gateway_namespace = try(local.core.tests.config.gateway_namespace, "")
     }
+  }
+}
+
+unit "trivy" {
+  source = "./core/trivy"
+  path   = "core/trivy"
+  values = {
+    enabled = try(local.core.trivy.enabled, false)
+    config  = try(local.core.trivy.config, {})
   }
 }
 

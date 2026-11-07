@@ -495,6 +495,13 @@ locals {
       dnsutils = {
         enabled = true
       }
+      falco = {
+        enabled = true
+        config = {
+          falcosidekick_enabled = true
+          minimum_priority      = "error"
+        }
+      }
       gotify = {
         enabled = true
         config = {
@@ -603,6 +610,17 @@ locals {
       }
       tests = {
         enabled = false
+      }
+      trivy = {
+        enabled = true
+        config = {
+          built_in_trivy_server      = true
+          severity                   = "CRITICAL,HIGH"
+          ignore_unfixed             = true
+          scan_jobs_concurrent_limit = 1
+          scan_report_ttl            = "168h"
+          exclude_namespaces         = ["kube-system", "trivy-system"]
+        }
       }
     }
   }
