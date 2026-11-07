@@ -70,6 +70,18 @@ resource "kubernetes_deployment_v1" "this" {
         } : {}
       }
       spec {
+        affinity {
+          pod_affinity {
+            required_during_scheduling_ignored_during_execution {
+              label_selector {
+                match_labels = {
+                  "app.kubernetes.io/name" = var.config.name
+                }
+              }
+              topology_key = "kubernetes.io/hostname"
+            }
+          }
+        }
         init_container {
           name  = "${var.config.name}-init"
           image = "busybox:1.36"
