@@ -217,7 +217,10 @@ database needs `../../core/cnpg`.
   namespaces (NAMESPACE=ALL); a module can keep its dashboard ConfigMap in its
   own namespace (precedent: `trivy/dashboard.tf`; the falco chart installs its
   dashboard into the monitoring namespace).
-- Grafana dashboard ownership must be unique per uid: the kps `default`
+- Grafana uses sqlite on a PVC: set `grafana.strategy.type = "Recreate"` so
+  rollups never run two instances against one database (a RollingUpdate surge
+  pod shares the PVC and database with the old instance, breaking provisioning
+  saves and readiness). Dashboard ownership must also be unique per uid: the kps `default`
   file-provider persists gnetId downloads on the grafana PVC, so a chart that
   also creates a `grafana_dashboard = "1"` ConfigMap with the same uid (CNPG)
   puts provisioning into read-only mode and silently blocks all sidecar

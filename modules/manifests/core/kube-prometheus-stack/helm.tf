@@ -258,6 +258,9 @@ resource "helm_release" "this" {
       }
     }
     grafana = {
+      strategy = {
+        type = "Recreate"
+      }
       dashboardProviders = {
         "dashboardproviders.yaml" = {
           apiVersion = 1
