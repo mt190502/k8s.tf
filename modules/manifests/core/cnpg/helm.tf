@@ -9,7 +9,7 @@ resource "helm_release" "this" {
   namespace       = kubernetes_namespace_v1.this.metadata[0].name
   upgrade_install = true
   set = [
-    { name = "monitoring.grafanaDashboard.create", value = true },
+    { name = "monitoring.grafanaDashboard.create", value = false },
     { name = "monitoring.podMonitorEnabled", value = true },
     { name = "replicaCount", value = var.config.controlplane_count },
     { name = "resources.limits.memory", value = "256Mi" },

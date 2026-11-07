@@ -280,6 +280,7 @@ resource "helm_release" "this" {
         default = {
           atlantis       = { gnetId = 23419, revision = 1, datasource = "Prometheus", }
           cert_manager   = { gnetId = 11001, revision = 1, datasource = "Prometheus", }
+          cloudnative_pg = { gnetId = 20417, revision = 4, datasource = "Prometheus", }
           loki           = { gnetId = 14055, revision = 5, datasource = "Loki", }
           longhorn       = { gnetId = 13032, revision = 6, datasource = "Prometheus", }
           traefik        = { gnetId = 17346, revision = 9, datasource = "Prometheus", }
