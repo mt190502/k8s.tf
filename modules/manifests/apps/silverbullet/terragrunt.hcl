@@ -6,8 +6,9 @@
 #                                                                                                 #
 #  Dependencies:                                                                                  #
 #    - cert-manager: Optional, Provides gateway_name and gateway_namespace for HTTPRoute          #
+#    - traefik: Required, for traefik.io/v1alpha1 Middlewares and the nginx IngressClass          #
 #                                                                                                 #
-#  Apply order: cert-manager -> [silverbullet]                                                    #
+#  Apply order: (cert-manager/traefik) -> [silverbullet]                                          #
 ## ============================================================================================= ##
 include "common" {
   path   = find_in_parent_folders("modules/common.hcl")
@@ -80,6 +81,11 @@ dependency "cert_manager" {
   }
   mock_outputs_allowed_terraform_commands = include.common.locals.mock_outputs_allowed_terraform_commands
   mock_outputs_merge_strategy_with_state  = include.common.locals.mock_outputs_merge_strategy_with_state
+}
+
+dependency "traefik" {
+  config_path  = "../../core/traefik"
+  skip_outputs = true
 }
 
 inputs = {

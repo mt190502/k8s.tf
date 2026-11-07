@@ -4,7 +4,7 @@
 #  Terragrunt wrapper for Nightscout (CGM data visualization app) manifests.                      #
 #  Config is provided from stack values.                                                          #
 #                                                                                                 #
-#  Apply order: mongodb-community-operator -> [nightscout]                                        #
+#  Apply order: (mongodb-community-operator/traefik) -> [nightscout]                              #
 ## ============================================================================================= ##
 include "common" {
   path   = find_in_parent_folders("modules/common.hcl")
@@ -87,6 +87,11 @@ dependency "cert_manager" {
 
 dependency "mongodb_community_operator" {
   config_path  = "../../core/mongodb-community-operator"
+  skip_outputs = true
+}
+
+dependency "traefik" {
+  config_path  = "../../core/traefik"
   skip_outputs = true
 }
 

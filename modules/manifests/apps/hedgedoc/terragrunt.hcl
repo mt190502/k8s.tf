@@ -8,13 +8,14 @@
 #    - cert-manager: Optional, Provides gateway_name and gateway_namespace for HTTPRoute          #
 #    - cnpg: Optional, for PostgreSQL databases                                                   #
 #    - psmdb-operator: Optional, for MongoDB databases                                            #
+#    - traefik: Required, for traefik.io/v1alpha1 Middlewares and the nginx IngressClass          #
 #                                                                                                 #
 #  Usage: Copy this hedgedoc to your app directory and customize:                                 #
 #    1. Replace "hedgedoc" with your app name                                                     #
 #    2. Add/remove dependencies as needed                                                         #
 #    3. Update inputs to match your variables.tf                                                  #
 #                                                                                                 #
-#  Apply order: (cert-manager/cnpg/psmdb-operator) -> [hedgedoc]                                  #
+#  Apply order: (cert-manager/cnpg/traefik) -> [hedgedoc]                                         #
 ## ============================================================================================= ##
 include "common" {
   path   = find_in_parent_folders("modules/common.hcl")
@@ -106,6 +107,11 @@ dependency "cert_manager" {
 #   config_path  = "../../core/psmdb-operator"
 #   skip_outputs = true
 # }
+
+dependency "traefik" {
+  config_path  = "../../core/traefik"
+  skip_outputs = true
+}
 
 inputs = {
   enabled = try(values.enabled, false)

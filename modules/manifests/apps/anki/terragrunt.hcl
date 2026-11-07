@@ -4,7 +4,7 @@
 #  Terragrunt wrapper for anki manifests.                                                         #
 #  Config is provided from stack values.                                                          #
 #                                                                                                 #
-#  Apply order: (cert-manager/cnpg/psmdb-operator) -> [anki]                                      #
+#  Apply order: (cert-manager/cnpg/traefik) -> [anki]                                             #
 ## ============================================================================================= ##
 include "common" {
   path   = find_in_parent_folders("modules/common.hcl")
@@ -89,6 +89,11 @@ dependency "cert_manager" {
 
 dependency "cnpg" {
   config_path  = "../../core/cnpg"
+  skip_outputs = true
+}
+
+dependency "traefik" {
+  config_path  = "../../core/traefik"
   skip_outputs = true
 }
 

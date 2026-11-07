@@ -5,7 +5,7 @@
 #  Config is provided from stack values.                                                          #
 #                                                                                                 #
 #                                                                                                 #
-#  Apply order: (cert-manager/cnpg/longhorn/psmdb-operator) -> [atlantis]                         #
+#  Apply order: (cert-manager/longhorn/traefik) -> [atlantis]                                     #
 ## ============================================================================================= ##
 include "common" {
   path   = find_in_parent_folders("modules/common.hcl")
@@ -88,6 +88,11 @@ dependency "cert_manager" {
 
 dependency "longhorn" {
   config_path  = "../../core/longhorn"
+  skip_outputs = true
+}
+
+dependency "traefik" {
+  config_path  = "../../core/traefik"
   skip_outputs = true
 }
 

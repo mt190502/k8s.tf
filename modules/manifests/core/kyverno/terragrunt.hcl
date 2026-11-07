@@ -40,6 +40,14 @@ generate "versions" {
   EOF
 }
 
+## --------------------------------------------------------------------------------------------- ##
+#  Dependencies - enforce apply order and wire outputs from upstream modules.                     #
+## --------------------------------------------------------------------------------------------- ##
+dependency "kube_prometheus_stack_pre" {
+  config_path  = "../kube-prometheus-stack/pre"
+  skip_outputs = true
+}
+
 inputs = {
   enabled = try(values.enabled, false)
 }

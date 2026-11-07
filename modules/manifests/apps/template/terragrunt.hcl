@@ -8,6 +8,7 @@
 #    - cert-manager: Optional, Provides gateway_name and gateway_namespace for HTTPRoute          #
 #    - cnpg: Optional, for PostgreSQL databases                                                   #
 #    - psmdb-operator: Optional, for MongoDB databases                                            #
+#    - traefik: Optional, for traefik.io Middlewares/TraefikService and the nginx IngressClass    #
 #                                                                                                 #
 #  Usage: Copy this template to your app directory and customize:                                 #
 #    1. Replace "template" with your app name                                                     #
@@ -106,6 +107,12 @@ generate "versions" {
 #~ Uncomment if using mongo
 # dependency "psmdb_operator" {
 #   config_path  = "../../core/psmdb-operator"
+#   skip_outputs = true
+# }
+
+#~ Uncomment if using traefik.io objects (basic auth Middleware, TraefikService, nginx IngressClass)
+# dependency "traefik" {
+#   config_path  = "../../core/traefik"
 #   skip_outputs = true
 # }
 

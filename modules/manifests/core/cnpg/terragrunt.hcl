@@ -4,7 +4,7 @@
 #  Terragrunt wrapper for CloudNativePG (PostgreSQL operator).                                    #
 #  Config is provided from stack values.                                                          #
 #                                                                                                 #
-#  Apply order: longhorn -> [cnpg] -> cert-manager                                                #
+#  Apply order: longhorn; pre -> [cnpg] -> cert-manager                                           #
 ## ============================================================================================= ##
 include "common" {
   path   = find_in_parent_folders("modules/common.hcl")
@@ -51,6 +51,10 @@ generate "versions" {
 ## --------------------------------------------------------------------------------------------- ##
 #  Dependencies -  enforce apply order and wire outputs from upstream modules as inputs.          #
 ## --------------------------------------------------------------------------------------------- ##
+dependency "kube_prometheus_stack_pre" {
+  config_path  = "../kube-prometheus-stack/pre"
+  skip_outputs = true
+}
 dependency "longhorn" {
   config_path  = "../longhorn"
   skip_outputs = true

@@ -4,7 +4,7 @@
 #  Terragrunt wrapper for Longhorn (cluster storage).                                             #
 #  First manifest unit to apply after infra stack completes.                                      #
 #                                                                                                 #
-#  Apply order: (infra) cloudflare/post -> [longhorn] -> reflector/cnpg/kps -> cert-manager -> .. #
+#  Apply order: (infra) cloudflare/post; kps/pre -> [longhorn] -> [longhorn/jobs] -> ..           #
 ## ============================================================================================= ##
 include "common" {
   path   = find_in_parent_folders("modules/common.hcl")
@@ -46,6 +46,14 @@ generate "versions" {
       }
     }
   EOF
+}
+
+## --------------------------------------------------------------------------------------------- ##
+#  Dependencies - enforce apply order and wire outputs from upstream modules.                     #
+## --------------------------------------------------------------------------------------------- ##
+dependency "kube_prometheus_stack_pre" {
+  config_path  = "../kube-prometheus-stack/pre"
+  skip_outputs = true
 }
 
 inputs = {

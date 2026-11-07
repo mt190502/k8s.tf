@@ -4,7 +4,7 @@
 #  Terragrunt wrapper for slimserve manifests.                                                    #
 #  Config is provided from stack values.                                                          #
 #                                                                                                 #
-#  Apply order: (cert-manager/cnpg/psmdb-operator) -> [slimserve]                                 #
+#  Apply order: (cert-manager/traefik) -> [slimserve]                                             #
 ## ============================================================================================= ##
 include "common" {
   path   = find_in_parent_folders("modules/common.hcl")
@@ -87,6 +87,11 @@ dependency "cert_manager" {
 
 dependency "s3_csi" {
   config_path  = "../../core/s3-csi"
+  skip_outputs = true
+}
+
+dependency "traefik" {
+  config_path  = "../../core/traefik"
   skip_outputs = true
 }
 

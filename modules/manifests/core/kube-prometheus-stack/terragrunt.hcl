@@ -4,7 +4,7 @@
 #  Terragrunt wrapper for kube-prometheus-stack monitoring components.                            #
 #  Config is provided from stack values.                                                          #
 #                                                                                                 #
-#  Apply order: longhorn -> (kps/pre) -> cert-manager -> [kube-prometheus-stack]                  #
+#  Apply order: longhorn -> (kps/pre) -> cert-manager/traefik -> [kube-prometheus-stack]          #
 ## ============================================================================================= ##
 include "common" {
   path   = find_in_parent_folders("modules/common.hcl")
@@ -92,6 +92,11 @@ dependency "longhorn" {
 
 dependency "pre" {
   config_path  = "./pre"
+  skip_outputs = true
+}
+
+dependency "traefik" {
+  config_path  = "../traefik"
   skip_outputs = true
 }
 

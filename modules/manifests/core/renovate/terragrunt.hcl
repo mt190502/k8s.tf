@@ -5,9 +5,9 @@
 #  Config is provided from stack values.                                                          #
 #                                                                                                 #
 #  Dependencies:                                                                                  #
-#    - none                                                                                       #
+#    - kube-prometheus-stack/pre (skip_outputs, ServiceMonitor/PrometheusRule CRDs)               #
 #                                                                                                 #
-#  Apply order: [renovate]                                                                        #
+#  Apply order: kube-prometheus-stack/pre -> [renovate]                                           #
 ## ============================================================================================= ##
 include "common" {
   path   = find_in_parent_folders("modules/common.hcl")
@@ -49,6 +49,14 @@ generate "versions" {
       }
     }
   EOF
+}
+
+## --------------------------------------------------------------------------------------------- ##
+#  Dependencies - enforce apply order and wire outputs from upstream modules.                     #
+## --------------------------------------------------------------------------------------------- ##
+dependency "kube_prometheus_stack_pre" {
+  config_path  = "../kube-prometheus-stack/pre"
+  skip_outputs = true
 }
 
 inputs = {

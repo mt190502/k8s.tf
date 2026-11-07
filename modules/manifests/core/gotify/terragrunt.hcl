@@ -7,8 +7,9 @@
 #  Dependencies:                                                                                  #
 #    - cert-manager: Optional, Provides gateway_name and gateway_namespace for HTTPRoute          #
 #    - cnpg: Optional, for PostgreSQL database                                                    #
+#    - traefik: Required, for traefik.io/v1alpha1 Middlewares and the nginx IngressClass          #
 #                                                                                                 #
-#  Apply order: (cert-manager/cnpg/psmdb-operator) -> [gotify]                                    #
+#  Apply order: (cert-manager/cnpg/traefik) -> [gotify]                                           #
 ## ============================================================================================= ##
 include "common" {
   path   = find_in_parent_folders("modules/common.hcl")
@@ -91,6 +92,11 @@ dependency "cert_manager" {
 
 dependency "cnpg" {
   config_path  = "../cnpg"
+  skip_outputs = true
+}
+
+dependency "traefik" {
+  config_path  = "../traefik"
   skip_outputs = true
 }
 
