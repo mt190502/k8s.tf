@@ -1,8 +1,12 @@
 ## ============================================================================================= ##
-#  modules/manifests/core/longhorn/recurringjobs.tf                                               #
+#  modules/manifests/core/longhorn/jobs/recurringjobs.tf                                          #
 #                                                                                                 #
 #  Scheduled Longhorn snapshots and backups for volumes in the default recurring-job group.       #
 #  The backup job requires Longhorn's default backup target to be configured.                     #
+#                                                                                                 #
+#  Lives in its own unit because the RecurringJob CRDs ship with the Longhorn chart in            #
+#  core/longhorn; planning these CRs there fails on a fresh install. Moving them here deletes     #
+#  the old objects in core/longhorn and recreates them in this unit within one stack apply.       #
 ## ============================================================================================= ##
 resource "kubernetes_manifest" "recurring_snapshot" {
   manifest = {
@@ -10,7 +14,7 @@ resource "kubernetes_manifest" "recurring_snapshot" {
     kind       = "RecurringJob"
     metadata = {
       name      = "nightly-snapshot"
-      namespace = kubernetes_namespace_v1.this.metadata[0].name
+      namespace = "longhorn-system"
     }
     spec = {
       name        = "nightly-snapshot"
@@ -26,8 +30,6 @@ resource "kubernetes_manifest" "recurring_snapshot" {
       }
     }
   }
-
-  depends_on = [helm_release.this]
 }
 
 resource "kubernetes_manifest" "recurring_backup" {
@@ -36,7 +38,7 @@ resource "kubernetes_manifest" "recurring_backup" {
     kind       = "RecurringJob"
     metadata = {
       name      = "monthly-backup"
-      namespace = kubernetes_namespace_v1.this.metadata[0].name
+      namespace = "longhorn-system"
     }
     spec = {
       name        = "monthly-backup"
@@ -52,6 +54,4 @@ resource "kubernetes_manifest" "recurring_backup" {
       }
     }
   }
-
-  depends_on = [helm_release.this]
 }

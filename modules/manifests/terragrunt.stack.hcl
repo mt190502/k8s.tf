@@ -190,6 +190,14 @@ unit "longhorn" {
   }
 }
 
+unit "longhorn_jobs" {
+  source = "./core/longhorn/jobs"
+  path   = "core/longhorn/jobs"
+  values = {
+    enabled = try(local.core.longhorn.enabled, false)
+  }
+}
+
 unit "s3_csi" {
   source = "./core/s3-csi"
   path   = "core/s3-csi"
