@@ -55,7 +55,6 @@ resource "kubernetes_cron_job_v1" "retention" {
           }
           spec {
             restart_policy = "Never"
-            # The volume is ReadWriteOnce, so the job must run on the node where PicoShare runs.
             affinity {
               pod_affinity {
                 required_during_scheduling_ignored_during_execution {
@@ -74,12 +73,11 @@ resource "kubernetes_cron_job_v1" "retention" {
               }
             }
             container {
-              name    = "retention"
-              image   = "alpine:3.24"
+              name = "retention"
+              image   = "alpine/sqlite:3.53.4"
               command = ["/bin/sh", "-c"]
-              # apk needs root inside the container to install the sqlite3 CLI.
               args = [
-                "apk add --no-cache sqlite >/dev/null && exec /scripts/retention.sh"
+                "exec /scripts/retention.sh"
               ]
               env {
                 name  = "DB_PATH"
