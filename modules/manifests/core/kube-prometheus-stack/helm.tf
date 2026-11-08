@@ -180,6 +180,20 @@ resource "helm_release" "this" {
                 [{ receiver = "null" }]
               )
             }],
+            [{
+              match = {
+                alertname = "TrivyImageCriticalVulnerabilities"
+              }
+              repeat_interval = "6h"
+              routes = concat(
+                local.discord_adapter_enabled ? [{
+                  receiver = "discord"
+                  continue = true
+                }] : [],
+                local.gotify_regular_routes,
+                [{ receiver = "null" }]
+              )
+            }],
             local.discord_adapter_enabled ? [{
               receiver = "discord"
               continue = true
