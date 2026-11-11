@@ -5,7 +5,7 @@
 #  the nightly-snapshot and monthly-backup jobs skip it (same pattern as the Loki and Prometheus  #
 #  PVCs). The PVC only caches the vulnerability DB, which the server re-downloads on its own;     #
 #  snapshots of it pinned every DB update and grew the volume past its size on each replica.      #
-#  The "trim" group enables the weekly filesystem-trim job (core/longhorn/jobs), so blocks of     #
+#  The "trim" group enables the periodic filesystem-trim job (core/longhorn/jobs), so blocks of   #
 #  replaced DB files are released and the volume stays near its filesystem usage.                 #
 #                                                                                                 #
 #  The labels are set on the existing PVC: the chart exposes no volumeClaimTemplate labels and    #
