@@ -30,7 +30,7 @@ generate "versions" {
   contents  = <<-EOF
     terraform {
       required_providers {
-        tailscale = { source = "tailscale/tailscale", version = "~> 0.29.0" }
+        tailscale = { source = "tailscale/tailscale", version = "~> 0.30.0" }
         null      = { source = "hashicorp/null",      version = "~> 3.3.0" }
       }
     }
