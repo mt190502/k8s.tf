@@ -8,6 +8,7 @@
 #      autodiscover_filter --- Autodiscover filter, e.g. "owner/*" or "owner/repo"                #
 #      config_js_extra   --- Extra JavaScript appended to the generated config.js                 #
 #      concurrency_policy --- CronJob concurrency policy (Forbid/Allow/Replace)                   #
+#      cleanup_schedule   --- Schedule for the daily cache-cleanup CronJob (5-field cron)         #
 #      env               --- Extra environment variables (map of key-value)                       #
 #      log_level         --- Renovate log level                                                   #
 #      name              --- Application name (used for resources)                                #
@@ -35,6 +36,7 @@ variable "config" {
     autodiscover_filter     = optional(string)
     config_js_extra         = optional(string)
     concurrency_policy      = optional(string, "Forbid")
+    cleanup_schedule        = optional(string, "7 3 * * *")
     env                     = optional(map(string))
     log_level               = optional(string, "info")
     name                    = optional(string, "renovate")
