@@ -59,7 +59,7 @@ resource "kubernetes_cron_job_v1" "cache_cleanup" {
             }
             container {
               name    = "${var.config.name}-cache-cleanup"
-              image   = "alpine:lates"
+              image   = "alpine:3.24.4"
               command = ["sh", "-c"]
               args = [
                 "find /cache -mindepth 1 -type d -empty -mmin +2 ! -path '/cache/lost+found*' -delete; df -i /cache",
