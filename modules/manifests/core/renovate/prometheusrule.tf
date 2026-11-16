@@ -3,6 +3,10 @@
 #                                                                                                 #
 #  Renovate has no Prometheus metrics endpoint, so the runner is monitored through Kubernetes      #
 #  object state (kube-state-metrics) instead.                                                      #
+#  RenovateRunFailed only counts Jobs owned by the runner CronJob (not the cache cleanup) and     #
+#  only fires while no run has succeeded since the failure: failed Jobs stay in the history       #
+#  for up to 24h, so a single transient GitHub error must not keep the alert firing after the     #
+#  next run recovered. Without any recorded success, every failed run counts.                     #
 ## ============================================================================================= ##
 locals {
   namespace = "renovate-system"
@@ -28,7 +32,16 @@ resource "kubernetes_manifest" "prometheus_rule" {
           rules = [
             {
               alert = "RenovateRunFailed"
-              expr  = "kube_job_failed{namespace=\"${local.namespace}\", job_name=~\"${local.cronjob}-.*\"} > 0"
+              expr = join(" ", [
+                "(kube_job_status_start_time{namespace=\"${local.namespace}\"}",
+                "* on (namespace, job_name) group_left ()",
+                "(kube_job_failed{namespace=\"${local.namespace}\", condition=\"true\"} > 0)",
+                "* on (namespace, job_name) group_left ()",
+                "kube_job_owner{namespace=\"${local.namespace}\", owner_kind=\"CronJob\", owner_name=\"${local.cronjob}\"})",
+                "> on (namespace) group_left ()",
+                "(max by (namespace) (kube_cronjob_status_last_successful_time{namespace=\"${local.namespace}\", cronjob=\"${local.cronjob}\"})",
+                "or on (namespace) max by (namespace) (kube_job_status_start_time{namespace=\"${local.namespace}\"}) * 0)",
+              ])
               "for" = "5m"
               labels = {
                 severity  = "warning"
@@ -36,7 +49,7 @@ resource "kubernetes_manifest" "prometheus_rule" {
               }
               annotations = {
                 summary     = "Self-hosted Renovate run failed"
-                description = "A Renovate CronJob run in namespace ${local.namespace} failed. Check the job logs for datasource or authentication errors."
+                description = "A Renovate CronJob run in namespace ${local.namespace} failed and no run has succeeded since. Check the job logs for datasource or authentication errors."
               }
             },
             {
