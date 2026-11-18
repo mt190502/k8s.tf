@@ -48,7 +48,7 @@ resource "kubernetes_deployment_v1" "this" {
 
         init_container {
           name  = "${var.config.name}-init"
-          image = "mtlynch/picoshare:v1.5.4"
+          image = "mtlynch/picoshare:v1.5.5"
           command = [
             "sh",
             "-c",
@@ -73,7 +73,7 @@ resource "kubernetes_deployment_v1" "this" {
 
         container {
           name  = var.config.name
-          image = "mtlynch/picoshare:v1.5.4"
+          image = "mtlynch/picoshare:v1.5.5"
           port {
             container_port = var.config.port
           }
