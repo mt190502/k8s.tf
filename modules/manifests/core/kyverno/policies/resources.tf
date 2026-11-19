@@ -56,3 +56,78 @@ resource "kubernetes_manifest" "require_pod_resources" {
     }
   }
 }
+
+## ============================================================================================= ##
+#  Enforce that Longhorn PVCs excluded from recurring jobs are always in the trim group.          #
+## ============================================================================================= ##
+resource "kubernetes_manifest" "require_trim_on_excluded_pvc" {
+  manifest = {
+    apiVersion = "admissionregistration.k8s.io/v1"
+    kind       = "MutatingAdmissionPolicy"
+    metadata = {
+      name = "longhorn-excluded-pvc-gets-trim"
+    }
+    spec = {
+      failurePolicy = "Fail"
+      matchConstraints = {
+        resourceRules = [
+          {
+            apiGroups   = [""]
+            apiVersions = ["v1"]
+            operations  = ["CREATE", "UPDATE"]
+            resources   = ["persistentvolumeclaims"]
+            scope       = "Namespaced"
+          }
+        ]
+      }
+      matchConditions = [
+        {
+          name       = "is-longhorn"
+          expression = "object.spec.storageClassName == 'longhorn'"
+        },
+        {
+          name       = "excluded-from-recurring-jobs"
+          expression = "'recurring-job-group.longhorn.io/no-recurring-job' in object.metadata.labels && object.metadata.labels['recurring-job-group.longhorn.io/no-recurring-job'] == 'enabled'"
+        },
+        {
+          name       = "trim-missing"
+          expression = "!('recurring-job-group.longhorn.io/trim' in object.metadata.labels) || object.metadata.labels['recurring-job-group.longhorn.io/trim'] != 'enabled'"
+        }
+      ]
+      mutations = [
+        {
+          patchType = "JSONPatch"
+          jsonPatch = {
+            expression = "[JSONPatch{op: 'add', path: '/metadata/labels/' + jsonpatch.escapeKey('recurring-job-group.longhorn.io/trim'), value: 'enabled'}]"
+          }
+        }
+      ]
+      reinvocationPolicy = "IfNeeded"
+    }
+  }
+}
+
+resource "kubernetes_manifest" "require_trim_on_excluded_pvc_binding" {
+  manifest = {
+    apiVersion = "admissionregistration.k8s.io/v1"
+    kind       = "MutatingAdmissionPolicyBinding"
+    metadata = {
+      name = "longhorn-excluded-pvc-gets-trim"
+    }
+    spec = {
+      policyName = kubernetes_manifest.require_trim_on_excluded_pvc.manifest.metadata.name
+      matchResources = {
+        resourceRules = [
+          {
+            apiGroups   = [""]
+            apiVersions = ["v1"]
+            operations  = ["CREATE", "UPDATE"]
+            resources   = ["persistentvolumeclaims"]
+            scope       = "Namespaced"
+          }
+        ]
+      }
+    }
+  }
+  depends_on = [kubernetes_manifest.require_trim_on_excluded_pvc]
+}

@@ -83,6 +83,19 @@ resource "kubernetes_manifest" "prometheus_rule" {
               }
             },
             {
+              alert = "LonghornVolumeNearlyFull"
+              expr  = "max by (pvc, pvc_namespace, volume) (100 * longhorn_volume_actual_size_bytes / longhorn_volume_capacity_bytes) >= 90"
+              "for" = "30m"
+              labels = {
+                severity  = "warning"
+                component = "longhorn"
+              }
+              annotations = {
+                summary     = "Longhorn volume real size is at or above 90% of its provisioned size"
+                description = "Volume {{ $labels.pvc_namespace }}/{{ $labels.pvc }} holds {{ $value | humanize }}% of its provisioned size, counting data plus snapshots. Uncontrolled snapshots or a volume excluded from recurring jobs without a filesystem trim make real size converge to (or exceed) the PVC size on every replica node."
+              }
+            },
+            {
               alert = "LonghornVolumeSpaceUsageHigh"
               expr  = "max by (namespace, persistentvolumeclaim) (100 * (1 - kubelet_volume_stats_available_bytes{job=\"kubelet\", metrics_path=\"/metrics\"} / kubelet_volume_stats_capacity_bytes{job=\"kubelet\", metrics_path=\"/metrics\"}) and on (namespace, persistentvolumeclaim) kube_persistentvolumeclaim_info{storageclass=\"longhorn\"}) > 90"
               "for" = "15m"
@@ -99,6 +112,12 @@ resource "kubernetes_manifest" "prometheus_rule" {
         }
       ]
     }
+  }
+
+  field_manager {
+    #~ The rules field was co-owned by a one-off kubectl patch (2026-09-20) with identical
+    #~ content; take ownership so rule updates can apply. Precedent: core/gotify/db.tf.
+    force_conflicts = true
   }
 
   depends_on = [helm_release.this]
