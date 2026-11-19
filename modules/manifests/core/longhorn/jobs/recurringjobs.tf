@@ -3,6 +3,9 @@
 #                                                                                                 #
 #  Scheduled Longhorn snapshots and backups for volumes in the default recurring-job group.       #
 #  The backup job requires Longhorn's default backup target to be configured.                     #
+#  Nightly snapshots are kept for one day only (retain = 2 = tonight plus yesterday):             #
+#  database WAL churn pinned ~35 Gi per worker in the 3-nightly chain, and the offsite            #
+#  monthly-backup (retain = 12) remains the disaster-recovery copy.                               #
 #  Volumes labelled into the "trim" group (cache-like PVCs without snapshots: Prometheus TSDB,    #
 #  Loki, trivy server) get a filesystem trim every six hours (03/09/15/21 UTC) that releases      #
 #  blocks of deleted files. Without it such a volume grows to its full provisioned size on        #
@@ -28,7 +31,7 @@ resource "kubernetes_manifest" "recurring_snapshot" {
       name        = "nightly-snapshot"
       cron        = "0 23 * * *"
       task        = "snapshot"
-      retain      = 3
+      retain      = 2
       concurrency = 1
       groups      = ["default"]
       labels = {
