@@ -137,6 +137,21 @@ resource "helm_release" "this" {
             }],
             [{
               match = {
+                alertname = "LonghornVolumeNearlyFull"
+              }
+              repeat_interval = "24h"
+              routes = concat(
+                local.discord_adapter_enabled ? [{
+                  receiver = "discord"
+                  continue = true
+                }] : [],
+                local.gotify_info_routes,
+                local.gotify_regular_routes,
+                [{ receiver = "null" }]
+              )
+            }],
+            [{
+              match = {
                 alertname = "LonghornVolumeSpaceUsageHigh"
               }
               repeat_interval = "3h"
