@@ -377,7 +377,7 @@ locals {
               cpu    = "100m"
               memory = "256Mi"
             }
-            storage_size = "3Gi"
+            storage_size = "4Gi"
           }
         }
       }
@@ -571,7 +571,7 @@ locals {
           require_config      = "optional"
           onboarding          = true
           log_level           = "info"
-          storage_size        = "1Gi"
+          storage_size        = "2Gi"
           resources = {
             limits = {
               cpu    = "1"
