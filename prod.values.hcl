@@ -235,7 +235,7 @@ locals {
               cpu    = "50m"
               memory = "272Mi"
             }
-            storage_size = "1Gi"
+            storage_size = "2Gi"
           }
           replicas = 1
           resources = {
@@ -377,7 +377,7 @@ locals {
               cpu    = "100m"
               memory = "256Mi"
             }
-            storage_size = "2Gi"
+            storage_size = "3Gi"
           }
         }
       }
@@ -517,7 +517,7 @@ locals {
               cpu    = "50m"
               memory = "128Mi"
             }
-            storage_size = "2Gi"
+            storage_size = "3Gi"
           }
           resources = {
             limits = {
