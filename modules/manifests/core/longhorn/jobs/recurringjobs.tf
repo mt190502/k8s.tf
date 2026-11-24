@@ -7,10 +7,11 @@
 #  database WAL churn pinned ~35 Gi per worker in the 3-nightly chain, and the offsite            #
 #  monthly-backup (retain = 12) remains the disaster-recovery copy.                               #
 #  Volumes labelled into the "trim" group (cache-like PVCs without snapshots: Prometheus TSDB,    #
-#  Loki, trivy server) get a filesystem trim every six hours (03/09/15/21 UTC) that releases      #
-#  blocks of deleted files. Without it such a volume grows to its full provisioned size on        #
-#  every replica node: the Prometheus TSDB rewrites about 0.2 GB/h, so a daily or weekly trim     #
-#  does not bound it.                                                                             #
+#  Loki, trivy server) get a filesystem trim every six hours (03/09/15/21 UTC), scheduled         #
+#  at :12 to stay clear of the :00-aligned attach window of the renovate runs, that               #
+#  releases blocks of deleted files. Without it such a volume grows to its full provisioned       #
+#  size on every replica node: the Prometheus TSDB rewrites about 0.2 GB/h, so a daily or         #
+#  weekly trim does not bound it.                                                                 #
 #  The trim job is created before a replaced one is destroyed: when the last RecurringJob of      #
 #  a group is deleted, Longhorn removes that group's label from every volume and PVC, so a        #
 #  plain rename would silently drop all volumes out of the "trim" group.                          #
@@ -77,7 +78,7 @@ resource "kubernetes_manifest" "recurring_trim" {
     }
     spec = {
       name        = "periodic-trim"
-      cron        = "0 3,9,15,21 * * *"
+      cron        = "12 3,9,15,21 * * *"
       task        = "filesystem-trim"
       retain      = 0
       concurrency = 1
