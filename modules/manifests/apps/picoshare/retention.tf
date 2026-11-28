@@ -1,11 +1,11 @@
 ## ============================================================================================= ##
 #  modules/manifests/apps/picoshare/retention.tf                                                  #
 #                                                                                                 #
-#  Retention enforcer: clamps PicoShare's file lifetimes to a maximum of                           #
+#  Retention enforcer: clamps PicoShare's file lifetimes to a maximum of                          #
 #  var.config.max_expiration_days and vacuums the database. PicoShare's own garbage               #
-#  collector then deletes the expired entries (it runs every 7 hours while the app is up).         #
+#  collector then deletes the expired entries (it runs every 7 hours while the app is up).        #
 #                                                                                                 #
-#  The job shares the application's ReadWriteOnce volume, so pod affinity keeps it on the same node. #
+#  The job shares the application's RWO volume, so pod affinity keeps it on the same node.        #
 ## ============================================================================================= ##
 resource "kubernetes_config_map_v1" "retention" {
   count = (var.enabled && var.config.retention_enabled) ? 1 : 0
@@ -73,7 +73,7 @@ resource "kubernetes_cron_job_v1" "retention" {
               }
             }
             container {
-              name = "retention"
+              name    = "retention"
               image   = "alpine/sqlite:3.53.4"
               command = ["/bin/sh", "-c"]
               args = [
