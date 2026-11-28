@@ -30,7 +30,7 @@ graph TD
 
   subgraph TALOS["Talos Kubernetes Cluster"]
     subgraph STORAGE_STACK["StorageClass Stack"]
-      storage_s3["S3 CSI"]
+      storage_s3["S3 CSI (disabled)"]
       storage_longhorn["Longhorn"]
     end
     tailscale["Tailscale<br>(node-to-node)<br>(UDP/41641)"]
@@ -211,7 +211,7 @@ All shared configuration lives under `locals` in `prod.values.hcl`. Sensitive va
 | Layer              | Content                                                                                                                                                                                                                                                                                                                                                                   |
 |:------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
 | **Infrastructure** | Talos machine secrets, patch templates, Hetzner servers + firewall, Tailscale devices, Talos bootstrap, kubeconfig, Cloudflare DNS records                                                                                                                                                                                                                                |
-| **Manifests**      | Longhorn, S3 CSI, Reflector, CloudNativePG, MongoDB Community Operator, PSMDB Operator (disabled), kube-prometheus-stack, Loki, Grafana Alloy, cert-manager, Descheduler, Atlantis, Gotify, Kyverno and policies, Traefik, Tailscale Operator, DNS utils, Falco, Renovate, Trivy Operator, testing (disabled), plus apps (anki, hedgedoc (disabled), miniflux, nightscout, picoshare, radicale, redmine, silverbullet, slimserve, syncstorage-rs, umami) |
+| **Manifests**      | Longhorn, S3 CSI (disabled), Reflector, CloudNativePG, MongoDB Community Operator, PSMDB Operator (disabled), kube-prometheus-stack, Loki, Grafana Alloy, cert-manager, Descheduler, Atlantis, Gotify, Kyverno and policies, Traefik, Tailscale Operator, DNS utils, Falco, Renovate, Trivy Operator, testing (disabled), plus apps (anki, hedgedoc (disabled), miniflux, nightscout, picoshare, radicale, redmine, silverbullet, slimserve, syncstorage-rs, umami) |
 
 ---
 
@@ -249,7 +249,6 @@ graph TD
       subgraph CORE["Core"]
         ATL["atlantis"]
         LH["longhorn"]
-        S3["s3-csi"]
         RF["reflector"]
         RENO["renovate"]
         CNPG["cnpg"]
@@ -301,7 +300,7 @@ graph TD
       TF --> KPS & ATL & GOTIFY & ANKI & HEDGE & MINI & NS & RAD & RED & SILVER & SLIM & SYNC & UMA
       CM & CNPG --> ANKI & MINI & RED & UMA & SYNC
       CM & MONGO --> NS
-      S3 & CM --> SLIM
+      CM --> SLIM
     end
   end
 
@@ -323,7 +322,7 @@ graph TD
 
   class INPUTS inputTarget;
   class TP,HP,TSP,TAP,CP infraTarget;
-  class ATL,LH,LHJ,S3,RF,RENO,CNPG,PSMDB,MONGO,KPSPRE,KPS,LOKI,ALLOY,KYV,KYVP,GOTIFY,DNS,TSO,CM,DESCHED,TF,TS,FALCO,TRIVY coreTarget;
+  class ATL,LH,LHJ,RF,RENO,CNPG,PSMDB,MONGO,KPSPRE,KPS,LOKI,ALLOY,KYV,KYVP,GOTIFY,DNS,TSO,CM,DESCHED,TF,TS,FALCO,TRIVY coreTarget;
   class ANKI,HEDGE,MINI,NS,PICO,RAD,RED,SILVER,SLIM,SYNC,UMA appTarget;
   class HZ,TSn,CF,TPn,V,S internalTarget;
   class INFRA,MANIFESTS,CORE,APPS inputTarget;
@@ -386,7 +385,7 @@ graph TD
 │       │   ├── psmdb-operator/               # Percona MongoDB operator
 │       │   ├── reflector/                    # Secret/configmap reflection
 │       │   ├── renovate/                     # Renovate dependency-update bot (CronJob)
-│       │   ├── s3-csi/                       # S3-compatible storage CSI driver
+│       │   ├── s3-csi/                       # S3-compatible storage CSI driver (disabled)
 │       │   ├── tailscale-operator/           # Tailscale Kubernetes operator
 │       │   ├── testing/                      # Smoke tests (nginx, echoserver)
 │       │   ├── traefik/                      # Traefik Gateway API provider
@@ -401,7 +400,7 @@ graph TD
 │           ├── radicale/                     # CalDAV/CardDAV server
 │           ├── redmine/                      # Project management
 │           ├── silverbullet/                 # Markdown knowledge base
-│           ├── slimserve/                    # Lightweight file server
+│           ├── slimserve/                    # Lightweight file server (v1.x, serves S3 bucket directly)
 │           ├── syncstorage-rs/               # Firefox Sync storage
 │           └── umami/                        # Web analytics
 │

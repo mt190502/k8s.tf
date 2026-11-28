@@ -384,24 +384,20 @@ locals {
       slimserve = {
         enabled = true
         config = {
-          dirs     = "/data"
-          hostname = "files"
+          bucket_name = "files"
+          replicas    = 3
+          hostname    = "files"
+          s3_endpoint = "http://100.100.30.2:3900"
+          s3_region   = "us-east-1"
           resources = {
             limits = {
-              cpu    = "50m"
-              memory = "160Mi"
+              cpu    = "250m"
+              memory = "768Mi"
             }
             requests = {
               cpu    = "10m"
-              memory = "64Mi"
+              memory = "128Mi"
             }
-          }
-          persistence = {
-            enabled      = true
-            bucket_name  = "files"
-            s3_endpoint  = "http://100.100.30.2:3900"
-            s3_region    = "us-east-1"
-            storage_size = "1T"
           }
         }
       }
@@ -500,7 +496,7 @@ locals {
         config = {
           falcosidekick_enabled = true
           minimum_priority      = "error"
-          toolchain_namespaces = ["atlantis-system"]
+          toolchain_namespaces  = ["atlantis-system"]
         }
       }
       gotify = {
@@ -584,8 +580,11 @@ locals {
           }
         }
       }
+      # s3-csi disabled: slimserve v1.x serves the Garage bucket directly, no CSI PV needed.
+      # The Garage credential values under secrets.manifests.core.s3_csi are still the source
+      # for the slimserve deployment, so this block must stay in the secrets file.
       s3_csi = {
-        enabled = true
+        enabled = false
         config = {
           endpoint = "http://100.100.30.2:3900"
           region   = "us-east-1"

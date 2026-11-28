@@ -1,10 +1,5 @@
 ## ============================================================================================= ##
 #  modules/manifests/apps/slimserve/terragrunt.hcl                                                #
-#                                                                                                 #
-#  Terragrunt wrapper for slimserve manifests.                                                    #
-#  Config is provided from stack values.                                                          #
-#                                                                                                 #
-#  Apply order: (cert-manager/traefik) -> [slimserve]                                             #
 ## ============================================================================================= ##
 include "common" {
   path   = find_in_parent_folders("modules/common.hcl")
@@ -27,7 +22,7 @@ terraform {
       "${get_repo_root()}/.ci/public-domain.sh",
       "--name", "SlimServe",
       "--domain", "https://${try(values.config.hostname, "slimserve")}.${try(values.config.domain, "example.com")}",
-      "--statcodes", "200:401:403",
+      "--statcodes", "200",
     ] : ["sh", "-c", "true"]
   }
 
@@ -85,16 +80,6 @@ dependency "cert_manager" {
   mock_outputs_merge_strategy_with_state  = include.common.locals.mock_outputs_merge_strategy_with_state
 }
 
-dependency "s3_csi" {
-  config_path  = "../../core/s3-csi"
-  skip_outputs = true
-}
-
-dependency "traefik" {
-  config_path  = "../../core/traefik"
-  skip_outputs = true
-}
-
 inputs = {
   enabled = try(values.enabled, false)
   config = merge(
@@ -102,7 +87,6 @@ inputs = {
     {
       gateway_name      = dependency.cert_manager.outputs.gateway_name
       gateway_namespace = dependency.cert_manager.outputs.gateway_namespace
-      preferred_gateway = try(values.config.preferred_gateway, "cilium")
     }
   )
   secrets = try(values.secrets, {})

@@ -486,9 +486,15 @@ unit "slimserve" {
     enabled = try(local.apps.slimserve.enabled, false)
     config = merge(
       try(local.apps.slimserve.config, {}),
-      { domain = local.rootvars.cluster_url.dns, preferred_gateway = local.rootvars.preferred_gateway }
+      { domain = local.rootvars.cluster_url.dns }
     )
-    secrets = merge(try(local.secrets.manifests.apps.slimserve, {}), {})
+    secrets = merge(
+      try(local.secrets.manifests.core.s3_csi, {}),
+      {
+        release_cookie  = try(local.secrets.manifests.apps.slimserve.app.release_cookie, "")
+        secret_key_base = try(local.secrets.manifests.apps.slimserve.app.secret_key_base, "")
+      }
+    )
   }
 }
 

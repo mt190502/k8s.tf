@@ -87,11 +87,11 @@ resource "kubernetes_manifest" "require_trim_on_excluded_pvc" {
         },
         {
           name       = "excluded-from-recurring-jobs"
-          expression = "'recurring-job-group.longhorn.io/no-recurring-job' in object.metadata.labels && object.metadata.labels['recurring-job-group.longhorn.io/no-recurring-job'] == 'enabled'"
+          expression = "has(object.metadata.labels) && 'recurring-job-group.longhorn.io/no-recurring-job' in object.metadata.labels && object.metadata.labels['recurring-job-group.longhorn.io/no-recurring-job'] == 'enabled'"
         },
         {
           name       = "trim-missing"
-          expression = "!('recurring-job-group.longhorn.io/trim' in object.metadata.labels) || object.metadata.labels['recurring-job-group.longhorn.io/trim'] != 'enabled'"
+          expression = "!has(object.metadata.labels) || !('recurring-job-group.longhorn.io/trim' in object.metadata.labels) || object.metadata.labels['recurring-job-group.longhorn.io/trim'] != 'enabled'"
         }
       ]
       mutations = [

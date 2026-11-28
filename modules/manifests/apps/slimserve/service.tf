@@ -1,59 +1,6 @@
-## ============================================================================================= ##
-#  modules/manifests/apps/slimserve/service.tf                                                    #
-#                                                                                                 #
-#  ClusterIP Service for the application - exposes pods for internal cluster traffic.             #
-#  Used as HTTPRoute backend for Gateway API ingress.                                             #
-## ============================================================================================= ##
-locals {
-  traefik_service_enabled = var.enabled && var.config.port != null && try(var.config.replicas, 1) > 1 && !local.hash_ingress_enabled
-  traefik_service_name    = "${var.config.name}-sticky"
-  traefik_service_manifest = yamlencode({
-    apiVersion = "traefik.io/v1alpha1"
-    kind       = "TraefikService"
-    metadata = {
-      name      = local.traefik_service_name
-      namespace = try(kubernetes_namespace_v1.this[0].metadata[0].name, "")
-    }
-    spec = {
-      weighted = {
-        services = [
-          {
-            name   = try(kubernetes_service_v1.this[0].metadata[0].name, "")
-            port   = var.config.port
-            kind   = "Service"
-            weight = 1
-            sticky = {
-              cookie = {
-                name     = local.traefik_service_name
-                secure   = true
-                httpOnly = true
-                path     = "/"
-              }
-            }
-          }
-        ]
-      }
-    }
-  })
-}
-
-resource "null_resource" "traefik_service" {
-  count = local.traefik_service_enabled ? 1 : 0
-  triggers = {
-    manifest_sha = sha256(local.traefik_service_manifest)
-    name         = local.traefik_service_name
-    namespace    = kubernetes_namespace_v1.this[0].metadata[0].name
-  }
-  provisioner "local-exec" {
-    command = "kubectl apply -f - <<EOF\n${local.traefik_service_manifest}EOF"
-  }
-  provisioner "local-exec" {
-    when    = destroy
-    command = "kubectl delete traefikservice ${self.triggers.name} -n ${self.triggers.namespace} --ignore-not-found=true"
-  }
-  depends_on = [kubernetes_service_v1.this]
-}
-
+## =========================================================================================== ##
+#  modules/manifests/apps/slimserve/service.tf                                                  #
+## =========================================================================================== ##
 resource "kubernetes_service_v1" "this" {
   count = (var.enabled && var.config.port != null) ? 1 : 0
   metadata {
@@ -70,6 +17,31 @@ resource "kubernetes_service_v1" "this" {
     }
     ip_family_policy = "PreferDualStack"
     type             = "ClusterIP"
+  }
+  depends_on = [kubernetes_namespace_v1.this]
+}
+
+## --------------------------------------------------------------------------------------------- ##
+#  Headless Service for the Erlang cluster - pod discovery on port 4370 only.                     #
+#  Never exposed publicly; the HTTP Service stays unchanged.                                      #
+## --------------------------------------------------------------------------------------------- ##
+resource "kubernetes_service_v1" "nodes" {
+  count = local.clustered ? 1 : 0
+  metadata {
+    name      = "${var.config.name}-nodes"
+    namespace = kubernetes_namespace_v1.this[0].metadata[0].name
+  }
+  spec {
+    selector = {
+      "app.kubernetes.io/name" = var.config.name
+    }
+    port {
+      name        = "dist"
+      port        = 4370
+      target_port = 4370
+    }
+    cluster_ip                  = "None"
+    publish_not_ready_addresses = true
   }
   depends_on = [kubernetes_namespace_v1.this]
 }

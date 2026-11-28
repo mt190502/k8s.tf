@@ -1,10 +1,8 @@
 ## ============================================================================================= ##
 #  modules/manifests/apps/slimserve/pdb.tf                                                        #
-#                                                                                                 #
-#  Limits voluntary disruptions to one pod when the application runs multiple replicas.           #
 ## ============================================================================================= ##
 resource "kubernetes_manifest" "pdb" {
-  count = (var.enabled && try(coalesce(var.config.replicas, 1), 1) > 1) ? 1 : 0
+  count = local.clustered ? 1 : 0
   manifest = {
     apiVersion = "policy/v1"
     kind       = "PodDisruptionBudget"
