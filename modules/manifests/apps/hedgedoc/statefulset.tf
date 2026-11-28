@@ -26,7 +26,7 @@ resource "kubernetes_stateful_set_v1" "this" {
         }
         container {
           name  = var.config.name
-          image = "quay.io/hedgedoc/hedgedoc:1.12.0"
+          image = "quay.io/hedgedoc/hedgedoc:1.12.3"
           port { container_port = var.config.port }
           env {
             name = "CMD_SESSION_SECRET"
